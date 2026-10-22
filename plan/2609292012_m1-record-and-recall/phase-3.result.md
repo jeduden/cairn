@@ -42,8 +42,8 @@ Inherited:
 - `administration::act`: `Act`, `Class`, `permit(&Act, &Gate)`,
   `record`, `acts`, `open_residual_risks`. Every run seat counts as an
   unsandboxed run, leaving R1 to R8 open.
-- `cairn configuration accept`, `cairn risk-acceptance
-  show|record|withdraw`; `cairn counter ack` notes a `principal_act`
+- `parinn configuration accept`, `parinn risk-acceptance
+  show|record|withdraw`; `parinn counter ack` notes a `principal_act`
   audit entry, then records the act through it.
 - Audit counters `settings_layer_invalid`,
   `repository_configuration_key_ignored`, `trust_policy_key_ignored`,
@@ -69,12 +69,12 @@ For the stakeholder:
 
 Parked:
 
-- `cairn hook` and `cairn mcp` read no settings yet (phases 9, 10).
+- `parinn hook` and `parinn mcp` read no settings yet (phases 9, 10).
 - The parser's fuzz target joins phase 7's first `fuzz/` crate.
 - Managed policy that fails also refuses widening acts, beyond
   ADM-04's letter; Windows' ACLs are unchecked.
 - A recording command audits ignored keys on every run.
 - A refused act audited in a fresh home creates the home.
 - `home.id` does not write `home.json` yet.
-- An unknown key's name reaches `cairn status`'s stderr when it holds
+- An unknown key's name reaches `parinn status`'s stderr when it holds
   only a settings key's characters, up to 160: for security review.

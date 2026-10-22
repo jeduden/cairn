@@ -66,7 +66,7 @@ fn redactor() -> Redactor {
 }
 
 fn home(dir: &TempDir) -> Home {
-    Home::locate(Some(dir.path().join(".cairn").as_os_str()), None).unwrap()
+    Home::locate(Some(dir.path().join(".parinn").as_os_str()), None).unwrap()
 }
 
 /// A random transcript of the harness session `session`: lines of a few

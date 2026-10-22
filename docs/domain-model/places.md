@@ -7,9 +7,10 @@ summary: >-
 # Places
 
 - **Home**: The directory with one principal's ParleyInn state on a node
-  (`CAIRN_HOME`, default `~/.cairn`), belonging to one OS user, holding the keys
-  SEC-10 binds to it, and optionally bound to a **home id** (`home.id`) that the
-  environment must supply to open it (SEC-03). The unit of isolation (I8).
+  (`PARINN_HOME`, default `~/.parinn`), belonging to one OS user, holding the
+  keys SEC-10 binds to it, and optionally bound to a **home id** (`home.id`)
+  that the environment must supply to open it (SEC-03). The unit of isolation
+  (I8).
 - **Node**: One home on one machine, container or cloud environment, for one
   principal, with its own device key; an **ephemeral node**, one in a
   short-lived cloud environment, may have only a token key, a **token-key-only

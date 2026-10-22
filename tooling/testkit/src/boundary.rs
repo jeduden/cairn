@@ -142,7 +142,7 @@ impl Confinement {
         self.component
     }
 
-    /// Starts `program` with `args` and a `HOME` and `CAIRN_HOME` under
+    /// Starts `program` with `args` and a `HOME` and `PARINN_HOME` under
     /// `home` (ENG-14), confined, and waits for it. The caller, the
     /// test thread and the place that called, is named in a failure.
     ///

@@ -93,9 +93,9 @@ summary: >-
 - **Proof class**: Of a landing link. Proven: `same commit`, `same patch`, `same
   tree`. Not proven: `likely`, `asserted`, and `not proven` with a reason
   (LANE-06).
-- **Room trailer**: The `Cairn-Room:` line ParleyInn adds to the message of each
-  commit on a room's branch, naming the room; each `Cairn-Link:` line is a
-  trailer link (LANE-28).
+- **Room trailer**: The `ParleyInn-Room:` line ParleyInn adds to the message of
+  each commit on a room's branch, naming the room; each `ParleyInn-Link:` line
+  is a trailer link (LANE-28).
 - **Qualified links**: Every link is named by what it connects: a branch link
   (room to branch), a pull-request link (branch to its pull request, derived by
   ParleyInn from forge bridge events), an issue link (room to forge issue), a

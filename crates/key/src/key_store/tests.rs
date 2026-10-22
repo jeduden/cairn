@@ -121,13 +121,13 @@ fn each_key_store_says_where_it_keeps_keys_and_whether_an_agent_could_read_them(
 
 #[test]
 fn a_keychain_account_is_named_per_home() {
-    let a = account(Path::new("/home/a/.cairn"), &Entry::device());
-    let b = account(Path::new("/home/b/.cairn"), &Entry::device());
+    let a = account(Path::new("/home/a/.parinn"), &Entry::device());
+    let b = account(Path::new("/home/b/.parinn"), &Entry::device());
 
     assert_ne!(a, b);
     assert!(a.ends_with("/device"), "{a}");
     assert_eq!(a.len(), "home-".len() + 32 + "/device".len());
-    assert_eq!(a, account(Path::new("/home/a/.cairn"), &Entry::device()));
+    assert_eq!(a, account(Path::new("/home/a/.parinn"), &Entry::device()));
 }
 
 /// A keychain in memory, standing in for the macOS Keychain.
@@ -168,7 +168,7 @@ impl Keychain for Memory {
 
 #[test]
 fn a_keychain_store_keeps_each_entry_once_under_the_homes_account() {
-    let home = Path::new("/home/a/.cairn");
+    let home = Path::new("/home/a/.parinn");
     let keys = KeychainKeyStore::new(Memory::default(), home);
 
     keys.put(&Entry::device(), "00ff").unwrap();

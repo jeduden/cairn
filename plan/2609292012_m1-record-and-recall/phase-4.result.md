@@ -4,7 +4,7 @@ title: "Redaction before anything is written, input limits and paths"
 status: "✅"
 result: true
 summary: >-
-  @ENG-05 off @pending and passing. cairn ingest redacts every line
+  @ENG-05 off @pending and passing. parinn ingest redacts every line
   before it writes, refuses while a settings layer fails, reads only
   within the allowed roots, and a release build ingests again; hook
   input past 1 MiB or depth 64 is refused. SEC-05 rows 1-2 and SEC-08's
@@ -18,7 +18,7 @@ Outcome:
 
 - ENG-05 holds: `@ENG-05` is off `@pending`, its scenario passing
   against the built core, confined.
-- SEC-08's M1 part holds in `cairn ingest`: the rule set, version 1,
+- SEC-08's M1 part holds in `parinn ingest`: the rule set, version 1,
   the harness account identifiers and the principal's redaction
   patterns, each match `[REDACTED:<rule>]`, each redaction audited.
   `harness_account.rs` finds no identifier from any recorded
@@ -55,7 +55,7 @@ Inherited:
 - `allowed_root`: `AllowedRoots::with`, `with_worktree`, `resolve`.
   Phase 9's session binding adds the worktree root.
 - `structured_log`: `StructuredLog`, installed per run by `main`.
-- `cairn::bounded_lines` caps every input line at 1 MiB; `cairn mcp`
+- `parinn::bounded_lines` caps every input line at 1 MiB; `parinn mcp`
   answers a longer request and goes on.
 - Counters `redacted`, `redaction_pattern_refused`,
   `hook_input_too_large`, `hook_input_too_deep`,
@@ -65,7 +65,7 @@ Inherited:
 
 For the stakeholder:
 
-- `@SEC-08` cannot pass in M1: `cairn purge --run` is ADM-07's run
+- `@SEC-08` cannot pass in M1: `parinn purge --run` is ADM-07's run
   scope, in M3.
 - While a settings layer fails, may hook handlers still record? Their
   redaction patterns are as unknown as ingest's; phase 9 decides.

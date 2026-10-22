@@ -26,7 +26,7 @@ pub fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
 
-/// Points `command` at `home` (ENG-14): its `HOME`, a `CAIRN_HOME`
+/// Points `command` at `home` (ENG-14): its `HOME`, a `PARINN_HOME`
 /// inside it, and its working directory, so an executable a test starts
 /// cannot reach the real `HOME`, a ParleyInn home, Claude Code's
 /// configuration, or the repository configuration of the checkout the
@@ -34,7 +34,7 @@ pub fn repo_root() -> PathBuf {
 pub fn isolate<'a>(command: &'a mut Command, home: &Path) -> &'a mut Command {
     command
         .env("HOME", home)
-        .env("CAIRN_HOME", home.join(".cairn"))
+        .env("PARINN_HOME", home.join(".parinn"))
         .current_dir(home)
 }
 

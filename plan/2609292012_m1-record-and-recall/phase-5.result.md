@@ -17,12 +17,12 @@ summary: >-
 Outcome:
 
 - PRV-11 holds: `@PRV-11` is off `@pending`. A run seat is certified as
-  a run seat and no ingest seat; `cairn verify --json` reports each
+  a run seat and no ingest seat; `parinn verify --json` reports each
   seat's kind and ingest flag from its seat certificate alone. Its I2
   review is ADR-2610112004's.
 - SEC-10's M1 part holds: each key in its own entry of the key store,
   named per home: the macOS Keychain, a DPAPI file on Windows, a `0600`
-  file on Linux. `cairn status` names it and says an unsandboxed agent
+  file on Linux. `parinn status` names it and says an unsandboxed agent
   could read a key file. A missing key is told apart from an unreadable
   key store; neither starts a second genesis. `e2e_keys.rs` finds no
   seed in the store, a log, the audit log or any output.
@@ -32,7 +32,7 @@ Outcome:
   node identity change event, the new `minted` and its certificate
   record, audited and counted (`node_identity_changed`). Old writers
   get nothing more, and old principal acts no longer count.
-- `cairn verify` follows the key event logs through node identity
+- `parinn verify` follows the key event logs through node identity
   changes; a forged change is named.
 - LANE-16's M1 roles and LANE-23's seat id are proven by unit tests.
 - ADR-2610171300 (key stores, accepted on ruling 2); the `dpapi` shim
@@ -45,9 +45,9 @@ Inherited:
   `DeviceKey::keep`/`fetch` replace `save`/`load`.
 - `Node::certify_run_seat` for phase 10's MCP server, which keeps the
   key in memory. `Node::identity_change`, `node_identity`, `role`.
-- `cairn::open_node` opens the node for ingest and principal acts.
+- `parinn::open_node` opens the node for ingest and principal acts.
 - Counters `node_identity_changed`, `device_key_missing`,
-  `key_store_unavailable`. Seam `CAIRN_TEST_NODE_IDENTITY`.
+  `key_store_unavailable`. Seam `PARINN_TEST_NODE_IDENTITY`.
 
 For the stakeholder:
 
@@ -55,7 +55,7 @@ For the stakeholder:
 - `@REC-24` waits on phase 9's appending `SessionStart`, quarantine,
   origin and confirms. Its event also carries PRV-12's chain head,
   which REC-24's "only the fingerprints" omits: reconcile the rows.
-- `@SEC-10` waits on `cairn backup create` (M3) to start the node.
+- `@SEC-10` waits on `parinn backup create` (M3) to start the node.
 - macOS and Windows read no node identity (ADR-2610171301).
 - Accept ADR-2610171300's crates and ADR-2610171301; and is a node
   identity change rightly audited as `dropped`?
@@ -64,8 +64,8 @@ For the stakeholder:
 
 Parked:
 
-- Rotation, `cairn device-key rotate`, `minted anew`, `recovered`,
+- Rotation, `parinn device-key rotate`, `minted anew`, `recovered`,
   confirms, chooses, rejects, duplicities, the cross-process lock.
-- `cairn recovery-key write` needs a key derivation crate past ENG-18.
+- `parinn recovery-key write` needs a key derivation crate past ENG-18.
 - SEC-27's seat-key rotation and revocation; LANE-16 and LANE-23's
   scenarios need rooms (M7).

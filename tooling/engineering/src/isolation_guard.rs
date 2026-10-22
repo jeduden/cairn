@@ -56,7 +56,7 @@ const READS: [&str; 4] = ["var(", "var_os(", "env!(", "option_env!("];
 /// The variables that lead to real state, quoted.
 const NAMES: [&str; 4] = [
     "\"HOME\"",
-    "\"CAIRN_HOME\"",
+    "\"PARINN_HOME\"",
     "\"CLAUDE_CONFIG_DIR\"",
     "\"USERPROFILE\"",
 ];
@@ -198,7 +198,7 @@ pub fn guard_holds(exe: &Path, scratch: &Path, places: &[&str]) -> Vec<String> {
 }
 
 /// The reads of real state in `body`, the text of the Rust source `file`
-/// that is not a resolver: a read of `HOME`, `CAIRN_HOME`, Claude Code's
+/// that is not a resolver: a read of `HOME`, `PARINN_HOME`, Claude Code's
 /// configuration directory or the profile directory by name, or a call
 /// to the standard library's `HOME` lookup. Each is a line: `file:line: ...`.
 #[must_use]

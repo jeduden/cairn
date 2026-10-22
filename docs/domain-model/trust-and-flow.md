@@ -139,7 +139,7 @@ version
   (`parinn counter ack`, I6, OPS-03). The audit log also records every purge
   (ADM-07).
 - **Structured log**: A line for each operation ParleyInn's components perform,
-  one JSON object a line in `logs/cairn.jsonl` or on stderr, a hook handler's
+  one JSON object a line in `logs/parinn.jsonl` or on stderr, a hook handler's
   only in the file, every field redacted first (ENG-05, OPS-05). It is
   neither the audit log nor a writer log: it holds no counter and no hash
   chain, and nothing derived is built from it.

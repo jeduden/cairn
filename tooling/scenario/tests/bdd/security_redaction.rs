@@ -228,13 +228,13 @@ fn no_correlation_index(w: &mut World) -> Result<(), String> {
 }
 
 #[then(
-    regex = r#"^with a repository "\.cairn\.toml" adding the redaction pattern "([^"]+)", no stored text is redacted by that pattern, and an audit entry and a counter record the repository setting as ignored$"#
+    regex = r#"^with a repository "\.parinn\.toml" adding the redaction pattern "([^"]+)", no stored text is redacted by that pattern, and an audit entry and a counter record the repository setting as ignored$"#
 )]
 fn repository_pattern_ignored(w: &mut World, pattern: String) -> Result<(), String> {
     let git = w.home.join(".git");
     fs::create_dir_all(&git).map_err(|e| e.to_string())?;
     let setting = format!("[redaction]\nextra_patterns = [{pattern:?}]\n");
-    fs::write(w.home.join(".cairn.toml"), setting).map_err(|e| e.to_string())?;
+    fs::write(w.home.join(".parinn.toml"), setting).map_err(|e| e.to_string())?;
     let name = red(w).transcripts.first().map(|(n, _)| n.clone());
     let path = transcript(w, &name.ok_or("no agent run left a transcript")?)?;
     let shown = path.display().to_string();

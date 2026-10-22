@@ -98,11 +98,11 @@ commands:
 /// process's input, each injected so a test can stand in for them.
 pub struct Context<'a> {
     pub build: &'a Build<'a>,
-    /// `CAIRN_HOME`, as the process found it.
-    pub cairn_home: Option<OsString>,
+    /// `PARINN_HOME`, as the process found it.
+    pub parinn_home: Option<OsString>,
     /// `HOME`, as the process found it.
     pub home: Option<OsString>,
-    /// `CAIRN_HOME_ID`, the home id the environment supplies (SEC-03).
+    /// `PARINN_HOME_ID`, the home id the environment supplies (SEC-03).
     pub home_id: Option<OsString>,
     /// Whether the hook handler panics: a development build's seam for
     /// the `@ENG-04` scenario, never set in a release build.
@@ -158,7 +158,7 @@ impl Context<'_> {
     /// everything in it owner-only (SEC-02), and its home id the one the
     /// environment supplies (SEC-03).
     fn home(&self) -> Result<Home, administration::AdminError> {
-        let mut home = Home::locate(self.cairn_home.as_deref(), self.home.as_deref())?;
+        let mut home = Home::locate(self.parinn_home.as_deref(), self.home.as_deref())?;
         if let Some(path) = &self.node_identity {
             home = home.with_identity(IdentitySource::Files(vec![path.clone()]));
         }
@@ -206,13 +206,13 @@ impl Default for LogSettings {
 /// so no line is written; each is counted as dropped.
 #[must_use]
 pub fn structured_log(
-    cairn_home: Option<OsString>,
+    parinn_home: Option<OsString>,
     home: Option<OsString>,
     home_id: Option<OsString>,
     settings: LogSettings,
     clock: fn() -> u64,
 ) -> structured_log::StructuredLog {
-    let (compile_home, compile_os_home) = (cairn_home.clone(), home.clone());
+    let (compile_home, compile_os_home) = (parinn_home.clone(), home.clone());
     // With no home there are no settings layers to read and nowhere to
     // write: the rule set alone, and the log opens nothing.
     let compile: structured_log::Compile =
@@ -225,7 +225,7 @@ pub fn structured_log(
             },
         );
     let open: structured_log::Open = Box::new(move || {
-        let Ok(home) = Home::locate(cairn_home.as_deref(), home.as_deref()) else {
+        let Ok(home) = Home::locate(parinn_home.as_deref(), home.as_deref()) else {
             return Ok(None);
         };
         if !home.root().exists() || home.check().is_err() {
@@ -1524,7 +1524,7 @@ fn broken_json(
     reason = "the seam's whole purpose is a panic the hook entry point must catch"
 )]
 fn seam_panic() {
-    panic!("the hook handler panics, as CAIRN_TEST_FAULT asked");
+    panic!("the hook handler panics, as PARINN_TEST_FAULT asked");
 }
 
 /// The hook input on stdin, its lines joined, once the input closes

@@ -52,7 +52,7 @@ fn until(done: &AtomicBool, mut read: impl FnMut()) {
 #[test]
 fn the_mcp_server_and_parinn_ingest_together_record_every_line_once() {
     let dir = TempDir::new().unwrap();
-    let home = Home::locate(Some(dir.path().join(".cairn").as_os_str()), None).unwrap();
+    let home = Home::locate(Some(dir.path().join(".parinn").as_os_str()), None).unwrap();
     let path = dir
         .path()
         .join("5e55a0de-0000-4000-8000-0000000000c1.jsonl");

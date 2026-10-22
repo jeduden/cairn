@@ -39,8 +39,8 @@ impl Node {
         self.dir.path()
     }
 
-    fn cairn_home(&self) -> PathBuf {
-        self.home().join(".cairn")
+    fn parinn_home(&self) -> PathBuf {
+        self.home().join(".parinn")
     }
 
     fn managed(&self) -> PathBuf {
@@ -49,7 +49,7 @@ impl Node {
 
     fn env(&self) -> Vec<(&'static str, String)> {
         vec![(
-            "CAIRN_TEST_MANAGED_POLICY",
+            "PARINN_TEST_MANAGED_POLICY",
             self.managed().display().to_string(),
         )]
     }
@@ -87,9 +87,9 @@ impl Node {
 
     /// Writes the principal's configuration, owner-only.
     fn configure(&self, text: &str) {
-        fs::create_dir_all(self.cairn_home()).unwrap();
-        fs::set_permissions(self.cairn_home(), fs::Permissions::from_mode(0o700)).unwrap();
-        let path = self.cairn_home().join("config.toml");
+        fs::create_dir_all(self.parinn_home()).unwrap();
+        fs::set_permissions(self.parinn_home(), fs::Permissions::from_mode(0o700)).unwrap();
+        let path = self.parinn_home().join("config.toml");
         fs::write(&path, text).unwrap();
         fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).unwrap();
     }
@@ -106,7 +106,7 @@ impl Node {
 
     /// The audit log's entries naming `counter`, as JSON.
     fn audited(&self, counter: &str) -> Vec<Value> {
-        let dir = self.cairn_home().join("audit");
+        let dir = self.parinn_home().join("audit");
         let mut files: Vec<PathBuf> = fs::read_dir(&dir)
             .unwrap()
             .map(|e| e.unwrap().path())
@@ -159,7 +159,7 @@ fn an_invalid_configuration_fails_status_naming_the_key_and_ingest_refuses_until
             1,
             "{setting}"
         );
-        assert!(!node.cairn_home().join("store.db").exists(), "{setting}");
+        assert!(!node.parinn_home().join("store.db").exists(), "{setting}");
         assert_eq!(status.status.code(), Some(2), "{setting}");
         let err = text(&status.stderr);
         assert!(

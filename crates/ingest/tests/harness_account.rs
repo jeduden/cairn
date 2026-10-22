@@ -72,7 +72,7 @@ fn no_harness_account_identifier_from_a_recorded_transcript_reaches_the_store() 
     for path in found {
         let ids = identifiers(&fs::read_to_string(&path).unwrap());
         let dir = TempDir::new().unwrap();
-        let home = Home::locate(Some(dir.path().join(".cairn").as_os_str()), None).unwrap();
+        let home = Home::locate(Some(dir.path().join(".parinn").as_os_str()), None).unwrap();
 
         let ingested = ingest::ingest_path(&home, &path, &redactor, &mut OsEntropy).unwrap();
 

@@ -1,4 +1,4 @@
-# Competitor review of the Cairn pitch
+# Competitor review of the ParleyInn pitch
 
 Lens: does an existing product already match the pitch, or come close?
 Reviewer stance: adversarial. Date: 2 October 2026. Multica, LobeHub and an
@@ -81,9 +81,9 @@ Each row's sources follow the table.
   <https://github.com/lobehub/lobehub/blob/canary/docs/usage/start.mdx>,
   <https://github.com/lobehub/lobehub/blob/canary/docs/usage/agent/connect-external-agents.mdx>
 - C3 P, C4 P, C5 P. Agent Groups, Workspaces, connected execution devices,
-  cross-device conversations and Pages overlap with Cairn's planned live and
+  cross-device conversations and Pages overlap with ParleyInn's planned live and
   fleet views. Progress details depend on the connected agent; the sources do
-  not establish live shared-branch editing or Cairn's result-evidence view. [W]
+  not establish live shared-branch editing or ParleyInn's result-evidence view. [W]
   <https://github.com/lobehub/lobehub>,
   <https://github.com/lobehub/lobehub/blob/canary/docs/usage/agent/connect-external-agents.mdx>
 - C6 ?, C7 ?, C10 ?. The docs reviewed do not establish a commit-to-story
@@ -92,11 +92,11 @@ Each row's sources follow the table.
   <https://github.com/lobehub/lobehub/blob/canary/docs/self-hosting/start.mdx>
 - C8 ?. LobeHub documents its own connector permissions and delegates native
   file, command and approval permissions to the connected agent. The docs do
-  not establish Cairn's pull-only untrusted-data rule for all content that can
+  not establish ParleyInn's pull-only untrusted-data rule for all content that can
   reach an agent. [W]
   <https://github.com/lobehub/lobehub/blob/canary/docs/usage/agent/connect-external-agents.mdx>
 - C9 N. Its self-hosted application uses a networked Next.js service and
-  PostgreSQL. Self-hosting gives deployment control, but not Cairn's
+  PostgreSQL. Self-hosting gives deployment control, but not ParleyInn's
   socket-free core. [W]
   <https://github.com/lobehub/lobehub/blob/canary/docs/self-hosting/start.mdx>
 
@@ -138,7 +138,7 @@ Each row's sources follow the table.
 - C8 N. Workspace and project context is supplied to runs; a squad leader can
   cause another agent's run through a mention. No principal-controlled,
   pull-only, untrusted envelope is documented for these paths. This rates
-  Cairn's specific C8 claim, not Multica's access controls. [W]
+  ParleyInn's specific C8 claim, not Multica's access controls. [W]
   <https://multica.ai/docs/workspaces>,
   <https://multica.ai/docs/project-resources>,
   <https://multica.ai/docs/squads>
@@ -536,7 +536,7 @@ git refs plus a commit trailer) cover every pitch claim except C8–C10.
   [R] `notes/custom-storage-git-and-chat/integrated-platforms.md`
 - **The combination** of C1–C6 with C7–C10. That is the only defensible
   novelty. The research names this quadrant as unoccupied:
-  "Cairn's I2 and crypto-shredding goals would put it in a quadrant nobody
+  "ParleyInn's I2 and crypto-shredding goals would put it in a quadrant nobody
   currently occupies" [R].
 
 The unoccupied claims are all in the pitch's fourth paragraph, the security
@@ -548,7 +548,7 @@ one-liner are the occupied part, and Zed shipped them first.
 **Zed (Delta):** "That's our launch post. 'Replacing pull requests' is our
 tagline. 'A message and the edit it produced are recorded side by side' is our
 DeltaDB design. Our public beta runs on four platforms, including the web, and
-we have landed 570 changes with PRs turned off. Cairn is pre-implementation. Our
+we have landed 570 changes with PRs turned off. ParleyInn is pre-implementation. Our
 CRDT worktrees let people and agents edit the same files live. A lane that
 'never touches the network' cannot be real-time multiplayer without a relay,
 and that relay is the product. Redaction runs before anything leaves the
@@ -574,7 +574,7 @@ in July."
 
 **Anthropic (Claude Code):** "Peer-agent messages already arrive marked as
 untrusted and can never count as consent. Commits already carry a
-Claude-Session trailer. Cairn's C8 is a policy our harness already applies."
+Claude-Session trailer. ParleyInn's C8 is a policy our harness already applies."
 
 **Common rebuttal to the security paragraph:** "Nobody buys a PR replacement for
 crypto-shredding. Tamper evidence over a transcript proves only that the log was
@@ -621,8 +621,8 @@ and unattended approval prompts are answered automatically [W]
 <https://multica.ai/docs/security-model>. Its workspace and project context
 enters runs automatically [W] <https://multica.ai/docs/workspaces>,
 <https://multica.ai/docs/project-resources>. No source reviewed establishes
-Cairn's pull-only untrusted-content rule, a tamper-evident full record, or
-erasure by key. Cairn's comparable room view, record and trust guarantees must
+ParleyInn's pull-only untrusted-content rule, a tamper-evident full record, or
+erasure by key. ParleyInn's comparable room view, record and trust guarantees must
 ship before they can be tested against Multica's working experience.
 
 Multica's license is source-available with additional conditions on hosted
@@ -640,7 +640,7 @@ conversation use an execution device other than the one showing it [W]
 <https://github.com/lobehub/lobehub/blob/canary/docs/usage/start.mdx>,
 <https://github.com/lobehub/lobehub/blob/canary/docs/usage/agent/connect-external-agents.mdx>.
 This makes it a closer competitor for the fleet and collaboration experience
-than for Cairn's full-record and trust guarantees. LobeHub documents that a
+than for ParleyInn's full-record and trust guarantees. LobeHub documents that a
 connected runtime keeps its own session, memory and permissions, and that
 Topic history does not transfer that runtime state to another device [W]
 <https://github.com/lobehub/lobehub/blob/canary/docs/usage/agent/connect-external-agents.mdx>.
@@ -675,12 +675,12 @@ sets out that question and the separate record, trust and network boundaries.
 ### Conversation around the intent: a missing comparison criterion
 
 The original C2 asks whether people can chat with an agent on a branch or pull
-request. That is weaker than Cairn's intended experience: one room holds the
+request. That is weaker than ParleyInn's intended experience: one room holds the
 conversation among people and agents around an intent, and may name branches
 and link forge issues; results, evidence and review appear in that room. An
 issue link does not set the intent. A pull request, when used,
 is the forge's review object for a branch, connected by a pull-request link;
-the Cairn conversation stays in the room. Future comparisons need to ask
+the ParleyInn conversation stays in the room. Future comparisons need to ask
 whether issue discussion, review feedback and the responses to both stay in
 that conversation without a person carrying words between threads.
 
@@ -707,7 +707,7 @@ session [W] <https://docs.warp.dev/factories/connect-your-factory/>,
 <https://docs.warp.dev/factories/integrations/github/>,
 <https://docs.warp.dev/guides/agent-workflows/how-to-attach-agent-session-context-to-github-prs/>.
 
-Cairn now specifies the stronger path for linked issues and pull requests: the
+ParleyInn now specifies the stronger path for linked issues and pull requests: the
 forge bridge records review and issue items as untrusted events shown with
 the room's conversation after the forge read credential owner authorizes
 sharing that exact linked branch or issue with the room. A person can
@@ -720,10 +720,10 @@ answer either externally originated comment without leaving that conversation
 [LANE-34](../../../docs/srs/05b-room-collaboration-requirements.md),
 [SEC-28](../../../docs/srs/06-security.md)).
 
-### Lessons taken into Cairn's contract
+### Lessons taken into ParleyInn's contract
 
 1. **Start from an issue without adopting its intent.** Multica's issue-first
-   path makes entry easy. Cairn's M9 issue flow lets a person choose or create a
+   path makes entry easy. ParleyInn's M9 issue flow lets a person choose or create a
    room and add the issue link as a separate act; imported text never sets the
    intent ([LANE-34](../../../docs/srs/05b-room-collaboration-requirements.md)).
 2. **Finish external discussions in the room.** The room shows issue and
@@ -741,4 +741,4 @@ answer either externally originated comment without leaving that conversation
    [LANE-33](../../../docs/srs/05b-room-collaboration-requirements.md)).
 
 These are specified or planned behaviors, not shipping claims. The comparison
-should score competitors on these user paths and mark Cairn's delivery status.
+should score competitors on these user paths and mark ParleyInn's delivery status.

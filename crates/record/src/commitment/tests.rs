@@ -11,7 +11,7 @@ fn commit_is_hmac_sha256_over_the_canonical_content_under_the_commitment_key() {
     let canonical = crate::canonical::encode(&content).unwrap();
     assert_eq!(
         c.digest(),
-        &hmac_sha256(&[3; 32], &[b"cairn commitment v1\0", canonical.as_bytes()])
+        &hmac_sha256(&[3; 32], &[b"parinn commitment v1\0", canonical.as_bytes()])
     );
 }
 

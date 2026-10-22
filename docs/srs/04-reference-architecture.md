@@ -42,7 +42,7 @@ context. It is not binding; §5–§10 are.
  │ │ counters · audit · meta      │                                       │
  │ └──────────────────────────────┘                                       │
  └────────────────────────────────────────────────────────────────────────┘
-          CAIRN_HOME/                         (0700 dirs, 0600 files, one principal's)
+          PARINN_HOME/                         (0700 dirs, 0600 files, one principal's)
 ```
 
 ## 4.2 Components
@@ -76,7 +76,7 @@ The core's parts:
 | `parinn mcp`           | The MCP server, one per harness session over stdio, serving its runs (the main run and its subagents' runs) and keeping their run-seat keys (SEC-10); it exposes recall, landmarks, pins, room and kernel tools. It ingests its harness session's transcripts as they grow (REC-13).                                                                 |
 | `parinn kernel-worker` | The kernel worker, a child process of `parinn mcp` running the hermetic kernel under OS resource limits with a read-only store handle.                                                                                                                                                                                                               |
 | CLI                    | Install, verify, rebuild, quarantine, purge, backup creation and backup restore, migrate, counters, audit, doctor, and principal acts at a terminal (OWN-12).                                                                                                                                                                                        |
-| Commit hook            | Run as the CLI from git's commit hook: adds the `Cairn-Room:` room trailer and any `Cairn-Link:` trailer links to each commit on a branch that belongs to a room (LANE-01, LANE-28).                                                                                                                                                                 |
+| Commit hook            | Run as the CLI from git's commit hook: adds the `ParleyInn-Room:` room trailer and any `ParleyInn-Link:` trailer links to each commit on a branch that belongs to a room (LANE-01, LANE-28).                                                                                                                                                         |
 | TUI                    | A reduced client of the room view on a terminal (VIEW-14) and, like the CLI, a principal surface there (OWN-02).                                                                                                                                                                                                                                     |
 | Core library           | All logic; no global state; every blocking operation takes a deadline, directly or through a cancellation signal a deadline fires.                                                                                                                                                                                                                   |
 | Harness adapter        | Not a component: ParleyInn's code for one harness, split between the core and the launcher. Its transcript and hook part, among the core's hook handlers, MCP server and CLI, parses transcript formats and hook I/O for Claude Code (and later other harnesses), opening no socket and starting no process; its run part sits in the launcher (B1). |

@@ -61,8 +61,8 @@ score. Filters: `scope` (`room`; `run` needs the session binding, as
 
 Where the gate's scenarios go live:
 
-- `@REC-11`: ingest then `event_search` over `cairn mcp`.
-- `@SEC-04`: the four term rows over `cairn mcp`; the deadline row on
+- `@REC-11`: ingest then `event_search` over `parinn mcp`.
+- `@SEC-04`: the four term rows over `parinn mcp`; the deadline row on
   a store of 1M events built by the step.
 - `@RCL-02`: needs the session binding (phase 9), live ingest (phase
   10), trust levels (phase 11) and the `rooms` scope (phase 13), and

@@ -56,7 +56,7 @@ fn hook(home: &Path, input: &[u8]) -> Output {
 
 /// The audit log's entries in `home`, as JSON.
 fn audited(home: &Path) -> Vec<Value> {
-    let dir = home.join(".cairn").join("audit");
+    let dir = home.join(".parinn").join("audit");
     let mut out = Vec::new();
     for entry in fs::read_dir(dir).unwrap() {
         let text = fs::read_to_string(entry.unwrap().path()).unwrap();
@@ -82,7 +82,7 @@ fn home_bytes(dir: &Path, out: &mut Vec<u8>) {
 
 fn holds(home: &Path, needle: &str) -> bool {
     let mut bytes = Vec::new();
-    home_bytes(&home.join(".cairn"), &mut bytes);
+    home_bytes(&home.join(".parinn"), &mut bytes);
     bytes.windows(needle.len()).any(|w| w == needle.as_bytes())
 }
 
@@ -128,10 +128,10 @@ fn secrets(home: &Path) -> PathBuf {
 #[test]
 fn ingest_redacts_before_anything_is_written() {
     let home = TempDir::new().unwrap();
-    let cairn_home = home.path().join(".cairn");
-    fs::create_dir_all(&cairn_home).unwrap();
-    fs::set_permissions(&cairn_home, fs::Permissions::from_mode(0o700)).unwrap();
-    let config = cairn_home.join("config.toml");
+    let parinn_home = home.path().join(".parinn");
+    fs::create_dir_all(&parinn_home).unwrap();
+    fs::set_permissions(&parinn_home, fs::Permissions::from_mode(0o700)).unwrap();
+    let config = parinn_home.join("config.toml");
     fs::write(
         &config,
         "[redaction]\nextra_patterns = [\"ACME-[0-9]{8}\"]\n",
@@ -196,5 +196,5 @@ fn ingest_reads_nothing_outside_the_transcript_roots() {
         .filter(|e| e["detail"] == "path outside allowed roots")
         .count();
     assert_eq!(refused, 2);
-    assert!(!home.path().join(".cairn").join("store.db").exists());
+    assert!(!home.path().join(".parinn").join("store.db").exists());
 }

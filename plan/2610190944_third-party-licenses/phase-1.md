@@ -39,5 +39,5 @@ scenario fail. ENG-27 requires it because the check inspects the
 repository's records.
 
 Gate. Run the built tool against the real tree in an isolated
-`CAIRN_HOME`, then against a scratch copy with one crate's license file
+`PARINN_HOME`, then against a scratch copy with one crate's license file
 removed, and confirm the second run exits non-zero naming that crate.

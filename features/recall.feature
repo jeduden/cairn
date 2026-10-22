@@ -53,7 +53,7 @@ Feature: Recall (RCL)
     And an agent run with a Claude Code transcript "mixed-provenance"
     When the agent calls the MCP tool "<tool>" with <args>
     Then the recall result is wrapped in the envelope
-    And the envelope carries "cairn_envelope" 1 and the fixed envelope warning in its field "warning"
+    And the envelope carries "parinn_envelope" 1 and the fixed envelope warning in its field "warning"
 
     Examples:
       | tool         | args                         |

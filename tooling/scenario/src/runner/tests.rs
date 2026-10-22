@@ -142,7 +142,7 @@ fn is_isolated_wants_the_marked_home_under_the_temporary_directory() {
 }
 
 #[test]
-fn isolate_points_home_cairn_home_and_the_marker_at_the_home() {
+fn isolate_points_home_parinn_home_and_the_marker_at_the_home() {
     let mut command = Command::new("x");
 
     isolate(&mut command, Path::new("/tmp/h"));
@@ -159,9 +159,9 @@ fn isolate_points_home_cairn_home_and_the_marker_at_the_home() {
     assert_eq!(
         envs,
         [
-            ("CAIRN_HOME".to_owned(), "/tmp/h/.cairn".to_owned()),
             ("HOME".to_owned(), "/tmp/h".to_owned()),
             ("PARINN_BDD_HOME".to_owned(), "/tmp/h".to_owned()),
+            ("PARINN_HOME".to_owned(), "/tmp/h/.parinn".to_owned()),
         ]
     );
 }

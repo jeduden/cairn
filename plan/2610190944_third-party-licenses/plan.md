@@ -5,7 +5,7 @@ status: "🔲"
 summary: >-
   Fail the pull request that adds a crate with no license text
   (ENG-30), and embed in every executable its release target's
-  committed, regenerated THIRD_PARTY_LICENSES, shown by cairn licenses
+  committed, regenerated THIRD_PARTY_LICENSES, shown by parinn licenses
   (ENG-31), so a new dependency is covered the moment it is added.
 model: sonnet
 depends-on: []
@@ -24,7 +24,7 @@ dependency without regenerating `THIRD_PARTY_LICENSES`.
 The proposal is that third-party license texts ship with releases,
 inside each executable and not as a separate asset, and that a crate
 with no license text is never allowed; the stakeholder rules on it here.
-Today a release publishes bare `cairn-*` binaries, an SPDX SBOM, a
+Today a release publishes bare `parinn-*` binaries, an SPDX SBOM, a
 signed `checksums.txt` and attestations (ENG-20). Nothing carries a license
 text. `deny.toml` checks each crate's declared license against the
 ENG-18 allow-list but never reads a text.
@@ -34,7 +34,7 @@ Mechanism, as the proposed
 sets out: one committed `licenses/<target-triple>/THIRD_PARTY_LICENSES`
 per release target, the closed list the build workflow names. Each
 target's build embeds its own file with a `cfg`-selected `include_str!`,
-and `cairn licenses` prints it. A CI gate regenerates every file with
+and `parinn licenses` prints it. A CI gate regenerates every file with
 `cargo metadata --filter-platform` and fails on any difference. A test
 per target proves the build embeds its own file. The release build
 fails when a built executable's output differs from its target's
@@ -42,7 +42,7 @@ regenerated file. The ENG-20 signature and attestations cover the text
 because it is inside the binary.
 
 Core rules. The text is a compiled-in string: no dependency (ENG-18),
-no socket (I4, SEC-01). The domain model's list names `cairn licenses`;
+no socket (I4, SEC-01). The domain model's list names `parinn licenses`;
 the ADR stays `proposed` until the stakeholder rules on the pull request.
 
 Reuse, searched first:
@@ -69,17 +69,17 @@ ADR, plan) is its own change set.
    non-crate entries per target, and the CI gate that regenerates all
    of them, with its drift case (phase 2)
 3. Embedding: each target's build selects its own file, a test per
-   target proves it, `cairn licenses` prints it, the release build
+   target proves it, `parinn licenses` prints it, the release build
    compares each built executable's output with its target's
    regeneration, and ENG-31 closes (phase 3)
 
 ## Execution
 
-| Phase | Model  | Gate                                                                                                                    |
-| ----- | ------ | ----------------------------------------------------------------------------------------------------------------------- |
-| 1     | sonnet | `cargo test -p scenario` runs ENG-30; a scratch copy with a license-less crate added fails the new CI step              |
-| 2     | sonnet | The built tool, run twice, gives identical bytes naming every linked crate; a stale committed file fails the gate       |
-| 3     | opus   | The built `cairn licenses` equals the committed file in an isolated `CAIRN_HOME`; the release build fails on a mismatch |
+| Phase | Model  | Gate                                                                                                                      |
+| ----- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
+| 1     | sonnet | `cargo test -p scenario` runs ENG-30; a scratch copy with a license-less crate added fails the new CI step                |
+| 2     | sonnet | The built tool, run twice, gives identical bytes naming every linked crate; a stale committed file fails the gate         |
+| 3     | opus   | The built `parinn licenses` equals the committed file in an isolated `PARINN_HOME`; the release build fails on a mismatch |
 
 ## Phases
 
@@ -114,7 +114,7 @@ footer: |
   request that adds it
 - [ ] ENG-31 is off `@pending` and its scenario passes; each target's
   committed `THIRD_PARTY_LICENSES` is embedded in the core executable
-  and printed by `cairn licenses`, and the release build fails when a
+  and printed by `parinn licenses`, and the release build fails when a
   built executable's output differs from its target's regenerated file
 - [ ] Generating the file twice gives identical bytes; it names every
   crate linked into its target, SQLite, the Rust standard library and the musl C

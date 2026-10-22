@@ -585,7 +585,7 @@ pub(crate) fn run(conn: &Connection, search: &Search<'_>) -> Result<Vec<Hit>, St
 /// event, position), in key order, folded into one SHA-256. A row id
 /// derives from an address, so no storage layout reaches it.
 pub(crate) fn digest(conn: &Connection) -> Result<Digest, StoreError> {
-    let mut state = Fold(Digest::of(&[b"cairn search index digest v1"]));
+    let mut state = Fold(Digest::of(&[b"parinn search index digest v1"]));
     for (key, _) in settings() {
         let value: String = conn.query_row(
             "SELECT value FROM idx.search_settings WHERE key = ?1",

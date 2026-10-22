@@ -17,7 +17,7 @@ nearest harness process beside its process ancestry. The MCP server
 reads its own the same way and takes every session binding of that
 harness process, marked taken in one transaction, so none is counted
 untaken. Before that it ingests nothing as witnessed. Off Linux none
-is taken, and `cairn ingest` records the run (REC-22).
+is taken, and `parinn ingest` records the run (REC-22).
 
 Run seats (SEC-10): once bound, the MCP server mints a run-seat key in
 memory for the main run and each subagent's run, certified as a run
@@ -51,7 +51,7 @@ logged with its tool-use id, the run or cause, and the wait.
 
 Where the gate's scenarios go live:
 
-- `@REC-13`: both rows, against `cairn mcp` under a stand-in harness
+- `@REC-13`: both rows, against `parinn mcp` under a stand-in harness
   process.
 - `@PRV-14`: its calls name `event_search`, phase 12's, so it passes
   once that lands.

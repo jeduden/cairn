@@ -87,7 +87,7 @@ fn every_act_refuses_without_a_terminal_before_any_other_check_and_audits_it() {
             "{err}"
         );
         assert_eq!(refusals(&p).len(), 1, "{args:?}");
-        assert!(!p.cairn_home().join("store.db").exists());
+        assert!(!p.parinn_home().join("store.db").exists());
     }
 }
 
@@ -470,8 +470,8 @@ fn risk_acceptance_show_runs_without_a_terminal() {
 #[test]
 fn a_verb_reports_a_home_it_cannot_open() {
     let p = Process::new();
-    std::fs::create_dir_all(p.cairn_home()).unwrap();
-    crate::tests::set_mode(&p.cairn_home(), 0o750);
+    std::fs::create_dir_all(p.parinn_home()).unwrap();
+    crate::tests::set_mode(&p.parinn_home(), 0o750);
     for args in [
         &["configuration", "accept"][..],
         &["risk-acceptance", "record"],
@@ -488,7 +488,7 @@ fn a_verb_reports_a_home_it_cannot_open() {
 /// Makes the store refuse every principal act whose content holds
 /// `holding`, as a store that fails mid-act would.
 fn refuse_acts(p: &Process, holding: &str) {
-    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
     conn.execute_batch(&format!(
         "CREATE TRIGGER refuse BEFORE INSERT ON events \
          WHEN NEW.kind = 'principal_act' AND NEW.content LIKE '%{holding}%' \
@@ -516,7 +516,7 @@ fn a_store_that_takes_no_act_fails_the_verb() {
 #[test]
 fn a_run_seat_whose_certificate_does_not_read_fails_risk_acceptance() {
     let p = with_a_run();
-    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
     conn.execute(
         "UPDATE seats SET certificate = '{}' WHERE certificate NOT LIKE '%\"device\"%'",
         [],
@@ -542,7 +542,7 @@ fn a_run_seat_whose_certificate_does_not_read_fails_risk_acceptance() {
 fn cut_and_neutral_acts_need_no_open_residual_risks() {
     let p = with_a_run();
     assert_eq!(p.invoke(&["risk-acceptance", "record"], &DEV).0, EXIT_OK);
-    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
     conn.execute(
         "UPDATE seats SET certificate = '{}' WHERE certificate NOT LIKE '%\"device\"%'",
         [],
@@ -559,9 +559,9 @@ fn cut_and_neutral_acts_need_no_open_residual_risks() {
 fn a_refusal_the_audit_log_cannot_take_is_still_reported() {
     let mut p = Process::new();
     p.terminal = false;
-    let blocked = p.cairn_home().join("audit/audit-000001.jsonl");
+    let blocked = p.parinn_home().join("audit/audit-000001.jsonl");
     std::fs::create_dir_all(&blocked).unwrap();
-    for dir in [p.cairn_home(), p.cairn_home().join("audit"), blocked] {
+    for dir in [p.parinn_home(), p.parinn_home().join("audit"), blocked] {
         crate::tests::set_mode(&dir, 0o700);
     }
     let (code, _, err) = p.invoke(&["counter", "ack"], &DEV);

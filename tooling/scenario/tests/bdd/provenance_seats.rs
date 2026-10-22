@@ -243,12 +243,12 @@ fn i2_review(_w: &mut World) -> Result<(), String> {
 fn home_without_authenticator(w: &mut World) -> Result<(), String> {
     // No authenticator can be enrolled before OWN-11's ship; the home is
     // as fresh as any isolated one.
-    if w.cairn_home.starts_with(&w.home) && !w.cairn_home.exists() {
+    if w.parinn_home.starts_with(&w.home) && !w.parinn_home.exists() {
         Ok(())
     } else {
         Err(format!(
             "the ParleyInn home {} is not a fresh one inside the scenario's home",
-            w.cairn_home.display()
+            w.parinn_home.display()
         ))
     }
 }

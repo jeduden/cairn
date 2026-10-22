@@ -25,7 +25,7 @@ summary: >-
   Claude Agent SDK workers, on runner hosts we operate.
 - **Primary, too:** developer workstations (Linux and macOS) running a fleet
   of harnesses, one worktree each.
-- **Later, with PEER:** ephemeral nodes whose `CAIRN_HOME` is deleted
+- **Later, with PEER:** ephemeral nodes whose `PARINN_HOME` is deleted
   when they end keep their record only by sealing and offering segments
   to an enrolled peer (PEER-01, PEER-05).
   Until then they are out of scope.
@@ -34,7 +34,7 @@ summary: >-
   paths, are sent to the model provider as ordinary context. ParleyInn does
   not change this flow; its own components stay inside the boundaries of
   §6.3 (I4).
-- Runner workspaces, `~/.claude/`, and `CAIRN_HOME` live on durable volumes so
+- Runner workspaces, `~/.claude/`, and `PARINN_HOME` live on durable volumes so
   runs can pause and resume.
 
 ## 2.3 Assumptions register

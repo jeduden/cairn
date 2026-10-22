@@ -396,7 +396,7 @@ fn cargo_metadata_reads_a_workspace_and_names_a_failure() {
         ),
         ("src/lib.rs", ""),
     ]);
-    let home = dir.path().join(".cairn");
+    let home = dir.path().join(".parinn");
 
     let json = cargo_metadata(&cargo(), &dir.path().join("Cargo.toml"), &home).unwrap();
     assert!(json.contains("\"name\":\"t\""), "{json}");

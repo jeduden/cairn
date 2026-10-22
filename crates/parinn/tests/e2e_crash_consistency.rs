@@ -73,7 +73,7 @@ fn kill_and_verify(home: &Path, transcript: &Path, after: Duration, label: &str)
     let killed = core()
         .run_killed(program(), &["ingest", "--path", &path], home, &[], after)
         .unwrap_or_else(|e| panic!("{label}: {e}"));
-    if !home.join(".cairn/store.db").exists() {
+    if !home.join(".parinn/store.db").exists() {
         return killed;
     }
     let out = core()

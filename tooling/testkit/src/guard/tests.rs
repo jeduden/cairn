@@ -51,7 +51,7 @@ fn a_real_home_is_refused_with_the_path_it_would_have_reached() {
     assert_eq!(
         got.to_string(),
         format!(
-            "refusing to resolve the user's `HOME` directory at /home/someone: it is not under the temporary directory {}; point HOME and CAIRN_HOME at a testkit::TempDir first (ENG-14)",
+            "refusing to resolve the user's `HOME` directory at /home/someone: it is not under the temporary directory {}; point HOME and PARINN_HOME at a testkit::TempDir first (ENG-14)",
             temp.path().display()
         )
     );
@@ -132,21 +132,21 @@ fn a_home_that_does_not_exist_yet_resolves_inside_the_temporary_directory() {
 }
 
 #[test]
-fn the_cairn_home_defaults_to_dot_cairn_in_the_home() {
+fn the_parinn_home_defaults_to_dot_parinn_in_the_home() {
     let temp = TempDir::new().unwrap();
     let home = temp.path().join("home");
 
     let got = check(Place::ParleyInnHome, &vars(&[("HOME", &home)]), temp.path());
 
-    assert_eq!(got, Ok(home.join(".cairn")));
+    assert_eq!(got, Ok(home.join(".parinn")));
 }
 
 #[test]
-fn an_explicit_real_cairn_home_is_refused_beside_an_isolated_home() {
+fn an_explicit_real_parinn_home_is_refused_beside_an_isolated_home() {
     let temp = TempDir::new().unwrap();
     let home = temp.path().join("home");
-    let real = Path::new("/home/x/.cairn");
-    let var = vars(&[("HOME", &home), ("CAIRN_HOME", real)]);
+    let real = Path::new("/home/x/.parinn");
+    let var = vars(&[("HOME", &home), ("PARINN_HOME", real)]);
 
     let got = refused(Place::ParleyInnHome, &var, temp.path());
 
@@ -160,10 +160,10 @@ fn an_explicit_real_cairn_home_is_refused_beside_an_isolated_home() {
 }
 
 #[test]
-fn an_explicit_isolated_cairn_home_resolves_beside_a_real_home() {
+fn an_explicit_isolated_parinn_home_resolves_beside_a_real_home() {
     let temp = TempDir::new().unwrap();
     let parinn = temp.path().join("parinn");
-    let var = vars(&[("HOME", Path::new("/home/x")), ("CAIRN_HOME", &parinn)]);
+    let var = vars(&[("HOME", Path::new("/home/x")), ("PARINN_HOME", &parinn)]);
 
     assert_eq!(check(Place::ParleyInnHome, &var, temp.path()), Ok(parinn));
 }
@@ -225,7 +225,10 @@ fn a_refusal_says_which_place_it_kept_out() {
     let var = vars(&[("HOME", real)]);
 
     for (place, what) in [
-        (Place::ParleyInnHome, "the ParleyInn home at /home/x/.cairn"),
+        (
+            Place::ParleyInnHome,
+            "the ParleyInn home at /home/x/.parinn",
+        ),
         (
             Place::ClaudeConfig,
             "Claude Code's configuration directory at /home/x/.claude",
@@ -313,7 +316,7 @@ fn resolve_reads_the_environment_of_the_process() {
     if let Some(home) = env::var_os(CHILD) {
         let home = PathBuf::from(home);
         assert_eq!(resolve(Place::UserHome), home);
-        assert_eq!(resolve(Place::ParleyInnHome), home.join(".cairn"));
+        assert_eq!(resolve(Place::ParleyInnHome), home.join(".parinn"));
         assert_eq!(resolve(Place::ClaudeConfig), home.join(".claude"));
         assert_eq!(resolve(Place::ClaudeJson), home.join(".claude.json"));
         return;

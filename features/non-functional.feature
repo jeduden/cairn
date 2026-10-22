@@ -81,7 +81,7 @@ Feature: Non-functional requirements (NFR)
       | landmark builder panic                  | 0    | empty output and no injection |
       | untrusted text reaching a restore block | 1    | no injection (fail closed)    |
       | network access attempted                | 1    | no injection (fail closed)    |
-      | CAIRN_HOME of another UID               | 1    | no injection (fail closed)    |
+      | PARINN_HOME of another UID               | 1    | no injection (fail closed)    |
 
   @NFR-07 @pending
   Scenario: the store stays consistent when a process is killed at any point

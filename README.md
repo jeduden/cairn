@@ -84,10 +84,9 @@ This repository holds:
   signed release pipeline, every gate written in Rust;
 - the delivery plans in [PLAN.md](PLAN.md).
 
-Existing homes and records remain readable. The home path (`~/.cairn`),
-`CAIRN_HOME`, stored `cairn:room/` addresses, and `Cairn-Room:` and
-`Cairn-Link:` commit trailers keep their established spellings. The executable
-and new release assets use `parinn`.
+The executable is `parinn`. Its home is `~/.parinn`, or the directory
+`PARINN_HOME` names. Rooms are addressed as `parinn:room/…`, and commit
+trailers read `ParleyInn-Room:` and `ParleyInn-Link:`.
 
 <?include
 file: docs/srs/invariants.md

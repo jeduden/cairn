@@ -16,7 +16,7 @@ pub mod verify;
 /// What can go wrong administering the home.
 #[derive(Debug)]
 pub enum AdminError {
-    /// Neither `CAIRN_HOME` nor `HOME` names a home.
+    /// Neither `PARINN_HOME` nor `HOME` names a home.
     NoHome,
     /// A directory of the home cannot be made.
     Io {
@@ -56,7 +56,7 @@ pub enum AdminError {
 impl fmt::Display for AdminError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::NoHome => f.write_str("no home: set CAIRN_HOME or HOME"),
+            Self::NoHome => f.write_str("no home: set PARINN_HOME or HOME"),
             Self::Io { path, source } => write!(f, "{}: {source}", path.display()),
             Self::Key(e) => write!(f, "{e}"),
             Self::Store(e) => write!(f, "{e}"),
@@ -82,10 +82,10 @@ impl fmt::Display for AdminError {
                 write!(f, "{}: want {{\"id\": \"<home id>\"}}", path.display())
             }
             Self::HomeIdMismatch => {
-                f.write_str("the home id CAIRN_HOME_ID supplies does not match the home's")
+                f.write_str("the home id PARINN_HOME_ID supplies does not match the home's")
             }
             Self::HomeIdMissing => {
-                f.write_str("the home is bound to a home id, and CAIRN_HOME_ID supplies none")
+                f.write_str("the home is bound to a home id, and PARINN_HOME_ID supplies none")
             }
         }
     }

@@ -131,7 +131,7 @@ fn snapshot(root: &Path) -> Result<Snapshot, String> {
 }
 
 #[given(
-    regex = r#"^the store path "(CAIRN_HOME|store database|payload store)" has mode "([0-7]{4})" and belongs to the OS user "(running UID|another UID)"$"#
+    regex = r#"^the store path "(PARINN_HOME|store database|payload store)" has mode "([0-7]{4})" and belongs to the OS user "(running UID|another UID)"$"#
 )]
 fn store_path(w: &mut World, which: String, mode: String, user: String) -> Result<(), String> {
     use std::os::unix::fs::PermissionsExt;
@@ -147,7 +147,7 @@ fn store_path(w: &mut World, which: String, mode: String, user: String) -> Resul
     fs::set_permissions(&payload, fs::Permissions::from_mode(0o600)).map_err(|e| e.to_string())?;
 
     let path = match which.as_str() {
-        "CAIRN_HOME" => home.root().to_path_buf(),
+        "PARINN_HOME" => home.root().to_path_buf(),
         "store database" => home.store(),
         _ => payload,
     };
@@ -183,7 +183,7 @@ fn configured_home_id(w: &mut World, id: String) -> Result<(), String> {
 
 #[given(regex = r#"^the environment supplies home id "([^"]+)"$"#)]
 fn supplied_home_id(w: &mut World, id: String) {
-    set_env(w, "CAIRN_HOME_ID", &id);
+    set_env(w, "PARINN_HOME_ID", &id);
 }
 
 #[then(regex = r#"^the error names "([^"]+)" and the permission problem$"#)]

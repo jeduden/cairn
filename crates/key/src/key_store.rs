@@ -23,7 +23,7 @@ use crate::KeyError;
 use crate::file::{read_secret, write_secret};
 
 /// The label a home's keychain account is derived under.
-const ACCOUNT: &[u8] = b"cairn key store account v1\0";
+const ACCOUNT: &[u8] = b"parinn key store account v1\0";
 
 /// One entry of a key store: the place of one key.
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -7,7 +7,7 @@
 //! Each hook's budget and harness timeout are §9.1's and those ParleyInn
 //! installs it with (ASM-10). The development build's seams stand the
 //! clock still (`PARINN_TEST_CLOCK`) and hang a handler until it is
-//! killed (`CAIRN_TEST_FAULT=hook-hang`). The row that times a handler
+//! killed (`PARINN_TEST_FAULT=hook-hang`). The row that times a handler
 //! against its budget runs the release build, which has no seams, so
 //! it needs `cargo build --release -p parinn` first.
 
@@ -198,7 +198,7 @@ fn kill_hook(w: &mut World, hook: &str, at: u64) -> Result<(), String> {
         w,
         &["hook", hook],
         &[
-            ("CAIRN_TEST_FAULT", "hook-hang"),
+            ("PARINN_TEST_FAULT", "hook-hang"),
             ("PARINN_TEST_CLOCK", &at),
             (HOOK_BUDGET, "60000"),
         ],

@@ -83,7 +83,7 @@ Feature: Room view (VIEW)
   Scenario: Catch up is derived deterministically from the record and a starting point
     Given an isolated ParleyInn home
     And rooms with capture gaps, an unsynced writer, a tombstone, a voided branch link and finished runs since a starting point
-    And a head receipt of chain heads outside CAIRN_HOME
+    And a head receipt of chain heads outside PARINN_HOME
     When the person opens Catch up at that starting point
     Then it shows the starting point it used and where it came from, and links every line to its events
     And it lists capture gaps, uningested transcripts, risen failure counters and unsynced writers apart from rooms with no activity
@@ -113,7 +113,7 @@ Feature: Room view (VIEW)
   Scenario: every room shows its integrity status and the room view writes a head receipt outside the home
     Given an isolated ParleyInn home
     And a room whose writer's chain breaks at one event
-    When the person opens the room's Room page and, from its verify panel, writes a head receipt to a path outside CAIRN_HOME
+    When the person opens the room's Room page and, from its verify panel, writes a head receipt to a path outside PARINN_HOME
     Then the room shows its integrity status at all times, one of §9.7.5's seven values, here "broken"
     And every later event of that writer is marked "unverified" wherever it is shown, including in recall results
     And a writer with a segment refused under REC-21 has the integrity status "refused", which a rebuild derives from the recorded refusal alone

@@ -3,7 +3,7 @@
 //! heads give. The steps every record scenario shares are here too: an
 //! isolated home, and the person running a `parinn` command, which
 //! starts the built core executable confined to its boundary (ENG-12)
-//! with `HOME` and `CAIRN_HOME` in the scenario's own home (ENG-14).
+//! with `HOME` and `PARINN_HOME` in the scenario's own home (ENG-14).
 //!
 //! A record a scenario needs before its command runs is built through
 //! the product crates directly, as the core itself would build it.
@@ -37,7 +37,7 @@ pub struct RecordSteps {
     /// the wall-clock time its transcript gave each of its events.
     writers: Vec<(WriterId, Vec<String>)>,
     /// Variables a step set in the environment of every command the
-    /// scenario starts after it, beside `HOME` and `CAIRN_HOME`.
+    /// scenario starts after it, beside `HOME` and `PARINN_HOME`.
     env: Vec<(String, String)>,
 }
 
@@ -47,7 +47,7 @@ fn rec(w: &mut World) -> &mut RecordSteps {
 
 /// The scenario's home, as the core finds it.
 pub fn home(w: &World) -> Result<Home, String> {
-    Home::locate(Some(w.cairn_home.as_os_str()), None).map_err(|e| e.to_string())
+    Home::locate(Some(w.parinn_home.as_os_str()), None).map_err(|e| e.to_string())
 }
 
 /// The node's first start in the scenario's home, as the core makes
@@ -62,10 +62,10 @@ pub fn first_start(w: &World) -> Result<Home, String> {
 
 #[given(regex = r"^an isolated ParleyInn home$")]
 fn isolated_home(w: &mut World) -> Result<(), String> {
-    if !w.cairn_home.starts_with(&w.home) || w.cairn_home.exists() {
+    if !w.parinn_home.starts_with(&w.home) || w.parinn_home.exists() {
         return Err(format!(
             "the ParleyInn home {} is not a fresh one inside the scenario's home",
-            w.cairn_home.display()
+            w.parinn_home.display()
         ));
     }
     Ok(())
@@ -202,14 +202,14 @@ pub fn run_core_at_terminal(w: &mut World, args: &[&str]) -> Result<(), String> 
 }
 
 /// The environment a command starts with beside `HOME` and
-/// `CAIRN_HOME`: managed policy read from inside the scenario's home,
+/// `PARINN_HOME`: managed policy read from inside the scenario's home,
 /// never the machine's (ENG-14), a hook budget no development build
 /// reaches on a loaded machine unless a step sets the hook's own
 /// (NFR-02), then what the steps set.
 pub fn environment(w: &mut World) -> Vec<(String, String)> {
     let managed = w.home.join(MANAGED_POLICY).display().to_string();
     let mut env = vec![
-        ("CAIRN_TEST_MANAGED_POLICY".to_owned(), managed),
+        ("PARINN_TEST_MANAGED_POLICY".to_owned(), managed),
         (HOOK_BUDGET.to_owned(), LENIENT_BUDGET_MS.to_owned()),
     ];
     env.extend(rec(w).env.iter().cloned());

@@ -38,7 +38,7 @@ pub enum Coverage {
 pub enum Fixture {
     /// Nothing: the core starts in the benchmark's own environment.
     None,
-    /// A fresh home, `HOME` and `CAIRN_HOME` both inside it, holding one
+    /// A fresh home, `HOME` and `PARINN_HOME` both inside it, holding one
     /// transcript of this many lines under its transcript roots, taken
     /// from a recorded Claude Code transcript.
     Transcript { lines: usize },

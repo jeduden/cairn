@@ -1,13 +1,14 @@
 ---
 id: ADR-2610221545
-title: "The product is named ParleyInn and its executable parinn"
+title: "The product is named ParleyInn and every spelling follows"
 status: proposed
 summary: >-
   The invariants I1 to I10, PRV-10 to PRV-13 and the rest of the SRS name
-  the product ParleyInn instead of Cairn, and the executable and crate are
-  parinn. No invariant or requirement changes meaning. Storage and protocol
-  spellings that existing records and peers read keep the cairn name. The
-  security reviewer's approval is recorded here, as ENG-29 asks.
+  the product ParleyInn instead of Cairn. The executable, crate, home,
+  environment variables, addresses, trailers, file names, on-disk labels
+  and Keychain service follow as parinn or ParleyInn. No invariant or
+  requirement changes meaning. There are no installations to migrate.
+  The security reviewer's approval is recorded here, as ENG-29 asks.
 ---
 # ADR-2610221545: The product is named ParleyInn
 
@@ -27,40 +28,48 @@ rename counts as a change to it.
 
 ## Decision
 
-The product's name in prose is ParleyInn, and the executable, crate, commands,
+The product's name in prose is ParleyInn. The executable, crate, commands,
 release assets and MCP server name are `parinn`.
 
-Each of I1 to I10 keeps its meaning. Only the product name in its text changes,
-and with it the line wrapping of the include copies. PRV-10 to PRV-13 change
-only the product name. The reach and confinement gates (SEC-01, ENG-16) and the
-I10 determinism gate follow the renamed crate and binary and are not loosened.
-The I2 review these four requirements need before they ship (ENG-29) is
-unchanged by this record.
+Each of I1 to I10 keeps its meaning. Only the product name in its text
+changes, and with it the line wrapping of the include copies. PRV-10 to
+PRV-13 change only the product name. The reach and confinement gates
+(SEC-01, ENG-16) and the I10 determinism gate follow the renamed crate and
+binary and are not loosened.
 
-Some spellings are read by existing records, peers or tooling. They keep the
-`cairn` name. These are the home `~/.cairn`, `CAIRN_HOME` and its sibling
-variables, `cairn:` addresses, the `Cairn-Room:` and `Cairn-Link:` trailers,
-`.cairn.toml` and `logs/cairn.jsonl`. The payload, node-identity, key-store,
-search-index and Keychain labels keep it too. Renaming them changes what an
-existing home or peer resolves. That belongs to its own decision, with a
-format version.
+Every other spelling follows the name, because two names for one product
+confuse people and agents alike:
+
+- The home is `~/.parinn`, or the directory `PARINN_HOME` names. The
+  other environment variables move from the `CAIRN_` prefix to `PARINN_`.
+- Addresses read `parinn:room/…`. The commit trailers are `ParleyInn-Room:`,
+  `ParleyInn-Link:` and `ParleyInn-Session:`.
+- The repository configuration is `.parinn.toml`, and the structured log is
+  `logs/parinn.jsonl`.
+- The domain-separation labels that name payloads and derive identities
+  start with `parinn`, and the macOS Keychain service is `parinn`.
+  [ADR-2610171300](ADR-2610171300-key-stores.md) says so too.
+- Plans, research notes and earlier decision records use the new name, so
+  the history does not read as a second product. Recorded harness sessions
+  under `testdata/` stay as captured.
+
+The stakeholder decided on 22 October 2026 that nothing keeps the old
+spelling. No installation exists, so no home, key or peer needs a
+migration, and the format versions stay at 1.
 
 ## Alternatives
 
 - **Keep the name Cairn.** No edit to an invariant. But the stakeholder
   chose the new name.
-- **Rename the storage and protocol spellings too.** One name everywhere.
-  But it changes derived on-disk names and keychain accounts without a
-  format bump. It also contradicts
-  [ADR-2610171300](ADR-2610171300-key-stores.md), which names the Keychain
-  service `cairn`. The stakeholder noted there are no installations today.
-  So this stays open for a later record.
+- **Rename only the product and the executable.** That leaves storage
+  and protocol spellings under the old name. It would need a later record
+  with a format version, once installations exist.
 
 ## Consequences
 
-- Scripts and hooks that call `cairn` must call `parinn`; the Unreleased
+- Scripts and hooks that call `cairn` must call `parinn`. The Unreleased
   section of CHANGELOG.md says so (ENG-23).
-- The domain model, SRS and ADRs still carry some "Cairn" mentions. Moving them
-  to ParleyInn follows the domain-model agent's ruling.
+- A home made under the old names is not read. No release has shipped, so
+  none is known.
 - Status stays `proposed` until the named human security reviewer, the
   stakeholder, approves. Setting it to `accepted` records that approval.

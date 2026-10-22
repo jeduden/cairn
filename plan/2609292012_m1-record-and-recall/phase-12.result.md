@@ -73,7 +73,7 @@ For the stakeholder:
   "mixed-provenance" has no steps, and no live ingest (phase 10) reads
   it. `trust "trusted"` needs phase 11, `scope "rooms"` phase 13. Unit
   tests in `mcp` and `search` prove its filters, cap and damping.
-- `@SEC-04`'s deadline row sets `CAIRN_TEST_QUERY_DEADLINE_MS`, as no
+- `@SEC-04`'s deadline row sets `PARINN_TEST_QUERY_DEADLINE_MS`, as no
   bounded search runs for 2 s. NFR-03 is stated at 10M events; the
   evidence is 1M.
 - Stakeholder paths, each in its own commit: the `search` crate, the
@@ -81,15 +81,15 @@ For the stakeholder:
 
 Parked:
 
-- `cairn verify` naming a left-out writer or a seq from 2^28 on: M3.
+- `parinn verify` naming a left-out writer or a seq from 2^28 on: M3.
 - Purge and quarantine must reach the index (`row_id_of`, FTS5
   `secure-delete`): phase 14.
 - Settings for the indexing cap and the search deadline: ADM-04.
-- Recall scopes, trust and `run`: phases 9 to 13. `cairn event search`:
+- Recall scopes, trust and `run`: phases 9 to 13. `parinn event search`:
   M7.
 
 Phase 13 needs `score` in its golden files, RCL-05's scopes and RCL-07.
 
-- `cairn::forks::refuse` and `fork_conflict` (PEER-10, REC-21) are
+- `parinn::forks::refuse` and `fork_conflict` (PEER-10, REC-21) are
   groundwork: no M1 path brings two histories together. ADM-06's restore
   (M3), REC-23's import (M9) and a peer's sync (M8) will call it.

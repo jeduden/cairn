@@ -439,9 +439,9 @@ fn an_unconfined_start_hands_its_environment_and_input_to_the_program() {
     let out = unconfined()
         .run_in(
             Path::new("sh"),
-            &["-c", "printf '%s:' \"$CAIRN_HOME_ID\"; cat"],
+            &["-c", "printf '%s:' \"$PARINN_HOME_ID\"; cat"],
             home.path(),
-            &[("CAIRN_HOME_ID", "home-b")],
+            &[("PARINN_HOME_ID", "home-b")],
             Some(b"in"),
         )
         .unwrap();
@@ -457,9 +457,9 @@ fn a_confined_start_hands_its_environment_to_the_program() {
     let out = c
         .run_in(
             Path::new("sh"),
-            &["-c", "printf '%s' \"$CAIRN_TEST_FAULT\""],
+            &["-c", "printf '%s' \"$PARINN_TEST_FAULT\""],
             home.path(),
-            &[("CAIRN_TEST_FAULT", "hook-panic")],
+            &[("PARINN_TEST_FAULT", "hook-panic")],
             None,
         )
         .unwrap();
@@ -475,9 +475,12 @@ fn a_start_s_environment_never_moves_it_out_of_its_isolated_home() {
     let out = unconfined()
         .run_in(
             Path::new("sh"),
-            &["-c", "printf '%s|%s' \"$HOME\" \"$CAIRN_HOME\""],
+            &["-c", "printf '%s|%s' \"$HOME\" \"$PARINN_HOME\""],
             home.path(),
-            &[("HOME", "/elsewhere"), ("CAIRN_HOME", "/elsewhere/.cairn")],
+            &[
+                ("HOME", "/elsewhere"),
+                ("PARINN_HOME", "/elsewhere/.parinn"),
+            ],
             None,
         )
         .unwrap();
@@ -487,7 +490,7 @@ fn a_start_s_environment_never_moves_it_out_of_its_isolated_home() {
         format!(
             "{}|{}",
             home.path().display(),
-            home.path().join(".cairn").display()
+            home.path().join(".parinn").display()
         )
     );
 }
@@ -542,9 +545,9 @@ fn an_unconfined_start_at_a_terminal_gives_the_program_one() {
     let out = unconfined()
         .run_at_terminal(
             Path::new("sh"),
-            &["-c", "test -t 0 && test -t 1 && echo \"$CAIRN_HOME_ID\""],
+            &["-c", "test -t 0 && test -t 1 && echo \"$PARINN_HOME_ID\""],
             home.path(),
-            &[("CAIRN_HOME_ID", "h1")],
+            &[("PARINN_HOME_ID", "h1")],
         )
         .unwrap();
 

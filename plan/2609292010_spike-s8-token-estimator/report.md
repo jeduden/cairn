@@ -52,7 +52,7 @@ servers, a one-line system prompt and a user message of `<t>\n`, the
 text, `\n</t>`, sent as stream-json input. The count is the call's input
 usage (input, cache read and cache creation tokens) minus the same
 call's usage with an empty text: the text's tokens and the two
-newlines that join it to its delimiters, as Cairn joins text into a
+newlines that join it to its delimiters, as ParleyInn joins text into a
 block. The empty-text baseline was measured before and after each run
 and never moved.
 
@@ -294,7 +294,7 @@ components.
 - Fable 5.1's extra input tokens on some base64 content are not text
   tokens and no estimator of the text bounds them. Whether they count
   against the context the restore block shares is a question for the
-  model, not for Cairn.
+  model, not for ParleyInn.
 
 No requirement closes and no scenario leaves `@pending`. The spike
 gathers evidence for §8.4, NFR-01, NFR-03, NFR-04 and NFR-09.

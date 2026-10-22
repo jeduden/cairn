@@ -282,8 +282,8 @@ Report in the SRS's terms, not the source's.
 
 ## Isolation for Agents and Tests
 
-Never run a command that writes to, deletes from, or purges the real `~/.cairn`,
-`$CAIRN_HOME` or `~/.claude` of the machine you run on. Point `HOME` and
-`CAIRN_HOME` at a temporary directory first, as the test world does (ENG-14). No
-instruction here may direct an agent to run a destructive command against non-
-isolated state.
+Never run a command that writes to, deletes from, or purges the real
+`~/.parinn`, `$PARINN_HOME` or `~/.claude` of the machine you run on. Point
+`HOME` and `PARINN_HOME` at a temporary directory first, as the test world does
+(ENG-14). No instruction here may direct an agent to run a destructive command
+against non-isolated state.

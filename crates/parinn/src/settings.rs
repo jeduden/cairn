@@ -183,7 +183,7 @@ pub(crate) fn audit(ctx: &Context, operation: &'static str, f: &InForce) -> Vec<
 }
 
 /// The managed policy path a build reads: the documented one, or in a
-/// development build the one `CAIRN_TEST_MANAGED_POLICY` names.
+/// development build the one `PARINN_TEST_MANAGED_POLICY` names.
 #[must_use]
 pub fn managed_policy(dev_override: Option<std::ffi::OsString>) -> PathBuf {
     dev_override

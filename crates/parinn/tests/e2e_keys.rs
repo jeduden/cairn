@@ -149,13 +149,13 @@ fn two_device_seats_in_one_room(verified: &Value, room: &Value) {
 /// Checks that no key's seed is anywhere but its key file: not in the
 /// store, a log, the audit log or any output.
 fn no_seed_outside_its_key_file(home: &Path) {
-    let keys = files(&home.join(".cairn/keys"));
+    let keys = files(&home.join(".parinn/keys"));
     assert!(
         keys.len() >= 4,
         "{:?}",
         keys.iter().map(|k| &k.0).collect::<Vec<_>>()
     );
-    let mut elsewhere = files(&home.join(".cairn"));
+    let mut elsewhere = files(&home.join(".parinn"));
     elsewhere.retain(|(path, _)| !path.contains("/keys/"));
     for args in [&["status", "--json"][..], &["verify", "--json"]] {
         elsewhere.push(("output".to_owned(), parinn(home, args).stdout));

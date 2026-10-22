@@ -15,7 +15,7 @@ illustrative; the implementation MAY differ as long as every constraint marked
 ## 8.1 Home layout
 
 ```text
-$CAIRN_HOME/                          0700, belonging to one OS user       (N)
+$PARINN_HOME/                          0700, belonging to one OS user       (N)
 ├── config.toml                       the principal's configuration        0600
 ├── home.json                         home id binding (home.id, SEC-03)    0600
 ├── audit/audit-NNNNNN.jsonl          hash-chained audit log               0600

@@ -17,7 +17,7 @@ use std::process;
 pub enum Place {
     /// The user's `HOME` directory.
     UserHome,
-    /// A ParleyInn home: `CAIRN_HOME`, else `.cairn` in the user's `HOME`.
+    /// A ParleyInn home: `PARINN_HOME`, else `.parinn` in the user's `HOME`.
     ParleyInnHome,
     /// Claude Code's configuration directory: `CLAUDE_CONFIG_DIR`, else
     /// `.claude` in the user's `HOME`.
@@ -87,7 +87,7 @@ impl fmt::Display for Refusal {
             Self::Outside { place, path, temp } => write!(
                 f,
                 "refusing to resolve {} at {}: it is not under the temporary directory {}; \
-                 point HOME and CAIRN_HOME at a testkit::TempDir first (ENG-14)",
+                 point HOME and PARINN_HOME at a testkit::TempDir first (ENG-14)",
                 place.describe(),
                 path.display(),
                 temp.display()
@@ -102,9 +102,9 @@ fn locate(place: Place, var: Var<'_>) -> Result<PathBuf, Refusal> {
     let config = || var("CLAUDE_CONFIG_DIR").map(PathBuf::from);
     match place {
         Place::UserHome => home(),
-        Place::ParleyInnHome => match var("CAIRN_HOME") {
+        Place::ParleyInnHome => match var("PARINN_HOME") {
             Some(parinn) => Ok(PathBuf::from(parinn)),
-            None => home().map(|h| h.join(".cairn")),
+            None => home().map(|h| h.join(".parinn")),
         },
         Place::ClaudeConfig => match config() {
             Some(dir) => Ok(dir),

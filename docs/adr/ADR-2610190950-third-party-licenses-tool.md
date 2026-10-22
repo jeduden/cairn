@@ -6,13 +6,13 @@ summary: >-
   A small tool under tooling/ reads Cargo.lock and cargo metadata to
   check every crate's license text and to regenerate one committed
   THIRD_PARTY_LICENSES file per release target, which that target's
-  executable embeds and prints with cairn licenses. It adds no
+  executable embeds and prints with parinn licenses. It adds no
   dependency to the core or the repository.
 ---
 # ADR-2610190950: Third-party license texts embedded from an in-repository tool
 
 Proposal. This record proposes the in-repository tool, a file per
-release target, and the command name `cairn licenses`. It stays
+release target, and the command name `parinn licenses`. It stays
 `proposed` until the stakeholder rules on the pull request.
 
 ## Context
@@ -43,7 +43,7 @@ crate.
 a closed list read from the build workflow. Each file covers exactly the
 crates linked for that target, from `cargo metadata --filter-platform`,
 plus that target's non-crate code. A target's build embeds its own file
-with `include_str!` through a `cfg`-selected path, and `cairn licenses`
+with `include_str!` through a `cfg`-selected path, and `parinn licenses`
 prints it. CI regenerates every target's file and fails the pull
 request when any committed file differs, so a developer who adds a
 dependency regenerates them in the same change. A crate with no license
@@ -59,7 +59,7 @@ of the other's crates. Targets that link the same crates, such as the two
 musl targets, carry identical files.
 A target in the workflow with no file, or a file for no target, fails
 the build. The release build runs each built executable's
-`cairn licenses` on its own platform and compares it with that target's
+`parinn licenses` on its own platform and compares it with that target's
 regenerated file. The file is inside the executable, so the existing
 signature and attestations (ENG-20) cover it and no separate asset
 exists.
@@ -79,12 +79,12 @@ This record proposes (b) for exactness. Its one extra failure mode, the
 
 **Constraints.** The core gains no dependency: the text is a `&str`
 compiled in, so ENG-18's list and its ten-dependency target are
-unchanged. It gains no network access: `cairn licenses` only prints,
+unchanged. It gains no network access: `parinn licenses` only prints,
 which I4 and SEC-01 allow, and the crate's clippy and reach test still
 pass. The tool uses `serde_json`, which ADR-2610142221 accepts, and
 adds no module. Each binary grows by the size of its target's text, a
 few hundred kilobytes at most for the current tree; no requirement
-bounds binary size. `cairn licenses` is a new node-wide utility name.
+bounds binary size. `parinn licenses` is a new node-wide utility name.
 The domain model's list names it.
 
 ## Alternatives
@@ -131,6 +131,6 @@ ENG-31, which name a tool in the repository.
 - Adding a release target adds its file; the build fails until it has one.
 - The non-crate entries are a short list in the tool, reviewed on the
   stakeholder's paths; a new compiled-in library needs a line there.
-- Every executable is a little larger and answers `cairn licenses`.
+- Every executable is a little larger and answers `parinn licenses`.
 - The requirements name a tool in the repository (ENG-30, ENG-31), so
   choosing `cargo-about` instead would change those rows.

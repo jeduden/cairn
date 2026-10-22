@@ -41,7 +41,7 @@ fn adm(w: &mut World) -> &mut AdministrationSteps {
 pub fn configure(w: &World, text: &str) -> Result<(), String> {
     let home = crate::record::home(w)?;
     home.create().map_err(|e| e.to_string())?;
-    let path = w.cairn_home.join("config.toml");
+    let path = w.parinn_home.join("config.toml");
     fs::write(&path, text).map_err(|e| format!("{}: {e}", path.display()))?;
     fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).map_err(|e| e.to_string())
 }
@@ -89,13 +89,13 @@ fn config_containing(w: &mut World, setting: String) -> Result<(), String> {
     configure(w, &format!("{setting}\n"))
 }
 
-/// A repository holding the scenario's home: `.cairn.toml` beside a
+/// A repository holding the scenario's home: `.parinn.toml` beside a
 /// `.git` at its top, the working directory every command starts in.
-#[given(regex = r#"^a repository "\.cairn\.toml" containing "([^"]*)"$"#)]
+#[given(regex = r#"^a repository "\.parinn\.toml" containing "([^"]*)"$"#)]
 fn repository_containing(w: &mut World, setting: String) -> Result<(), String> {
     let git = w.home.join(".git");
     fs::create_dir_all(&git).map_err(|e| format!("{}: {e}", git.display()))?;
-    let path = w.home.join(".cairn.toml");
+    let path = w.home.join(".parinn.toml");
     fs::write(&path, format!("{setting}\n")).map_err(|e| format!("{}: {e}", path.display()))
 }
 

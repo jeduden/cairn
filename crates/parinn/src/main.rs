@@ -27,23 +27,23 @@ fn main() -> ExitCode {
     let clock = move || fixed.unwrap_or_else(now);
     let ctx = parinn::Context {
         build: &parinn::BUILD,
-        cairn_home: std::env::var_os("CAIRN_HOME"),
+        parinn_home: std::env::var_os("PARINN_HOME"),
         home: std::env::var_os("HOME"),
-        home_id: std::env::var_os("CAIRN_HOME_ID"),
+        home_id: std::env::var_os("PARINN_HOME_ID"),
         // The development build's seam for the `@ENG-04` scenario; a
         // release build never reads it.
         // The development build's seam for the `@NFR-02` scenario.
         hook_hangs: cfg!(debug_assertions)
-            && std::env::var_os("CAIRN_TEST_FAULT").is_some_and(|v| v == "hook-hang"),
+            && std::env::var_os("PARINN_TEST_FAULT").is_some_and(|v| v == "hook-hang"),
         hook_panics: cfg!(debug_assertions)
-            && std::env::var_os("CAIRN_TEST_FAULT").is_some_and(|v| v == "hook-panic"),
+            && std::env::var_os("PARINN_TEST_FAULT").is_some_and(|v| v == "hook-panic"),
         terminal: terminal(),
         working_dir: std::env::current_dir().ok(),
         // A development build's seam for the tests; a release build
         // reads only the documented path.
         managed_policy: parinn::managed_policy(
             cfg!(debug_assertions)
-                .then(|| std::env::var_os("CAIRN_TEST_MANAGED_POLICY"))
+                .then(|| std::env::var_os("PARINN_TEST_MANAGED_POLICY"))
                 .flatten(),
         ),
         // A development build's seam for the tests; a release build
@@ -83,9 +83,9 @@ fn main() -> ExitCode {
     };
 
     let log = parinn::structured_log(
-        std::env::var_os("CAIRN_HOME"),
+        std::env::var_os("PARINN_HOME"),
         std::env::var_os("HOME"),
-        std::env::var_os("CAIRN_HOME_ID"),
+        std::env::var_os("PARINN_HOME_ID"),
         parinn::LogSettings {
             managed: ctx.managed_policy.clone(),
             os_user: ctx.os_user,

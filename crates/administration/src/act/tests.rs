@@ -21,7 +21,7 @@ struct Started {
 
 fn started() -> Started {
     let dir = TempDir::new().unwrap();
-    let home = Home::locate(Some(dir.path().join(".cairn").as_os_str()), None).unwrap();
+    let home = Home::locate(Some(dir.path().join(".parinn").as_os_str()), None).unwrap();
     home.create().unwrap();
     let mut store = Store::open(&home.store()).unwrap();
     let node = Node::open(&home, &mut store, &mut OsEntropy).unwrap();

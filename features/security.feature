@@ -25,8 +25,8 @@ Feature: Security (SEC)
 
     Examples:
       | path           | mode | user        |
-      | CAIRN_HOME     | 0755 | running UID |
-      | CAIRN_HOME     | 0700 | another UID |
+      | PARINN_HOME     | 0755 | running UID |
+      | PARINN_HOME     | 0700 | another UID |
       | store database | 0644 | running UID |
       | payload store  | 0600 | another UID |
 
@@ -100,7 +100,7 @@ Feature: Security (SEC)
     And each secret is replaced by "[REDACTED:<rule>]", with no hash or other value derived from the secret
     And no stored event, segment or export carries a value from which the secret could be confirmed
     And any correlation of the repeated AWS access key lives only in a node-local index keyed under this node's own at-rest key
-    And with a repository ".cairn.toml" adding the redaction pattern "(?s).+", no stored text is redacted by that pattern, and an audit entry and a counter record the repository setting as ignored
+    And with a repository ".parinn.toml" adding the redaction pattern "(?s).+", no stored text is redacted by that pattern, and an audit entry and a counter record the repository setting as ignored
     When the person runs "parinn purge --run secrets"
     Then the correlation index contains no entry for the purged events
 
@@ -136,7 +136,7 @@ Feature: Security (SEC)
   @SEC-11 @P0 @I2 @I7 @pending
   Scenario Outline: repository configuration may only tighten security settings
     Given an isolated ParleyInn home
-    And a repository ".cairn.toml" setting "<key>" to "<value>"
+    And a repository ".parinn.toml" setting "<key>" to "<value>"
     When the person runs "parinn status --json"
     Then the effective value of "<key>" is unchanged by the repository configuration
     And an audit entry records "repository configuration attempted to loosen <key>", and a counter counts it
@@ -259,7 +259,7 @@ Feature: Security (SEC)
     And a configuration turning it off applies with no acceptance, from then on its entry point does not run, and "parinn configuration accept", at a terminal with nothing more asked, records it as the cut act turning it off
     And an HTTP request whose Host or Origin is not its own, and any cross-origin HTTP request, is rejected and audited
     And it refuses to start while the core keeps recording, an audit entry and a counter recording why, when the managed policy file at the documented system path is one the person can write or is unparsable, or when managed policy disables B1
-    And it starts only from the person's config.toml after a widening act recorded that file's digest, stays off while managed policy turns it off, and stays off when a repository ".cairn.toml" turns it on, an audit entry and a counter recording the ignored key
+    And it starts only from the person's config.toml after a widening act recorded that file's digest, stays off while managed policy turns it off, and stays off when a repository ".parinn.toml" turns it on, an audit entry and a counter recording the ignored key
 
   @SEC-21 @P1 @I2 @I4 @pending
   Scenario: the room view renders record content as inert text

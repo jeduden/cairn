@@ -38,7 +38,7 @@ fn event_search_returns_previews_with_scores_in_the_envelope() {
     let item = &items[0];
     assert_eq!(
         item["address"],
-        format!("cairn:room/{}/w/{}/2", f.ingested.room, f.ingested.writer)
+        format!("parinn:room/{}/w/{}/2", f.ingested.room, f.ingested.writer)
     );
     assert_eq!(item["author"], f.ingested.seat.to_string());
     assert_eq!(item["origin"], "ingested");
@@ -175,7 +175,7 @@ fn a_bad_argument_is_refused_with_fixed_text() {
 #[test]
 fn a_search_past_its_deadline_is_cancelled_counted_and_told_in_fixed_text() {
     let dir = TempDir::new().unwrap();
-    let home = Home::locate(Some(dir.path().join(".cairn").as_os_str()), None).unwrap();
+    let home = Home::locate(Some(dir.path().join(".parinn").as_os_str()), None).unwrap();
     let path = dir.path().join("t.jsonl");
     std::fs::write(&path, "alpha pad\n".repeat(2100)).unwrap();
     ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();
@@ -232,7 +232,7 @@ fn a_store_with_no_index_makes_a_search_say_to_run_verify() {
 #[test]
 fn hits_of_one_run_share_its_author_and_origin() {
     let dir = TempDir::new().unwrap();
-    let home = Home::locate(Some(dir.path().join(".cairn").as_os_str()), None).unwrap();
+    let home = Home::locate(Some(dir.path().join(".parinn").as_os_str()), None).unwrap();
     let path = dir.path().join("t.jsonl");
     std::fs::write(&path, "alpha one\nalpha two\nbeta\n").unwrap();
     let ingested = ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();

@@ -148,12 +148,12 @@ pub fn is_isolated(home: Option<&OsStr>, marker: Option<&OsStr>, temp: &Path) ->
     }
 }
 
-/// Points `command` at `home`: its `HOME`, a `CAIRN_HOME` inside it,
+/// Points `command` at `home`: its `HOME`, a `PARINN_HOME` inside it,
 /// and the marker that says the process is isolated.
 pub fn isolate<'a>(command: &'a mut Command, home: &Path) -> &'a mut Command {
     command
         .env("HOME", home)
-        .env("CAIRN_HOME", home.join(".cairn"))
+        .env("PARINN_HOME", home.join(".parinn"))
         .env(ISOLATED_HOME, home)
 }
 

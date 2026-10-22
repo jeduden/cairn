@@ -6,7 +6,7 @@ result: true
 summary: >-
   @REC-09 off @pending and passing. Content above the payload threshold
   goes to the payload store under a keyed name; segments close at turn
-  ends; a newer store or segment is refused, cairn status exits 3.
+  ends; a newer store or segment is refused, parinn status exits 3.
   REC-12, REC-19's segment and ADM-05's status steps pass narrowed;
   10,000 kills of ingest run nightly; NFR-09 and REC-17's secret frozen.
 ---
@@ -24,17 +24,17 @@ Outcome:
   a well-formed transcript timestamp is kept as metadata, else none.
 - REC-19's segment closing: a core append closes the segment it ends;
   ingest closes one at each turn end and subagent end, and at the end.
-  `cairn verify` checks segments tile each log; it and `cairn status`
+  `parinn verify` checks segments tile each log; it and `parinn status`
   report each writer chain ended without a closed segment.
 - ADM-05's M1 part (ruling 3): every segment and the store carry
   format version 1. A newer store is refused before anything in it
-  changes; `cairn status` and `cairn verify` exit 3 naming it, as they
+  changes; `parinn status` and `parinn verify` exit 3 naming it, as they
   do a newer segment.
 - ENG-08's first property: `store/tests/seq_property.rs`, 64 seeded
   random records over two connections, keeps each writer gap-free.
 - ENG-06 over ingest: `e2e_crash_consistency.rs` kills the confined
   core at seeded points; 1,000 kills (seed 11) passed locally. It found
-  that a first start cut short failed `cairn verify`, now fixed.
+  that a first start cut short failed `parinn verify`, now fixed.
 - Frozen with evidence: NFR-09's overhead, 1.34x over every recording
   (`store_overhead.rs`), once events moved to a rowid table (1.78x
   before); REC-17's 256-bit secret (an ingest unit test).
@@ -58,7 +58,7 @@ For the stakeholder:
 
 - SEC-05's third row cannot pass as written: SEC-08 redacts each JSON
   string whole, PRV-08 parses the line whole. `@REC-12` waits on
-  `cairn event expand` (phase 13).
+  `parinn event expand` (phase 13).
 - REC-12's chain head step runs two seeded homes, as the core has no
   entropy seam; REC-09's export step checks names, there being no
   export. Confirm both readings.
@@ -74,5 +74,5 @@ Parked:
   cleaning it is purge's (phase 14) or SEC-31's.
 - The 30 s and harness-session-end closes, and excluding a writer that
   still appends from the open-segment report: phase 10.
-- `cairn migrate` and its backup: M3. `doctor` and principal acts
+- `parinn migrate` and its backup: M3. `doctor` and principal acts
   refuse a newer store with exit 1, not 3.

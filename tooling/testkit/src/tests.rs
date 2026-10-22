@@ -62,7 +62,7 @@ fn create_unique_passes_other_errors_on() {
 }
 
 #[test]
-fn isolate_points_home_cairn_home_and_the_working_directory_at_the_directory() {
+fn isolate_points_home_parinn_home_and_the_working_directory_at_the_directory() {
     let mut command = Command::new("x");
 
     isolate(&mut command, Path::new("/tmp/h"));
@@ -79,8 +79,8 @@ fn isolate_points_home_cairn_home_and_the_working_directory_at_the_directory() {
     assert_eq!(
         envs,
         [
-            ("CAIRN_HOME".into(), "/tmp/h/.cairn".into()),
-            ("HOME".into(), "/tmp/h".into())
+            ("HOME".into(), "/tmp/h".into()),
+            ("PARINN_HOME".into(), "/tmp/h/.parinn".into())
         ]
     );
     assert_eq!(command.get_current_dir(), Some(Path::new("/tmp/h")));

@@ -98,8 +98,8 @@ impl Process {
         }
     }
 
-    pub(crate) fn cairn_home(&self) -> std::path::PathBuf {
-        self.dir.path().join(".cairn")
+    pub(crate) fn parinn_home(&self) -> std::path::PathBuf {
+        self.dir.path().join(".parinn")
     }
 
     pub(crate) fn invoke(&self, args: &[&str], build: &Build) -> (u8, String, String) {
@@ -130,7 +130,7 @@ impl Process {
         };
         let ctx = Context {
             build,
-            cairn_home: None,
+            parinn_home: None,
             home: Some(self.dir.path().as_os_str().to_owned()),
             home_id: self.home_id.as_ref().map(Into::into),
             hook_panics: self.hook_panics,
@@ -176,9 +176,9 @@ impl Process {
     /// Writes the principal's configuration, owner-only as the home
     /// wants it, making the home first.
     pub(crate) fn configure(&self, text: &str) {
-        let home = Home::locate(Some(self.cairn_home().as_os_str()), None).unwrap();
+        let home = Home::locate(Some(self.parinn_home().as_os_str()), None).unwrap();
         home.create().unwrap();
-        let path = self.cairn_home().join("config.toml");
+        let path = self.parinn_home().join("config.toml");
         std::fs::write(&path, text).unwrap();
         set_mode(&path, 0o600);
     }
@@ -198,7 +198,7 @@ impl Process {
     /// containing the working directory.
     pub(crate) fn repository(&self, text: &str) {
         std::fs::create_dir_all(self.dir.path().join(".git")).unwrap();
-        std::fs::write(self.dir.path().join(".cairn.toml"), text).unwrap();
+        std::fs::write(self.dir.path().join(".parinn.toml"), text).unwrap();
     }
 }
 
@@ -325,7 +325,7 @@ fn a_failed_write_is_a_failure() {
         let input = || mpsc::channel().1;
         let ctx = Context {
             build: &DEV,
-            cairn_home: Some(p.cairn_home().into_os_string()),
+            parinn_home: Some(p.parinn_home().into_os_string()),
             home: Some(p.dir.path().as_os_str().to_owned()),
             home_id: None,
             hook_panics: false,
@@ -429,7 +429,7 @@ fn ingest_redacts_by_the_principals_patterns_and_audits_each_redaction() {
             ),
         ]
     );
-    let store = std::fs::read(p.cairn_home().join("store.db")).unwrap();
+    let store = std::fs::read(p.parinn_home().join("store.db")).unwrap();
     assert!(!store.windows(13).any(|w| w == b"ACME-12345678"));
 }
 
@@ -537,7 +537,7 @@ fn ingest_audits_and_counts_each_unparsed_line_and_format_drift() {
 fn ingest_says_which_unparsed_line_or_drift_it_cannot_audit_and_still_records() {
     let p = Process::new();
     p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
-    let audit_dir = p.cairn_home().join("audit");
+    let audit_dir = p.parinn_home().join("audit");
     std::fs::remove_dir_all(&audit_dir).unwrap();
     std::fs::write(&audit_dir, "").unwrap();
     set_mode(&audit_dir, 0o600);
@@ -708,7 +708,7 @@ fn ingest_says_which_lost_transcript_source_it_cannot_audit() {
     let cut = transcript_in(&p, "-w-a", "cut-short.jsonl", b"{\"a\":1}\n{\"b\":");
     assert_eq!(p.invoke(&["ingest", "--all"], &DEV).0, EXIT_OK);
     std::fs::remove_file(&cut).unwrap();
-    let audit_dir = p.cairn_home().join("audit");
+    let audit_dir = p.parinn_home().join("audit");
     std::fs::remove_dir_all(&audit_dir).unwrap();
     std::fs::write(&audit_dir, "").unwrap();
     set_mode(&audit_dir, 0o600);
@@ -727,7 +727,7 @@ fn transcript_sources_that_cannot_be_read_fail_verify_and_status_and_are_said_by
     transcript_in(&p, "-w-a", "s1.jsonl", b"a\n");
     assert_eq!(p.invoke(&["ingest", "--all"], &DEV).0, EXIT_OK);
     std::fs::remove_file(p.dir.path().join(".claude/projects/-w-a/s1.jsonl")).unwrap();
-    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
     conn.execute_batch("DROP TABLE transcript_sources").unwrap();
     drop(conn);
 
@@ -851,7 +851,7 @@ fn verify_checks_the_record_and_counts_it() {
         .collect();
     assert_eq!(order.len(), 6);
     assert!(
-        order.iter().all(|a| a.starts_with("cairn:room/")),
+        order.iter().all(|a| a.starts_with("parinn:room/")),
         "{order:?}"
     );
 }
@@ -861,7 +861,7 @@ fn verify_exits_3_naming_where_the_chain_breaks() {
     let p = Process::new();
     let path = p.transcript("a\nb\n");
     p.invoke(&["ingest", "--path", &path], &DEV);
-    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
     conn.execute(
         "UPDATE events SET provenance = 'user' WHERE kind = 'unparsed_line' AND seq = 2",
         [],
@@ -873,7 +873,7 @@ fn verify_exits_3_naming_where_the_chain_breaks() {
 
     assert_eq!((code, out.as_str()), (EXIT_INTEGRITY, ""));
     assert!(
-        err.starts_with("parinn verify: chain broken at cairn:room/"),
+        err.starts_with("parinn verify: chain broken at parinn:room/"),
         "{err}"
     );
     assert!(
@@ -907,7 +907,7 @@ fn verify_exits_3_naming_where_the_chain_breaks() {
 /// home: a copy of that writer's log that disagrees from seq 2 on.
 /// Returns the writer and what the refusal said.
 fn refuse_a_disagreeing_copy(p: &Process) -> (String, crate::forks::Refused) {
-    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    let home = Home::locate(Some(p.parinn_home().as_os_str()), None).unwrap();
     let store = Store::open(&home.store()).unwrap();
     let writer = store
         .writers()
@@ -932,7 +932,7 @@ fn refuse_a_disagreeing_copy(p: &Process) -> (String, crate::forks::Refused) {
 }
 
 fn ctx_audit(p: &Process, o: &audit::entry::Occurrence) -> bool {
-    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    let home = Home::locate(Some(p.parinn_home().as_os_str()), None).unwrap();
     Log::new(home.audit()).append(o, p.now).is_ok()
 }
 
@@ -980,7 +980,7 @@ fn a_refused_fork_is_audited_counted_and_leaves_the_record_as_it_was() {
     let path = p.transcript("a\nb\nc\n");
     p.invoke(&["ingest", "--path", &path], &DEV);
     let digest = |p: &Process| {
-        let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+        let home = Home::locate(Some(p.parinn_home().as_os_str()), None).unwrap();
         let store = Store::open(&home.store()).unwrap();
         store
             .writers()
@@ -1011,7 +1011,7 @@ fn verify_names_a_broken_chain_before_a_refused_fork() {
     let path = p.transcript("a\nb\nc\n");
     p.invoke(&["ingest", "--path", &path], &DEV);
     refuse_a_disagreeing_copy(&p);
-    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
     conn.execute(
         "UPDATE events SET provenance = 'user' WHERE kind = 'unparsed_line' AND seq = 2",
         [],
@@ -1034,11 +1034,11 @@ fn verify_without_a_store_or_with_a_failing_one_fails() {
         err,
         format!(
             "parinn verify: no store at {}\n",
-            p.cairn_home().join("store.db").display()
+            p.parinn_home().join("store.db").display()
         )
     );
 
-    owner_only_dirs(&p.cairn_home());
+    owner_only_dirs(&p.parinn_home());
     junk_store(&p);
     let (code, _, err) = p.invoke(&["verify"], &DEV);
     assert_eq!(code, EXIT_FAILURE);
@@ -1049,7 +1049,7 @@ fn verify_without_a_store_or_with_a_failing_one_fails() {
 fn verify_reports_a_store_error_met_while_checking() {
     let p = Process::new();
     p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
-    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
     conn.execute("UPDATE seats SET room = 'x'", []).unwrap();
 
     let (code, _, err) = p.invoke(&["verify"], &DEV);
@@ -1071,7 +1071,7 @@ fn verify_reports_a_store_error_met_while_checking() {
 fn verify_reports_a_store_that_fails_while_checking() {
     let p = Process::new();
     p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
-    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
     conn.execute("DROP TABLE event_heads", []).unwrap();
 
     let (code, _, err) = p.invoke(&["verify"], &DEV);
@@ -1087,7 +1087,7 @@ fn verify_reports_a_store_that_fails_while_checking() {
 fn verify_fails_naming_the_store_when_its_refused_forks_cannot_be_read() {
     let p = Process::new();
     p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
-    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
     conn.execute("CREATE TABLE fork_refusals (unrelated TEXT)", [])
         .unwrap();
 
@@ -1102,7 +1102,7 @@ fn verify_fails_naming_the_store_when_its_refused_forks_cannot_be_read() {
 fn verify_of_a_home_without_its_device_key_fails() {
     let p = Process::new();
     p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
-    std::fs::remove_file(p.cairn_home().join("keys/device.key")).unwrap();
+    std::fs::remove_file(p.parinn_home().join("keys/device.key")).unwrap();
 
     let (code, _, err) = p.invoke(&["verify"], &DEV);
 
@@ -1158,7 +1158,7 @@ fn mcp_refuses_flags_and_reports_a_store_it_cannot_open() {
         );
     }
     let p = Process::new();
-    owner_only_dirs(&p.cairn_home());
+    owner_only_dirs(&p.parinn_home());
     junk_store(&p);
     let (code, _, err) = p.invoke(&["mcp"], &DEV);
     assert_eq!(code, EXIT_FAILURE);
@@ -1172,8 +1172,8 @@ fn mcp_starts_the_node_it_records_in_and_refuses_one_whose_device_key_is_missing
     let (code, _, err) = p.invoke(&["mcp"], &DEV);
 
     assert_eq!((code, err.as_str()), (EXIT_OK, ""));
-    assert!(p.cairn_home().join("store.db").exists());
-    std::fs::remove_file(p.cairn_home().join("keys/device.key")).unwrap();
+    assert!(p.parinn_home().join("store.db").exists());
+    std::fs::remove_file(p.parinn_home().join("keys/device.key")).unwrap();
     let (code, _, err) = p.invoke(&["mcp"], &DEV);
     assert_eq!(code, EXIT_FAILURE);
     assert!(err.contains("the device key is missing"), "{err}");
@@ -1248,7 +1248,7 @@ fn a_bound_mcp_server_serves_a_call_under_its_tool_use_ids_run_and_counts_each_r
 /// Leaves, in `p`'s home, the start marker an MCP server killed before
 /// it stopped would, naming the transcript at `path`.
 fn stale_marker(p: &Process, path: &str) {
-    let dir = p.cairn_home().join("mcp");
+    let dir = p.parinn_home().join("mcp");
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("0011223344556677.marker"), format!("{path}\n")).unwrap();
     #[cfg(unix)]
@@ -1288,7 +1288,7 @@ fn the_next_reader_audits_what_a_killed_mcp_server_left() {
             "{command:?}: {entries:?}"
         );
         assert!(
-            !p.cairn_home()
+            !p.parinn_home()
                 .join("mcp")
                 .join("0011223344556677.marker")
                 .exists()
@@ -1304,7 +1304,7 @@ fn ambiguous_calls_are_counted_on_their_own() {
     let input = || mpsc::channel().1;
     let ctx = Context {
         build: &DEV,
-        cairn_home: Some(p.cairn_home().into_os_string()),
+        parinn_home: Some(p.parinn_home().into_os_string()),
         home: None,
         home_id: None,
         hook_panics: false,
@@ -1372,7 +1372,7 @@ fn mcp_reports_a_reply_it_cannot_write() {
     };
     let ctx = Context {
         build: &DEV,
-        cairn_home: Some(p.cairn_home().into_os_string()),
+        parinn_home: Some(p.parinn_home().into_os_string()),
         home: None,
         home_id: None,
         hook_panics: false,
@@ -1403,7 +1403,7 @@ fn a_command_without_a_home_fails() {
     let input = || mpsc::channel().1;
     let ctx = Context {
         build: &DEV,
-        cairn_home: None,
+        parinn_home: None,
         home: None,
         home_id: None,
         hook_panics: false,
@@ -1441,7 +1441,7 @@ fn a_command_without_a_home_fails() {
         };
         assert_eq!(
             String::from_utf8(err).unwrap(),
-            format!("parinn {name}: no home: set CAIRN_HOME or HOME\n")
+            format!("parinn {name}: no home: set PARINN_HOME or HOME\n")
         );
     }
 }
@@ -1459,7 +1459,7 @@ pub(crate) fn owner_only_dirs(path: &std::path::Path) {
 /// Writes a store file that is no database, readable by its owner alone
 /// so the store reads it rather than refuse its permissions (SEC-02).
 fn junk_store(p: &Process) {
-    let path = p.cairn_home().join("store.db");
+    let path = p.parinn_home().join("store.db");
     std::fs::write(&path, "not a database, but long enough to read a header").unwrap();
     #[cfg(unix)]
     {
@@ -1470,7 +1470,7 @@ fn junk_store(p: &Process) {
 
 /// The audit log's entries in `p`'s home.
 pub(crate) fn audited(p: &Process) -> Vec<audit::entry::Entry> {
-    audit::log::Log::new(p.cairn_home().join("audit"))
+    audit::log::Log::new(p.parinn_home().join("audit"))
         .entries()
         .unwrap()
 }
@@ -1525,9 +1525,9 @@ fn a_hook_input_that_is_no_json_object_is_audited_and_counted() {
         use std::os::unix::fs::PermissionsExt;
         let mode =
             |path: &std::path::Path| std::fs::metadata(path).unwrap().permissions().mode() & 0o777;
-        assert_eq!(mode(&p.cairn_home()), 0o700);
+        assert_eq!(mode(&p.parinn_home()), 0o700);
         assert_eq!(
-            mode(&p.cairn_home().join("audit/audit-000001.jsonl")),
+            mode(&p.parinn_home().join("audit/audit-000001.jsonl")),
             0o600
         );
     }
@@ -1568,7 +1568,7 @@ fn a_hook_input_that_trickles_past_its_wait_is_rejected() {
     };
     let ctx = Context {
         build: &DEV,
-        cairn_home: Some(p.cairn_home().into_os_string()),
+        parinn_home: Some(p.parinn_home().into_os_string()),
         home: None,
         home_id: None,
         hook_panics: false,
@@ -1613,7 +1613,7 @@ fn a_panic_while_auditing_a_hook_failure_still_exits_0() {
     };
     let ctx = Context {
         build: &DEV,
-        cairn_home: Some(p.cairn_home().into_os_string()),
+        parinn_home: Some(p.parinn_home().into_os_string()),
         home: None,
         home_id: None,
         hook_panics: false,
@@ -1694,20 +1694,20 @@ fn a_hook_handler_that_panics_fails_open_and_is_audited() {
 fn a_hook_in_a_home_it_must_refuse_writes_nothing_and_exits_0() {
     use std::os::unix::fs::PermissionsExt;
     let mut p = Process::new();
-    std::fs::create_dir(p.cairn_home()).unwrap();
-    std::fs::set_permissions(p.cairn_home(), std::fs::Permissions::from_mode(0o755)).unwrap();
+    std::fs::create_dir(p.parinn_home()).unwrap();
+    std::fs::set_permissions(p.parinn_home(), std::fs::Permissions::from_mode(0o755)).unwrap();
     p.lines = vec!["not json".to_owned()];
 
     assert_eq!(
         p.invoke(&["hook", "UserPromptSubmit"], &DEV),
         (EXIT_OK, String::new(), String::new())
     );
-    assert!(!p.cairn_home().join("audit").exists());
+    assert!(!p.parinn_home().join("audit").exists());
     p.home_id = Some("other".into());
-    std::fs::set_permissions(p.cairn_home(), std::fs::Permissions::from_mode(0o700)).unwrap();
-    std::fs::write(p.cairn_home().join("home.json"), r#"{"id":"mine"}"#).unwrap();
+    std::fs::set_permissions(p.parinn_home(), std::fs::Permissions::from_mode(0o700)).unwrap();
+    std::fs::write(p.parinn_home().join("home.json"), r#"{"id":"mine"}"#).unwrap();
     std::fs::set_permissions(
-        p.cairn_home().join("home.json"),
+        p.parinn_home().join("home.json"),
         std::fs::Permissions::from_mode(0o600),
     )
     .unwrap();
@@ -1715,13 +1715,13 @@ fn a_hook_in_a_home_it_must_refuse_writes_nothing_and_exits_0() {
         p.invoke(&["hook", "UserPromptSubmit"], &DEV),
         (EXIT_OK, String::new(), String::new())
     );
-    assert!(!p.cairn_home().join("audit").exists());
+    assert!(!p.parinn_home().join("audit").exists());
 }
 
 #[test]
 fn a_hook_whose_audit_log_cannot_take_an_entry_still_exits_0() {
     let mut p = Process::new();
-    owner_only_dirs(&p.cairn_home().join("audit/audit-000001.jsonl"));
+    owner_only_dirs(&p.parinn_home().join("audit/audit-000001.jsonl"));
     p.lines = vec!["not json".to_owned()];
 
     assert_eq!(
@@ -1766,7 +1766,7 @@ fn counter_ack_keeps_its_recorded_act_when_the_audit_log_takes_no_note() {
     let mut p = Process::new();
     p.lines = vec!["not json".to_owned()];
     p.invoke(&["hook", "UserPromptSubmit"], &DEV);
-    let lock = p.cairn_home().join("audit/lock");
+    let lock = p.parinn_home().join("audit/lock");
     std::fs::remove_file(&lock).unwrap();
     owner_only_dirs(&lock);
 
@@ -1790,7 +1790,7 @@ fn an_acknowledgement_hides_no_failure_once_the_audit_log_began_again() {
     p.invoke(&["hook", "UserPromptSubmit"], &DEV);
     p.invoke(&["hook", "UserPromptSubmit"], &DEV);
     assert_eq!(p.invoke(&["counter", "ack"], &DEV).0, EXIT_OK);
-    std::fs::remove_dir_all(p.cairn_home().join("audit")).unwrap();
+    std::fs::remove_dir_all(p.parinn_home().join("audit")).unwrap();
     p.invoke(&["hook", "UserPromptSubmit"], &DEV);
 
     let (code, out, _) = p.invoke(&["doctor"], &DEV);
@@ -1804,7 +1804,7 @@ fn an_acknowledgement_hides_no_failure_once_the_audit_log_began_again() {
 
 /// The content of every principal act the home's store holds.
 pub(crate) fn recorded(p: &Process) -> Vec<serde_json::Value> {
-    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    let home = Home::locate(Some(p.parinn_home().as_os_str()), None).unwrap();
     let store = Store::open(&home.store()).unwrap();
     let node = Node::find(&home, &store).unwrap();
     act_record::acts(&store, &node)
@@ -1829,7 +1829,7 @@ fn counter_ack_without_a_terminal_is_refused_audited_and_acknowledges_nothing() 
                 .into()
         )
     );
-    assert!(!p.cairn_home().join("store.db").exists());
+    assert!(!p.parinn_home().join("store.db").exists());
     let entries = audited(&p);
     assert_eq!(entries.len(), 1);
     assert_eq!(entries[0].counter.as_deref(), Some("principal_act_refused"));
@@ -1857,7 +1857,7 @@ fn counter_needs_ack_and_refuses_other_flags() {
 #[test]
 fn counter_ack_reports_an_audit_log_it_cannot_append_to() {
     let p = Process::new();
-    owner_only_dirs(&p.cairn_home().join("audit/audit-000001.jsonl"));
+    owner_only_dirs(&p.parinn_home().join("audit/audit-000001.jsonl"));
 
     let (code, _, err) = p.invoke(&["counter", "ack"], &DEV);
 
@@ -1877,7 +1877,7 @@ fn doctor_fails_while_a_counter_rose_since_the_last_acknowledgement() {
             EXIT_OK,
             format!(
                 "no home at {} yet: nothing to diagnose\n",
-                p.cairn_home().display()
+                p.parinn_home().display()
             ),
             String::new()
         )
@@ -1917,7 +1917,7 @@ fn doctor_and_status_exit_3_on_a_broken_audit_log() {
     let mut p = Process::new();
     p.lines = vec!["not json".to_owned()];
     p.invoke(&["hook", "UserPromptSubmit"], &DEV);
-    let file = p.cairn_home().join("audit/audit-000001.jsonl");
+    let file = p.parinn_home().join("audit/audit-000001.jsonl");
     let text = std::fs::read_to_string(&file).unwrap();
     std::fs::write(&file, text.replace("rejected", "rejecteD")).unwrap();
 
@@ -1948,7 +1948,7 @@ fn doctor_and_status_refuse_unknown_flags() {
 #[test]
 fn status_shows_the_home_the_store_the_audit_log_and_the_counters() {
     let mut p = Process::new();
-    let home = p.cairn_home().display().to_string();
+    let home = p.parinn_home().display().to_string();
     let id = identity_lines();
     assert_eq!(
         p.invoke(&["status"], &DEV),
@@ -1960,7 +1960,7 @@ fn status_shows_the_home_the_store_the_audit_log_and_the_counters() {
             String::new()
         )
     );
-    Home::locate(Some(p.cairn_home().as_os_str()), None)
+    Home::locate(Some(p.parinn_home().as_os_str()), None)
         .unwrap()
         .create()
         .unwrap();
@@ -1977,7 +1977,7 @@ fn status_shows_the_home_the_store_the_audit_log_and_the_counters() {
 
     let (code, out, err) = p.invoke(&["status"], &DEV);
     assert_eq!((code, err.as_str()), (EXIT_OK, ""));
-    let bytes = std::fs::metadata(p.cairn_home().join("store.db"))
+    let bytes = std::fs::metadata(p.parinn_home().join("store.db"))
         .unwrap()
         .len();
     assert_eq!(
@@ -2021,7 +2021,7 @@ fn status_of_a_home_not_made_yet_shows_no_store() {
     assert_eq!(
         v,
         serde_json::json!({
-            "home": fresh.cairn_home().display().to_string(),
+            "home": fresh.parinn_home().display().to_string(),
             "store": null,
             "audit": null,
             "counters": {},
@@ -2047,7 +2047,7 @@ fn every_command_refuses_a_home_others_can_reach_naming_it() {
     use std::os::unix::fs::PermissionsExt;
     let p = Process::new();
     p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
-    std::fs::set_permissions(p.cairn_home(), std::fs::Permissions::from_mode(0o750)).unwrap();
+    std::fs::set_permissions(p.parinn_home(), std::fs::Permissions::from_mode(0o750)).unwrap();
     let path = p.transcript("b\n");
     for args in [
         &["ingest", "--path", path.as_str()][..],
@@ -2069,7 +2069,7 @@ fn every_command_refuses_a_home_others_can_reach_naming_it() {
             format!(
                 "parinn {name}: {}: mode 0750 lets other OS users in; the home wants owner-only \
                  permissions\n",
-                p.cairn_home().display()
+                p.parinn_home().display()
             ),
             "{args:?}"
         );
@@ -2080,7 +2080,7 @@ fn every_command_refuses_a_home_others_can_reach_naming_it() {
 fn every_command_refuses_a_home_bound_to_another_home_id() {
     let mut p = Process::new();
     p.invoke(&["counter", "ack"], &DEV);
-    let binding = p.cairn_home().join("home.json");
+    let binding = p.parinn_home().join("home.json");
     std::fs::write(&binding, r#"{"id":"home-a"}"#).unwrap();
     #[cfg(unix)]
     {
@@ -2094,7 +2094,7 @@ fn every_command_refuses_a_home_bound_to_another_home_id() {
         assert_eq!(
             err,
             format!(
-                "parinn {command}: the home id CAIRN_HOME_ID supplies does not match the home's\n"
+                "parinn {command}: the home id PARINN_HOME_ID supplies does not match the home's\n"
             )
         );
     }
@@ -2114,7 +2114,7 @@ fn verify_checks_the_audit_chain_too() {
         out.ends_with("the audit log's chain holds over 1 entries\n"),
         "{out}"
     );
-    let file = p.cairn_home().join("audit/audit-000001.jsonl");
+    let file = p.parinn_home().join("audit/audit-000001.jsonl");
     let text = std::fs::read_to_string(&file).unwrap();
     std::fs::write(&file, text.replace("rejected", "rejecteD")).unwrap();
 
@@ -2140,7 +2140,7 @@ fn verify_checks_the_audit_chain_too() {
 #[test]
 fn a_panic_in_the_mcp_server_is_audited() {
     let p = Process::new();
-    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    let home = Home::locate(Some(p.parinn_home().as_os_str()), None).unwrap();
 
     mcp_panicked(&home, NOW).unwrap();
 
@@ -2159,8 +2159,8 @@ fn a_panic_in_the_mcp_server_is_audited() {
 #[test]
 fn a_caught_mcp_panic_the_audit_log_cannot_take_is_said_on_stderr() {
     let p = Process::new();
-    owner_only_dirs(&p.cairn_home().join("audit/audit-000001.jsonl"));
-    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    owner_only_dirs(&p.parinn_home().join("audit/audit-000001.jsonl"));
+    let home = Home::locate(Some(p.parinn_home().as_os_str()), None).unwrap();
     let mut err = Vec::new();
 
     on_mcp_panic(&home, &|| NOW, &mut err)();
@@ -2175,7 +2175,7 @@ fn a_caught_mcp_panic_the_audit_log_cannot_take_is_said_on_stderr() {
 #[test]
 fn a_caught_mcp_panic_is_audited_quietly() {
     let p = Process::new();
-    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    let home = Home::locate(Some(p.parinn_home().as_os_str()), None).unwrap();
     let mut err = Vec::new();
 
     on_mcp_panic(&home, &|| NOW, &mut err)();
@@ -2188,7 +2188,7 @@ fn a_caught_mcp_panic_is_audited_quietly() {
 fn an_audit_log_that_cannot_be_read_fails_verify_doctor_and_status() {
     let p = Process::new();
     p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
-    let audit = p.cairn_home().join("audit");
+    let audit = p.parinn_home().join("audit");
     std::fs::write(&audit, "not a directory").unwrap();
     #[cfg(unix)]
     {
@@ -2213,7 +2213,7 @@ fn ingest_says_which_redaction_it_cannot_audit_and_still_records() {
     let (code, _, _) = p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
     assert_eq!(code, EXIT_OK);
     // An audit log that takes no entry.
-    let audit_dir = p.cairn_home().join("audit");
+    let audit_dir = p.parinn_home().join("audit");
     std::fs::remove_dir_all(&audit_dir).unwrap();
     std::fs::write(&audit_dir, "").unwrap();
     set_mode(&audit_dir, 0o600);
@@ -2416,14 +2416,14 @@ fn the_logged_transcript_path_is_redacted_with_the_harness_account_identifiers()
 }
 
 fn log_file(p: &Process) -> std::path::PathBuf {
-    p.cairn_home().join("logs").join(structured_log::LOG_FILE)
+    p.parinn_home().join("logs").join(structured_log::LOG_FILE)
 }
 
 #[test]
 fn the_structured_log_waits_for_the_home_and_redacts_each_field() {
     let p = Process::new();
     log_one(&p, None);
-    assert!(!p.cairn_home().exists(), "a log makes no home");
+    assert!(!p.parinn_home().exists(), "a log makes no home");
 
     p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
     let log = log_one(&p, None);
@@ -2434,7 +2434,7 @@ fn the_structured_log_waits_for_the_home_and_redacts_each_field() {
     assert_eq!(line["fields"]["key"], "[REDACTED:aws_access_key]");
     assert_eq!(line["time"], NOW);
     assert!(
-        Home::locate(Some(p.cairn_home().as_os_str()), None)
+        Home::locate(Some(p.parinn_home().as_os_str()), None)
             .unwrap()
             .check()
             .is_ok()
@@ -2445,14 +2445,14 @@ fn the_structured_log_waits_for_the_home_and_redacts_each_field() {
 fn a_home_the_core_refuses_gets_no_log() {
     let mut p = Process::new();
     p.home_id = Some("h1".to_owned());
-    std::fs::create_dir_all(p.cairn_home()).unwrap();
-    set_mode(&p.cairn_home(), 0o700);
-    std::fs::write(p.cairn_home().join("home.json"), r#"{"id":"h1"}"#).unwrap();
-    set_mode(&p.cairn_home().join("home.json"), 0o600);
+    std::fs::create_dir_all(p.parinn_home()).unwrap();
+    set_mode(&p.parinn_home(), 0o700);
+    std::fs::write(p.parinn_home().join("home.json"), r#"{"id":"h1"}"#).unwrap();
+    set_mode(&p.parinn_home().join("home.json"), 0o600);
 
     log_one(&p, Some("h2"));
     assert!(!log_file(&p).exists());
-    set_mode(&p.cairn_home(), 0o755);
+    set_mode(&p.parinn_home(), 0o755);
     log_one(&p, Some("h1"));
     assert!(!log_file(&p).exists());
     let none = structured_log(None, None, None, LogSettings::default(), || NOW);
@@ -2504,7 +2504,7 @@ fn ingest_refuses_a_path_outside_the_allowed_roots_and_reads_nothing() {
         entries[0].counter.as_deref(),
         Some("path_outside_allowed_roots")
     );
-    assert!(!p.cairn_home().join("store.db").exists());
+    assert!(!p.parinn_home().join("store.db").exists());
 }
 
 /// While the principal's configuration fails, ingest cannot know the
@@ -2533,7 +2533,7 @@ fn ingest_refuses_while_a_settings_layer_fails() {
         counters.contains(&Some("ingest_refused_settings_invalid".to_owned())),
         "{counters:?}"
     );
-    assert!(!p.cairn_home().join("store.db").exists());
+    assert!(!p.parinn_home().join("store.db").exists());
 
     p.configure("recall.max_k = 10\n");
     assert_eq!(p.invoke(&["ingest", "--path", &transcript], &DEV).0, 0);
@@ -2560,8 +2560,8 @@ fn ingest_reads_within_the_configured_transcript_roots_only() {
     assert_eq!((code, err.as_str()), (EXIT_OK, ""));
 
     // Nothing in the home is a transcript: not its keys, not its store.
-    let device_key = p.cairn_home().join("keys").join("device.key");
-    let store = p.cairn_home().join("store.db");
+    let device_key = p.parinn_home().join("keys").join("device.key");
+    let store = p.parinn_home().join("store.db");
     for path in [device_key, store] {
         let (code, _, err) = p.invoke(&["ingest", "--path", &path.display().to_string()], &DEV);
         assert_eq!(
@@ -2579,7 +2579,7 @@ fn ingest_says_when_it_cannot_audit_its_refusal() {
     let p = Process::new();
     p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
     p.configure("recal.max_k = 10\n");
-    let audit_dir = p.cairn_home().join("audit");
+    let audit_dir = p.parinn_home().join("audit");
     let _ = std::fs::remove_dir_all(&audit_dir);
     std::fs::write(&audit_dir, "").unwrap();
     set_mode(&audit_dir, 0o600);
@@ -2598,7 +2598,7 @@ fn ingest_says_when_it_cannot_audit_a_path_outside_the_roots() {
     let p = Process::new();
     let (code, _, _) = p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
     assert_eq!(code, EXIT_OK);
-    let audit_dir = p.cairn_home().join("audit");
+    let audit_dir = p.parinn_home().join("audit");
     let _ = std::fs::remove_dir_all(&audit_dir);
     std::fs::write(&audit_dir, "").unwrap();
     set_mode(&audit_dir, 0o600);
@@ -2618,7 +2618,7 @@ fn ingest_says_when_it_cannot_audit_a_path_outside_the_roots() {
 
 /// Every audit entry the home at `p` holds, as text.
 fn audit_text(p: &Process) -> String {
-    let dir = p.cairn_home().join("audit");
+    let dir = p.parinn_home().join("audit");
     let mut text = String::new();
     let Ok(entries) = std::fs::read_dir(dir) else {
         return text;
@@ -2669,7 +2669,7 @@ fn ingest_audits_and_counts_a_node_identity_change_before_it_appends() {
 fn ingest_refuses_a_missing_or_unreadable_device_key_audited_and_counted() {
     let p = Process::new();
     p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
-    let key = p.cairn_home().join("keys/device.key");
+    let key = p.parinn_home().join("keys/device.key");
     std::fs::remove_file(&key).unwrap();
 
     let (code, _, err) = p.invoke(&["ingest", "--path", &p.transcript("b\n")], &DEV);
@@ -2705,7 +2705,7 @@ fn a_principal_act_audits_a_node_identity_change_and_counts_no_act_from_before_i
 
     assert_eq!((code, err.as_str()), (EXIT_OK, ""));
     assert!(audit_text(&p).contains("node identity changed"));
-    let home = Home::locate(Some(p.cairn_home().as_os_str()), None)
+    let home = Home::locate(Some(p.parinn_home().as_os_str()), None)
         .unwrap()
         .with_identity(IdentitySource::Files(vec![id]));
     let store = Store::open(&home.store()).unwrap();
@@ -2717,7 +2717,7 @@ fn a_principal_act_audits_a_node_identity_change_and_counts_no_act_from_before_i
 fn ingest_fails_on_a_store_the_node_cannot_be_found_in_and_audits_no_key_failure() {
     let p = Process::new();
     p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
-    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
     conn.execute("UPDATE seats SET certificate = '{'", [])
         .unwrap();
     let before = audit_text(&p);
@@ -2733,7 +2733,7 @@ fn ingest_fails_on_a_store_the_node_cannot_be_found_in_and_audits_no_key_failure
 
 /// Runs `statement` on the store in `p`'s home.
 fn store_sql(p: &Process, statement: &str) {
-    rusqlite::Connection::open(p.cairn_home().join("store.db"))
+    rusqlite::Connection::open(p.parinn_home().join("store.db"))
         .unwrap()
         .execute_batch(statement)
         .unwrap();
@@ -2751,7 +2751,7 @@ fn writer_left_open(p: &Process) -> store::WriterId {
         commitment_key: store::CommitmentKey::from_bytes([n; 32]),
         transcript_timestamp: None,
     };
-    Store::open(&p.cairn_home().join("store.db"))
+    Store::open(&p.parinn_home().join("store.db"))
         .unwrap()
         .append_open(writer, &[new(1), new(2)])
         .unwrap();
@@ -2800,7 +2800,7 @@ fn verify_reports_each_writer_chain_ended_without_a_closed_segment_and_exits_0()
             "DELETE FROM segments WHERE writer = '{writer}'; DELETE FROM events WHERE writer = '{writer}'"
         ),
     );
-    let ingest = Store::open(&p.cairn_home().join("store.db"))
+    let ingest = Store::open(&p.parinn_home().join("store.db"))
         .unwrap()
         .open_segments()
         .unwrap();
@@ -2840,7 +2840,7 @@ fn status_and_verify_exit_3_naming_a_newer_store_and_leave_it_unchanged() {
         &p,
         "PRAGMA journal_mode = DELETE; UPDATE meta SET value = '2' WHERE key = 'schema_version'",
     );
-    let path = p.cairn_home().join("store.db");
+    let path = p.parinn_home().join("store.db");
     let before = std::fs::read(&path).unwrap();
 
     for command in ["status", "verify"] {
@@ -2873,7 +2873,7 @@ fn status_and_verify_exit_3_naming_a_newer_segment() {
         "UPDATE segments SET format_version = 2 WHERE writer IN \
          (SELECT writer FROM events WHERE kind = 'transcript_line')",
     );
-    let newer = Store::open(&p.cairn_home().join("store.db"))
+    let newer = Store::open(&p.parinn_home().join("store.db"))
         .unwrap()
         .newer_segments()
         .unwrap();
@@ -2898,8 +2898,8 @@ fn status_and_verify_exit_3_naming_a_newer_segment() {
 #[test]
 fn status_of_a_store_it_cannot_read_fails() {
     let p = Process::new();
-    owner_only_dirs(&p.cairn_home());
-    Home::locate(Some(p.cairn_home().as_os_str()), None)
+    owner_only_dirs(&p.parinn_home());
+    Home::locate(Some(p.parinn_home().as_os_str()), None)
         .unwrap()
         .create()
         .unwrap();
@@ -2923,7 +2923,7 @@ fn ingest_puts_a_line_above_the_configured_payload_threshold_in_the_payload_stor
     let (code, _, err) = p.invoke(&["ingest", "--path", &p.transcript(&long)], &DEV);
 
     assert_eq!((code, err.as_str()), (EXIT_OK, ""));
-    let held = std::fs::read_dir(p.cairn_home().join("payloads"))
+    let held = std::fs::read_dir(p.parinn_home().join("payloads"))
         .unwrap()
         .any(|e| {
             std::fs::read_to_string(e.unwrap().path())
@@ -2939,7 +2939,7 @@ fn verify_of_a_home_whose_first_start_was_cut_short_before_it_recorded_exits_0()
     use key::key_store::Entry;
     use key::signing::{DeviceKey, RecoveryKey, SeatKey};
     let p = Process::new();
-    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    let home = Home::locate(Some(p.parinn_home().as_os_str()), None).unwrap();
     home.create().unwrap();
     drop(Store::open(&home.store()).unwrap());
     // A first start killed after it staged its keys, before it recorded.
@@ -3020,8 +3020,8 @@ fn a_search_the_deadline_cancels_is_told_in_fixed_text_and_audited() {
 #[test]
 fn a_cancelled_search_the_audit_log_cannot_take_is_said_on_stderr() {
     let p = Process::new();
-    owner_only_dirs(&p.cairn_home().join("audit/audit-000001.jsonl"));
-    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    owner_only_dirs(&p.parinn_home().join("audit/audit-000001.jsonl"));
+    let home = Home::locate(Some(p.parinn_home().as_os_str()), None).unwrap();
     let mut err = Vec::new();
 
     on_query_cancelled(&home, &|| NOW, &mut err)(2);
@@ -3038,13 +3038,13 @@ fn a_cancelled_search_the_audit_log_cannot_take_is_said_on_stderr() {
 #[test]
 fn no_cancelled_search_is_audited_when_none_was_cancelled() {
     let p = Process::new();
-    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    let home = Home::locate(Some(p.parinn_home().as_os_str()), None).unwrap();
     let mut err = Vec::new();
 
     on_query_cancelled(&home, &|| NOW, &mut err)(0);
 
     assert!(err.is_empty());
-    assert!(!p.cairn_home().join("audit").exists());
+    assert!(!p.parinn_home().join("audit").exists());
 }
 
 #[test]
@@ -3069,7 +3069,7 @@ fn ingest_audits_each_gap_of_the_search_index_once_and_status_counts_it() {
     let (_, out, _) = p.invoke(&["ingest", &format!("--path={path}"), "--json"], &DEV);
     let first: serde_json::Value = serde_json::from_str(&out).unwrap();
     let small = record::id::WriterId::parse(first["writer"].as_str().unwrap()).unwrap();
-    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    let home = Home::locate(Some(p.parinn_home().as_os_str()), None).unwrap();
     let large = index_gaps::tests::leave_out_a_writer_sharing_the_slot_of(&home, small);
 
     for name in ["b.jsonl", "c.jsonl"] {
@@ -3100,12 +3100,12 @@ fn ingest_says_which_search_index_gap_it_cannot_audit_and_reports_it_at_the_next
     let (_, out, _) = p.invoke(&["ingest", &format!("--path={path}"), "--json"], &DEV);
     let first: serde_json::Value = serde_json::from_str(&out).unwrap();
     let small = record::id::WriterId::parse(first["writer"].as_str().unwrap()).unwrap();
-    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    let home = Home::locate(Some(p.parinn_home().as_os_str()), None).unwrap();
     index_gaps::tests::leave_out_a_writer_sharing_the_slot_of(&home, small);
-    let audit_dir = p.cairn_home().join("audit");
+    let audit_dir = p.parinn_home().join("audit");
     let kept = std::fs::read_dir(&audit_dir).unwrap().count();
     assert!(kept > 0);
-    std::fs::rename(&audit_dir, p.cairn_home().join("audit-kept")).unwrap();
+    std::fs::rename(&audit_dir, p.parinn_home().join("audit-kept")).unwrap();
     std::fs::write(&audit_dir, "").unwrap();
     set_mode(&audit_dir, 0o600);
 
@@ -3121,7 +3121,7 @@ fn ingest_says_which_search_index_gap_it_cannot_audit_and_reports_it_at_the_next
         "{err}"
     );
     std::fs::remove_file(&audit_dir).unwrap();
-    std::fs::rename(p.cairn_home().join("audit-kept"), &audit_dir).unwrap();
+    std::fs::rename(p.parinn_home().join("audit-kept"), &audit_dir).unwrap();
     let again = transcript_in(&p, "p", "c.jsonl", b"c\n");
     p.invoke(&["ingest", "--path", &again.display().to_string()], &DEV);
     let gaps = audited(&p)
@@ -3136,7 +3136,7 @@ fn ingest_counts_and_says_a_lookup_of_the_search_index_gaps_that_failed() {
     let p = Process::new();
     let path = p.transcript("a\n");
     p.invoke(&["ingest", &format!("--path={path}")], &DEV);
-    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    let home = Home::locate(Some(p.parinn_home().as_os_str()), None).unwrap();
     let mut ingested = ingest::ingest_path(
         &home,
         std::path::Path::new(&path),
@@ -3148,7 +3148,7 @@ fn ingest_counts_and_says_a_lookup_of_the_search_index_gaps_that_failed() {
     let input = || mpsc::channel().1;
     let ctx = Context {
         build: &DEV,
-        cairn_home: Some(p.cairn_home().into_os_string()),
+        parinn_home: Some(p.parinn_home().into_os_string()),
         home: None,
         home_id: None,
         hook_panics: false,
@@ -3190,7 +3190,7 @@ fn ingest_says_a_search_index_gap_it_cannot_audit_when_the_home_cannot_be_found(
     let p = Process::new();
     let path = p.transcript("a\n");
     p.invoke(&["ingest", &format!("--path={path}")], &DEV);
-    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    let home = Home::locate(Some(p.parinn_home().as_os_str()), None).unwrap();
     let mut ingested = ingest::ingest_path(
         &home,
         std::path::Path::new(&path),
@@ -3205,7 +3205,7 @@ fn ingest_says_a_search_index_gap_it_cannot_audit_when_the_home_cannot_be_found(
     let input = || mpsc::channel().1;
     let ctx = Context {
         build: &DEV,
-        cairn_home: None,
+        parinn_home: None,
         home: None,
         home_id: None,
         hook_panics: false,

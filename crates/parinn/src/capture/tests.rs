@@ -20,7 +20,7 @@ struct Fixture {
 impl Fixture {
     fn new() -> Self {
         let dir = TempDir::new().unwrap();
-        let home = Home::locate(Some(dir.path().join(".cairn").as_os_str()), None).unwrap();
+        let home = Home::locate(Some(dir.path().join(".parinn").as_os_str()), None).unwrap();
         home.create().unwrap();
         std::fs::create_dir_all(dir.path().join("projects").join("p")).unwrap();
         Self {

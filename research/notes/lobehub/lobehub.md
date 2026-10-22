@@ -28,14 +28,14 @@ files moved with it to another device or directory. Sources:
 <https://github.com/lobehub/lobehub/blob/canary/docs/usage/agent/connect-external-agents.mdx>,
 <https://github.com/lobehub/lobehub/discussions/13927>.
 
-This is real overlap with Cairn's planned fleet and room view: people can
+This is real overlap with ParleyInn's planned fleet and room view: people can
 organize agents, watch work and keep a conversation around it. LobeHub's
 documented organizing unit is an agent and its Topic, with Tasks, Groups and
-Projects around it. Cairn's room is organized around one intent and its
+Projects around it. ParleyInn's room is organized around one intent and its
 conversation, seats, pins, linked branches and linked forge issues. That
 difference matters when several agents, people and branches serve the same
-intent. Sources: [Cairn intent](../../../docs/srs/01-introduction.md),
-[Cairn room](../../../docs/domain-model/places.md),
+intent. Sources: [ParleyInn intent](../../../docs/srs/01-introduction.md),
+[ParleyInn room](../../../docs/domain-model/places.md),
 <https://github.com/lobehub/lobehub/blob/canary/docs/usage/start.mdx>.
 
 ## Issue and pull-request discussion
@@ -50,7 +50,7 @@ open comparison questions rather than proven product gaps. Sources:
 <https://github.com/lobehub/lobehub/blob/canary/docs/usage/start.mdx>,
 <https://github.com/lobehub/lobehub/blob/canary/docs/usage/agent/connect-external-agents.mdx>.
 
-Cairn specifies that stronger conversation path for M9: issue and review items
+ParleyInn specifies that stronger conversation path for M9: issue and review items
 are shown as untrusted forge content in the room only after the credential
 owner grants sharing of the exact issue or branch, and a person's separate act
 can send their room response to the forge. The issue does not set the room's
@@ -69,7 +69,7 @@ LobeHub Topic. Sources:
 <https://github.com/lobehub/lobehub/blob/canary/.agents/skills/cli/references/memory.md>,
 <https://github.com/lobehub/lobehub/blob/canary/docs/usage/agent/connect-external-agents.mdx>.
 
-Those sources do not establish Cairn's I1/I3/I10 contract: every observed
+Those sources do not establish ParleyInn's I1/I3/I10 contract: every observed
 event recoverable by stable address, qualifying pins restored verbatim after
 compaction, and derived room state reproducible from writer logs. Nor do they
 establish I2's closed paths for untrusted material entering an agent. LobeHub
@@ -78,27 +78,27 @@ follow that agent's own permission system; a working directory is not a
 sandbox. This is a difference in stated contracts, not a claim that LobeHub
 has no security controls. Sources:
 <https://github.com/lobehub/lobehub/blob/canary/docs/usage/agent/connect-external-agents.mdx>,
-[Cairn invariants](../../../docs/srs/invariants.md).
+[ParleyInn invariants](../../../docs/srs/invariants.md).
 
 ## Network and deployment
 
 LobeHub can be self-hosted. Its self-hosting architecture uses a Next.js
 application and PostgreSQL, with optional Redis and S3-compatible storage;
-agents may use connected devices and cloud services. Cairn instead specifies
+agents may use connected devices and cloud services. ParleyInn instead specifies
 a socket-free core, optional peer, publish and bridge components, and no central
 or third-party service dependency. Self-hosting is a useful LobeHub deployment
-choice, but it is a different network boundary from Cairn's I4. Sources:
+choice, but it is a different network boundary from ParleyInn's I4. Sources:
 <https://github.com/lobehub/lobehub/blob/canary/docs/self-hosting/start.mdx>,
 <https://github.com/lobehub/lobehub/blob/canary/docs/usage/feature-status.mdx>,
-[Cairn invariants](../../../docs/srs/invariants.md).
+[ParleyInn invariants](../../../docs/srs/invariants.md).
 
 ## Competitive reading
 
 LobeHub is a direct competitor for the **agent workspace and control surface**:
 multi-agent coordination, connected coding agents, cross-device access,
 memory, tasks and shared work. Its documented path does not yet answer the
-more specific Cairn question: can one conversation follow an intent across
+more specific ParleyInn question: can one conversation follow an intent across
 several agents and branches, import the issue and review discussion around it,
 and let a person reply from that conversation? That is the next workflow to
-test, not a documented absence. Cairn's record, trust and network guarantees
+test, not a documented absence. ParleyInn's record, trust and network guarantees
 also remain specification claims until they ship and are tested.

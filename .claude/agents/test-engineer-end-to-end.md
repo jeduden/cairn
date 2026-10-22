@@ -36,7 +36,7 @@ You review the top of ParleyInn's test pyramid: the scenarios under
    binding matches only that keyword; a step text two sections bind is
    ambiguous. Reuse existing text.
 4. **Isolation and confinement.** The runner gives each world a fresh
-   `HOME` and `CAIRN_HOME`; a step that starts a process points it
+   `HOME` and `PARINN_HOME`; a step that starts a process points it
    there (ENG-14). A component runs only inside its network boundary
    (ENG-12, I4).
 5. **Few and stable.** An end-to-end test proves what no lower test

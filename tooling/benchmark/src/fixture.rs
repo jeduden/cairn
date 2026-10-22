@@ -1,6 +1,6 @@
 //! What a benchmark's core runs over, made before each sample and
 //! outside its time: for ingestion (NFR-04), a fresh home holding one
-//! transcript under its transcript roots. `HOME` and `CAIRN_HOME` both
+//! transcript under its transcript roots. `HOME` and `PARINN_HOME` both
 //! point inside it, so a sample never reaches the machine's own home,
 //! ParleyInn home or Claude Code configuration (ENG-14).
 
@@ -99,7 +99,7 @@ impl Home {
     ///
     /// Fails when the audit directory exists and cannot be read.
     pub fn counted(&self, counter: &str) -> io::Result<bool> {
-        let Ok(listing) = fs::read_dir(self.root.join(".cairn").join("audit")) else {
+        let Ok(listing) = fs::read_dir(self.root.join(".parinn").join("audit")) else {
             return Ok(false);
         };
         let wanted = format!("\"{counter}\"");
@@ -112,13 +112,13 @@ impl Home {
         Ok(false)
     }
 
-    /// The variables the core starts with: `HOME` and `CAIRN_HOME`, both
+    /// The variables the core starts with: `HOME` and `PARINN_HOME`, both
     /// inside this home.
     #[must_use]
     pub fn env(&self) -> [(&'static str, PathBuf); 2] {
         [
             ("HOME", self.root.clone()),
-            ("CAIRN_HOME", self.root.join(".cairn")),
+            ("PARINN_HOME", self.root.join(".parinn")),
         ]
     }
 }

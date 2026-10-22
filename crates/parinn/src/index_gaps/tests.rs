@@ -60,7 +60,7 @@ pub(crate) fn leave_out_a_writer_sharing_the_slot_of(home: &Home, small: WriterI
 
 /// A home whose search index leaves out the second of two writers.
 fn home_with_a_gap(dir: &TempDir) -> (Home, WriterId) {
-    let home = Home::locate(Some(dir.path().join(".cairn").as_os_str()), None).unwrap();
+    let home = Home::locate(Some(dir.path().join(".parinn").as_os_str()), None).unwrap();
     home.create().unwrap();
     let small = writer(1);
     seated_with_an_event(&mut Store::open(&home.store()).unwrap(), small);
@@ -150,7 +150,7 @@ fn a_gap_whose_entry_the_audit_log_refused_stays_unreported_for_the_next_ingest(
 #[test]
 fn a_store_that_cannot_be_opened_audits_nothing_so_the_next_ingest_audits_each_gap_once() {
     let dir = TempDir::new().unwrap();
-    let home = Home::locate(Some(dir.path().join(".cairn").as_os_str()), None).unwrap();
+    let home = Home::locate(Some(dir.path().join(".parinn").as_os_str()), None).unwrap();
     home.create().unwrap();
     std::fs::create_dir(home.store()).unwrap();
     let gap = IndexGap {

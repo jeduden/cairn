@@ -28,7 +28,7 @@ fn logs(w: &mut World) -> &mut LogSteps {
 
 /// The home's log file's lines.
 fn log_lines(w: &World) -> Result<Vec<String>, String> {
-    let path = home(w)?.root().join("logs").join("cairn.jsonl");
+    let path = home(w)?.root().join("logs").join("parinn.jsonl");
     let text = fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
     Ok(text.lines().map(str::to_owned).collect())
 }

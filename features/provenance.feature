@@ -105,7 +105,7 @@ Feature: Provenance and trust (PRV)
 
     Examples:
       | configuration                                                                                                                                           | mark                      | trust     | audit                                                                                 |
-      | the person's configuration sets no deployment mode, and the repository's ".cairn.toml" sets "node.deployment_mode" to "interactive"                     | with the attended mark    | untrusted | an audit entry records "rejected repository setting node.deployment_mode"             |
+      | the person's configuration sets no deployment mode, and the repository's ".parinn.toml" sets "node.deployment_mode" to "interactive"                     | with the attended mark    | untrusted | an audit entry records "rejected repository setting node.deployment_mode"             |
       | the person's configuration sets "node.deployment_mode" to "interactive"                                                                                 | without the attended mark | untrusted | the counter "harness_session_not_attended" increases by 1 and an audit entry names it |
       | the person's configuration sets "node.deployment_mode" to "interactive", and the MCP server's environment has "CLAUDE_CODE_SESSION_ATTENDED" set to "1" | without the attended mark | untrusted | the counter "harness_session_not_attended" increases by 1 and an audit entry names it |
       | the person's configuration sets "node.deployment_mode" to "interactive"                                                                                 | with the attended mark    | trusted   | no audit entry names the deployment mode                                              |
@@ -114,7 +114,7 @@ Feature: Provenance and trust (PRV)
   Scenario Outline: no settings layer can trust a provenance class beyond the default policy
     Given an isolated ParleyInn home
     And deployment mode "interactive"
-    And managed policy, the person's configuration and the repository's ".cairn.toml" each set the trust of "<provenance>" to "trusted"
+    And managed policy, the person's configuration and the repository's ".parinn.toml" each set the trust of "<provenance>" to "trusted"
     When an event with provenance "<provenance>" is ingested
     Then the event is stored with provenance "<provenance>" and its trust level is "untrusted"
     And an audit entry for each settings layer records "rejected trust override for <provenance>"

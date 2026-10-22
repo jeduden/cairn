@@ -38,7 +38,7 @@ pub(crate) fn home_and_a_disagreeing_copy(
     use serde_json::json;
     use store::NewEvent;
 
-    let home = Home::locate(Some(dir.path().join(".cairn").as_os_str()), None).unwrap();
+    let home = Home::locate(Some(dir.path().join(".parinn").as_os_str()), None).unwrap();
     home.create().unwrap();
     let mut store = Store::open(&home.store()).unwrap();
     let new: Vec<NewEvent> = (1..=events)

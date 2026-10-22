@@ -100,7 +100,7 @@ fn public_keys_and_signatures_round_trip_through_hex() {
     assert_eq!(format!("{public:?}"), format!("PublicKey({public})"));
     assert_eq!(
         public.fingerprint(),
-        record::digest::Digest::of(&[b"cairn key fingerprint v1\0", public.as_bytes()])
+        record::digest::Digest::of(&[b"parinn key fingerprint v1\0", public.as_bytes()])
     );
     assert_eq!(Signature::from_hex(&sig.to_string()).unwrap(), sig);
     assert_eq!(format!("{sig:?}"), format!("Signature({sig})"));

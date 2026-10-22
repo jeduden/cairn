@@ -388,7 +388,7 @@ impl Entropy for Seeded {
 /// The writer id and chain head an ingest of `transcript` gives in a
 /// fresh home under `dir`, its random source seeded with `seed`.
 fn seeded_ingest(dir: &Path, transcript: &Path, seed: u64) -> Result<(WriterId, Digest), String> {
-    let home = administration::home::Home::locate(Some(dir.join(".cairn").as_os_str()), None)
+    let home = administration::home::Home::locate(Some(dir.join(".parinn").as_os_str()), None)
         .map_err(|e| e.to_string())?;
     let redactor = redaction::Redactor::new(&[]).map_err(|e| e.to_string())?.0;
     let ingested = ingest::ingest_path(&home, transcript, &redactor, &mut Seeded(seed))

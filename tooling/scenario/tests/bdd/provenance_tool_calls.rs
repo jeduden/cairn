@@ -211,7 +211,7 @@ fn restarts(w: &mut World) -> Result<(), String> {
 /// The run each logged call of the tool-use id `id` names, how long it
 /// waited, and the cause of its refusal, read from the structured log.
 fn logged(w: &World, id: &str) -> Result<Vec<Value>, String> {
-    let file = home(w)?.root().join("logs").join("cairn.jsonl");
+    let file = home(w)?.root().join("logs").join("parinn.jsonl");
     let text = fs::read_to_string(&file).map_err(|e| format!("read {}: {e}", file.display()))?;
     Ok(text
         .lines()

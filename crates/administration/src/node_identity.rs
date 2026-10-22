@@ -17,7 +17,7 @@ use crate::AdminError;
 use crate::home::Home;
 
 /// The label a node identity's digest is derived under.
-const LABEL: &[u8] = b"cairn node identity v1\0";
+const LABEL: &[u8] = b"parinn node identity v1\0";
 
 /// Where a node identity is read from.
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -9,7 +9,7 @@ summary: >-
 - **Record**: The set of writer logs a node holds (I10); the audit log,
   counters and **configuration** sit beside it: the principal's settings
   (§9.6), some changes to which apply only once accepted (ADM-04), and which a
-  repository's `.cairn.toml`, its **repository configuration**, may only
+  repository's `.parinn.toml`, its **repository configuration**, may only
   tighten (SEC-11). Managed policy, configuration and repository configuration
   are the three **settings layers**. The **store** is the home's files
   containing the record, its derived artifacts and payloads (§8.1).
@@ -27,7 +27,7 @@ summary: >-
 - **seq**: An event's position in its writer: strictly increasing, gap-free and
   never reused (REC-06).
 - **Address**: (writer, seq), shown as short `A2·4812` (its writer label and
-  seq), range `A2·4812–5025` or full `cairn:room/<room>/w/<writer>/<seq>`. One
+  seq), range `A2·4812–5025` or full `parinn:room/<room>/w/<writer>/<seq>`. One
   ASCII input form, `<label>:<seq>` or `<label>:<from>-<to>`, the writer id
   allowed in place of the label, is accepted with them (RCL-08). A **writer
   label** is a writer's short display alias, unique per node, each

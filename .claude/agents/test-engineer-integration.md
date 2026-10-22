@@ -32,7 +32,7 @@ whole pyramid; you go deep here.
    implementation, the one the unit tests replace with a fake, has an
    integration test that runs it.
 3. **Isolation.** Every file a test writes is under a temporary
-   directory it owns; nothing reaches the real `HOME`, `CAIRN_HOME` or
+   directory it owns; nothing reaches the real `HOME`, `PARINN_HOME` or
    `~/.claude` (ENG-14).
 4. **The right test layer.** A test that only calls a pure function
    belongs beside it as a unit test; one that runs an executable

@@ -48,7 +48,7 @@ fn a_probe_that_failed_for_another_reason_was_not_refused() {
 fn a_probe_that_printed_a_path_under_the_isolated_home_was_allowed() {
     let got = not_allowed(
         "user-home",
-        &probe(true, "/t/home/.cairn\n", ""),
+        &probe(true, "/t/home/.parinn\n", ""),
         Path::new("/t/home"),
     );
 
@@ -270,7 +270,7 @@ fn a_read_of_the_home_by_name_is_found_with_its_line() {
 fn every_variable_that_leads_to_the_real_home_is_found() {
     for (read, name) in [
         ("var", "HOME"),
-        ("var_os", "CAIRN_HOME"),
+        ("var_os", "PARINN_HOME"),
         ("var", "CLAUDE_CONFIG_DIR"),
         ("var_os", "USERPROFILE"),
         ("env!", "HOME"),
@@ -301,7 +301,7 @@ fn the_standard_library_s_home_lookup_is_found() {
 
 #[test]
 fn two_hits_on_one_line_are_one_finding() {
-    let body = "let _ = (var(\"HOME\"), var(\"CAIRN_HOME\"));\n";
+    let body = "let _ = (var(\"HOME\"), var(\"PARINN_HOME\"));\n";
 
     assert_eq!(unguarded_reads("x.rs", body).len(), 1);
 }

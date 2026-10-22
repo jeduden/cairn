@@ -35,7 +35,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "cairn-fuzz"
+name = "parinn-fuzz"
 version = "0.0.0"
 dependencies = [
  "configuration",
