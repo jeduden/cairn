@@ -132,7 +132,7 @@ fn a_home_that_does_not_exist_yet_resolves_inside_the_temporary_directory() {
 }
 
 #[test]
-fn the_parinn_home_defaults_to_dot_cairn_in_the_home() {
+fn the_cairn_home_defaults_to_dot_cairn_in_the_home() {
     let temp = TempDir::new().unwrap();
     let home = temp.path().join("home");
 
@@ -142,7 +142,7 @@ fn the_parinn_home_defaults_to_dot_cairn_in_the_home() {
 }
 
 #[test]
-fn an_explicit_real_parinn_home_is_refused_beside_an_isolated_home() {
+fn an_explicit_real_cairn_home_is_refused_beside_an_isolated_home() {
     let temp = TempDir::new().unwrap();
     let home = temp.path().join("home");
     let real = Path::new("/home/x/.cairn");
@@ -160,7 +160,7 @@ fn an_explicit_real_parinn_home_is_refused_beside_an_isolated_home() {
 }
 
 #[test]
-fn an_explicit_isolated_parinn_home_resolves_beside_a_real_home() {
+fn an_explicit_isolated_cairn_home_resolves_beside_a_real_home() {
     let temp = TempDir::new().unwrap();
     let parinn = temp.path().join("parinn");
     let var = vars(&[("HOME", Path::new("/home/x")), ("CAIRN_HOME", &parinn)]);

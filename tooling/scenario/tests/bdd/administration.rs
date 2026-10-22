@@ -41,7 +41,7 @@ fn adm(w: &mut World) -> &mut AdministrationSteps {
 pub fn configure(w: &World, text: &str) -> Result<(), String> {
     let home = crate::record::home(w)?;
     home.create().map_err(|e| e.to_string())?;
-    let path = w.parinn_home.join("config.toml");
+    let path = w.cairn_home.join("config.toml");
     fs::write(&path, text).map_err(|e| format!("{}: {e}", path.display()))?;
     fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).map_err(|e| e.to_string())
 }

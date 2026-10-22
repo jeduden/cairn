@@ -9,6 +9,14 @@ its upgrade notes (ENG-23). Cairn follows semantic versioning.
 
 ## Unreleased
 
+- Upgrade note: the product is now ParleyInn and its executable is
+  `parinn`. The executable, its release assets (`parinn-*`,
+  `parinn.spdx.json`), its MCP server name and every command's name
+  change from `cairn`; scripts and hook entries that call `cairn` must
+  call `parinn`. An existing home keeps working: `~/.cairn`,
+  `CAIRN_HOME`, `cairn:` addresses, `Cairn-Room:` and `Cairn-Link:`
+  trailers, and the payload, node-identity, key-store and Keychain
+  labels keep their spelling.
 - Repository bootstrap: the SRS, one pending scenario per requirement,
   CI, a nightly fuzz job and the release pipeline. `cairn version` is
   the only command.

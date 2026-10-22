@@ -128,10 +128,10 @@ fn secrets(home: &Path) -> PathBuf {
 #[test]
 fn ingest_redacts_before_anything_is_written() {
     let home = TempDir::new().unwrap();
-    let parinn_home = home.path().join(".cairn");
-    fs::create_dir_all(&parinn_home).unwrap();
-    fs::set_permissions(&parinn_home, fs::Permissions::from_mode(0o700)).unwrap();
-    let config = parinn_home.join("config.toml");
+    let cairn_home = home.path().join(".cairn");
+    fs::create_dir_all(&cairn_home).unwrap();
+    fs::set_permissions(&cairn_home, fs::Permissions::from_mode(0o700)).unwrap();
+    let config = cairn_home.join("config.toml");
     fs::write(
         &config,
         "[redaction]\nextra_patterns = [\"ACME-[0-9]{8}\"]\n",

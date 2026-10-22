@@ -47,7 +47,7 @@ fn rec(w: &mut World) -> &mut RecordSteps {
 
 /// The scenario's home, as the core finds it.
 pub fn home(w: &World) -> Result<Home, String> {
-    Home::locate(Some(w.parinn_home.as_os_str()), None).map_err(|e| e.to_string())
+    Home::locate(Some(w.cairn_home.as_os_str()), None).map_err(|e| e.to_string())
 }
 
 /// The node's first start in the scenario's home, as the core makes
@@ -62,10 +62,10 @@ pub fn first_start(w: &World) -> Result<Home, String> {
 
 #[given(regex = r"^an isolated ParleyInn home$")]
 fn isolated_home(w: &mut World) -> Result<(), String> {
-    if !w.parinn_home.starts_with(&w.home) || w.parinn_home.exists() {
+    if !w.cairn_home.starts_with(&w.home) || w.cairn_home.exists() {
         return Err(format!(
             "the ParleyInn home {} is not a fresh one inside the scenario's home",
-            w.parinn_home.display()
+            w.cairn_home.display()
         ));
     }
     Ok(())

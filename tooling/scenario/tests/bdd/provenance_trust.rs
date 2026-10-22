@@ -56,7 +56,7 @@ fn every_layer_trusts(w: &mut World, class: String) -> Result<(), String> {
     managed_policy(w, &trusting(&class))?;
     let home = home(w)?;
     home.create().map_err(|e| e.to_string())?;
-    let config = w.parinn_home.join("config.toml");
+    let config = w.cairn_home.join("config.toml");
     append_to(&config, &trusting(&class))?;
     use std::os::unix::fs::PermissionsExt;
     fs::set_permissions(&config, fs::Permissions::from_mode(0o600)).map_err(|e| e.to_string())?;

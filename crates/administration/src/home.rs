@@ -27,9 +27,9 @@ impl Home {
     /// # Errors
     ///
     /// Fails when neither names one.
-    pub fn locate(parinn_home: Option<&OsStr>, home: Option<&OsStr>) -> Result<Self, AdminError> {
+    pub fn locate(cairn_home: Option<&OsStr>, home: Option<&OsStr>) -> Result<Self, AdminError> {
         let set = |v: Option<&OsStr>| v.filter(|v| !v.is_empty()).map(PathBuf::from);
-        let root = set(parinn_home)
+        let root = set(cairn_home)
             .or_else(|| set(home).map(|h| h.join(".cairn")))
             .ok_or(AdminError::NoHome)?;
 

@@ -11,7 +11,7 @@ fn its_keys_are_files_in_its_keys_directory_on_this_os() {
 use testkit::TempDir;
 
 #[test]
-fn the_home_is_parinn_home_when_set_else_dot_parinn_in_home() {
+fn the_home_is_cairn_home_when_set_else_dot_cairn_in_home() {
     assert_eq!(
         Home::locate(Some(OsStr::new("/c")), Some(OsStr::new("/h")))
             .unwrap()

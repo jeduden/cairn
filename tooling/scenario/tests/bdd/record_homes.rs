@@ -68,7 +68,7 @@ fn enter(w: &mut World, name: &str) -> Result<(), String> {
     let dir = base.join("homes").join(name);
     fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     homes(w).homes.insert(name.to_owned(), dir.clone());
-    w.parinn_home = dir.join(".cairn");
+    w.cairn_home = dir.join(".cairn");
     w.home = dir;
     Ok(())
 }

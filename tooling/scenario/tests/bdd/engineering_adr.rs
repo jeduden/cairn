@@ -13,12 +13,12 @@ use crate::engineering::eng;
 #[when(regex = r#"^the direct dependencies are read from "([^"]+)"$"#)]
 fn read_direct_deps(w: &mut World, file: String) -> Result<(), String> {
     let checkout = eng(w).checkout()?.clone();
-    let (cargo, parinn_home) = (
+    let (cargo, cairn_home) = (
         env::var_os("CARGO").unwrap_or_else(|| "cargo".into()),
-        w.parinn_home.clone(),
+        w.cairn_home.clone(),
     );
     let deps = dependencies::direct_deps(&checkout, &file, |manifest| {
-        dependencies::cargo_metadata(&cargo, manifest, &parinn_home)
+        dependencies::cargo_metadata(&cargo, manifest, &cairn_home)
     })?;
     let e = eng(w);
     e.deps.all.extend(deps.all);

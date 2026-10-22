@@ -147,9 +147,9 @@ fn ingest_says_what_it_cannot_read_or_audit_and_still_records() {
     let (code, _, _) = p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
     assert_eq!(code, EXIT_OK);
     // The device key gone, the accepted configuration cannot be read.
-    std::fs::remove_file(p.parinn_home().join("keys/device.key")).unwrap();
+    std::fs::remove_file(p.cairn_home().join("keys/device.key")).unwrap();
     // An audit log that takes no entry.
-    let audit_dir = p.parinn_home().join("audit");
+    let audit_dir = p.cairn_home().join("audit");
     std::fs::remove_dir_all(&audit_dir).unwrap();
     std::fs::write(&audit_dir, "").unwrap();
     crate::tests::set_mode(&audit_dir, 0o600);
@@ -169,7 +169,7 @@ fn sources_find_the_repository_configuration_from_the_working_directory() {
     let home = p_home(&p);
     let ctx = ctx_of(&p);
     let s = sources(&ctx, &home);
-    assert_eq!(s.configuration, p.parinn_home().join("config.toml"));
+    assert_eq!(s.configuration, p.cairn_home().join("config.toml"));
     assert_eq!(s.repository, None);
     assert_eq!(s.running, OsUser::Known(u32::MAX));
     p.repository("");
@@ -180,7 +180,7 @@ fn sources_find_the_repository_configuration_from_the_working_directory() {
 }
 
 fn p_home(p: &Process) -> Home {
-    Home::locate(Some(p.parinn_home().as_os_str()), None).unwrap()
+    Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap()
 }
 
 /// A context for `p`'s directory, as `Process::invoke` makes one.
@@ -189,7 +189,7 @@ pub(crate) fn ctx_of(p: &Process) -> Context<'static> {
         Box::leak(Box::new(|| std::sync::mpsc::channel().1));
     Context {
         build: &DEV,
-        parinn_home: Some(p.parinn_home().into_os_string()),
+        cairn_home: Some(p.cairn_home().into_os_string()),
         home: None,
         home_id: None,
         hook_panics: false,
@@ -222,7 +222,7 @@ fn recorded_acts_are_none_while_the_first_start_is_unfinished() {
     // The genesis recorded, its device key not yet placed.
     let q = Process::new();
     q.invoke(&["ingest", "--path", &q.transcript("a\n")], &DEV);
-    std::fs::remove_file(q.parinn_home().join("keys/device.key")).unwrap();
+    std::fs::remove_file(q.cairn_home().join("keys/device.key")).unwrap();
     std::fs::write(p_home(&q).staged(), "change").unwrap();
     assert_eq!(recorded_acts(&p_home(&q)), Ok(Vec::new()));
 }
@@ -231,7 +231,7 @@ fn recorded_acts_are_none_while_the_first_start_is_unfinished() {
 fn recorded_acts_reports_a_store_whose_node_is_gone() {
     let p = Process::new();
     p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
-    std::fs::remove_file(p.parinn_home().join("keys/device.key")).unwrap();
+    std::fs::remove_file(p.cairn_home().join("keys/device.key")).unwrap();
     assert!(recorded_acts(&p_home(&p)).is_err());
     let (code, _, err) = p.invoke(&["status"], &DEV);
     assert_eq!(code, crate::EXIT_FAILURE);

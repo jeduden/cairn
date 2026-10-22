@@ -42,13 +42,13 @@ fn user_prompt_submit(p: &Process, session: &str, prompt_id: &str, prompt: &str)
 }
 
 fn store(p: &Process) -> Store {
-    Store::open(&p.parinn_home().join("store.db")).unwrap()
+    Store::open(&p.cairn_home().join("store.db")).unwrap()
 }
 
 /// What the store keeps on disk: its file, and the log a hook handler
 /// leaves to the next opener.
 fn stored(p: &Process) -> String {
-    let file = |name: &str| fs::read(p.parinn_home().join(name)).unwrap_or_default();
+    let file = |name: &str| fs::read(p.cairn_home().join(name)).unwrap_or_default();
     let text = [file("store.db"), file("store.db-wal")].concat();
     String::from_utf8_lossy(&text).into_owned()
 }
@@ -76,7 +76,7 @@ fn entries(p: &Process) -> Vec<(Option<String>, String)> {
 }
 
 fn markers(p: &Process) -> Vec<String> {
-    fs::read_dir(p.parinn_home().join(MARKERS))
+    fs::read_dir(p.cairn_home().join(MARKERS))
         .map(|l| {
             l.flatten()
                 .map(|e| e.file_name().to_string_lossy().into_owned())
@@ -205,7 +205,7 @@ fn a_hook_input_failing_the_schema_is_rejected_audited_and_holds_nothing() {
             "hook input failed schema validation".into()
         )]
     );
-    assert!(!p.parinn_home().join("store.db").exists());
+    assert!(!p.cairn_home().join("store.db").exists());
 }
 
 #[test]
@@ -242,7 +242,7 @@ fn an_unknown_source_is_recorded_as_other() {
 fn a_transcript_path_outside_the_roots_is_refused_and_never_read() {
     let mut p = Process::new();
     let mut input: Value = serde_json::from_str(&session_start(&p, "s1", "startup")).unwrap();
-    input["transcript_path"] = json!(p.parinn_home().join("store.db"));
+    input["transcript_path"] = json!(p.cairn_home().join("store.db"));
 
     hook(&mut p, "SessionStart", |_| input.to_string());
 
@@ -299,7 +299,7 @@ fn a_permission_request_in_a_home_with_no_store_creates_none() {
     });
 
     assert_eq!(ran.0, EXIT_OK);
-    assert!(!p.parinn_home().join("store.db").exists());
+    assert!(!p.cairn_home().join("store.db").exists());
 }
 
 #[test]
@@ -316,7 +316,7 @@ fn a_hook_input_without_a_session_holds_nothing() {
 #[test]
 fn a_store_that_cannot_open_is_counted_and_the_hook_answers_empty() {
     let mut p = Process::new();
-    crate::tests::owner_only_dirs(&p.parinn_home().join("store.db"));
+    crate::tests::owner_only_dirs(&p.cairn_home().join("store.db"));
 
     let ran = hook(&mut p, "SessionStart", |p| {
         session_start(p, "s1", "startup")
@@ -355,7 +355,7 @@ fn a_hook_handler_past_its_budget_answers_empty_audited_and_clears_its_marker() 
 
 /// Leaves a start marker named `name` holding `text` in `p`'s home.
 fn leave_marker(p: &Process, name: &str, text: &str) {
-    let dir = p.parinn_home().join(MARKERS);
+    let dir = p.cairn_home().join(MARKERS);
     crate::tests::owner_only_dirs(&dir);
     fs::write(dir.join(name), text).unwrap();
     crate::tests::set_mode(&dir.join(name), 0o600);
@@ -404,7 +404,7 @@ fn parinn_status_and_the_mcp_server_as_it_starts_count_a_marker_left_behind() {
 
 /// Holds a `SessionStart` hook observation of `session` made at `at`.
 fn hold_start(p: &Process, session: &str, at: u64) {
-    let home = Home::locate(Some(p.parinn_home().as_os_str()), None).unwrap();
+    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
     home.create().unwrap();
     let observation = Observation {
         hook: "SessionStart".into(),
@@ -601,7 +601,7 @@ fn a_hook_handler_leaves_the_stores_log_to_the_next_opener() {
         session_start(p, "s1", "startup")
     });
 
-    let log = fs::metadata(p.parinn_home().join("store.db-wal")).unwrap();
+    let log = fs::metadata(p.cairn_home().join("store.db-wal")).unwrap();
     assert!(log.len() > 0, "its commit is in the log, not checkpointed");
     assert_eq!(held(&p).len(), 1, "the next opener reads what it held");
 }
@@ -648,8 +648,8 @@ fn redaction_rules_compile_on_a_thread_that_sends_them_with_their_patterns() {
 #[test]
 fn a_store_a_stopped_hook_handler_made_no_schema_in_reads_as_holding_nothing() {
     let p = Process::new();
-    crate::tests::owner_only_dirs(&p.parinn_home());
-    let store = p.parinn_home().join("store.db");
+    crate::tests::owner_only_dirs(&p.cairn_home());
+    let store = p.cairn_home().join("store.db");
     fs::write(&store, "").unwrap();
     crate::tests::set_mode(&store, 0o600);
 
@@ -673,7 +673,7 @@ fn a_source_names_only_a_known_start_and_a_budget_parses_as_milliseconds() {
 #[test]
 fn a_transcript_size_that_cannot_be_read_is_none_and_counted() {
     let p = Process::new();
-    let home = Home::locate(Some(p.parinn_home().as_os_str()), None).unwrap();
+    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
     home.create().unwrap();
     let sources = Sources {
         configuration: p.dir.path().join("configuration.toml"),
@@ -715,7 +715,7 @@ fn a_transcript_size_that_cannot_be_read_is_none_and_counted() {
 fn a_hook_observation_the_store_cannot_hold_is_counted_and_the_hook_answers_empty() {
     let mut p = Process::new();
     hold_start(&p, "old", NOW - 31);
-    let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
+    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
     conn.execute_batch("DROP TABLE hook_observations").unwrap();
     drop(conn);
 
@@ -739,7 +739,7 @@ fn session_bindings_a_store_cannot_list_are_left_uncounted() {
     let p = Process::new();
     hold_start(&p, "old", NOW - 31);
     let mut store = store(&p);
-    rusqlite::Connection::open(p.parinn_home().join("store.db"))
+    rusqlite::Connection::open(p.cairn_home().join("store.db"))
         .unwrap()
         .execute_batch("DROP TABLE hook_observations")
         .unwrap();
@@ -767,7 +767,7 @@ fn ingest_says_which_prompt_match_it_cannot_audit() {
     let mut p = Process::new();
     let path = prompt_matched_twice(&mut p);
     // Nothing was audited yet, so a file takes the audit log's place.
-    let audit_dir = p.parinn_home().join("audit");
+    let audit_dir = p.cairn_home().join("audit");
     fs::write(&audit_dir, "").unwrap();
     crate::tests::set_mode(&audit_dir, 0o600);
 

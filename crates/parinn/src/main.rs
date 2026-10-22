@@ -27,7 +27,7 @@ fn main() -> ExitCode {
     let clock = move || fixed.unwrap_or_else(now);
     let ctx = parinn::Context {
         build: &parinn::BUILD,
-        parinn_home: std::env::var_os("CAIRN_HOME"),
+        cairn_home: std::env::var_os("CAIRN_HOME"),
         home: std::env::var_os("HOME"),
         home_id: std::env::var_os("CAIRN_HOME_ID"),
         // The development build's seam for the `@ENG-04` scenario; a

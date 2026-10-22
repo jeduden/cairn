@@ -121,17 +121,13 @@ fn normal(package: &serde_json::Value) -> impl Iterator<Item = &serde_json::Valu
 
 /// Runs `cargo metadata` on the workspace `manifest` roots, without
 /// resolving its dependency graph, with `CAIRN_HOME` pointed at
-/// `parinn_home` (ENG-14).
+/// `cairn_home` (ENG-14).
 ///
 /// # Errors
 ///
 /// Fails when cargo cannot run, exits unsuccessfully, or prints no
 /// UTF-8.
-pub fn cargo_metadata(
-    cargo: &OsStr,
-    manifest: &Path,
-    parinn_home: &Path,
-) -> Result<String, String> {
+pub fn cargo_metadata(cargo: &OsStr, manifest: &Path, cairn_home: &Path) -> Result<String, String> {
     let out = Command::new(cargo)
         .args([
             "metadata",
@@ -142,7 +138,7 @@ pub fn cargo_metadata(
             "--manifest-path",
         ])
         .arg(manifest)
-        .env("CAIRN_HOME", parinn_home)
+        .env("CAIRN_HOME", cairn_home)
         .output()
         .map_err(|e| format!("run cargo metadata: {e}"))?;
     if !out.status.success() {
