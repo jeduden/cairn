@@ -310,7 +310,9 @@ jobs:
         run: |
           cd "$RUNNER_TEMP/base"
           if [ -f tooling/benchmark/Cargo.toml ]; then
-            cargo build --release --locked -p benchmark -p parinn
+            core=cairn
+            [ -f crates/parinn/Cargo.toml ] && core=parinn
+            cargo build --release --locked -p benchmark -p "$core"
           fi
       - name: Sample both sides and gate
         shell: bash
@@ -318,6 +320,8 @@ jobs:
           set -euo pipefail
           head="$GITHUB_WORKSPACE/target/release"
           base="$RUNNER_TEMP/base/target/release"
+          base_core=cairn
+          [ -x "$base/parinn" ] && base_core=parinn
           out="$RUNNER_TEMP/samples"
           mkdir -p "$out"
           if [ ! -x "$base/benchmark" ]; then
@@ -333,7 +337,9 @@ jobs:
             for side in $order; do
               bin="$head"
               [ "$side" = base ] && bin="$base"
-              "$bin/benchmark" run --core "$bin/parinn" --samples "$SAMPLES" >> "$out/$side.samples"
+              core="$bin/parinn"
+              [ "$side" = base ] && core="$base/$base_core"
+              "$bin/benchmark" run --core "$core" --samples "$SAMPLES" >> "$out/$side.samples"
             done
           done
           status=0

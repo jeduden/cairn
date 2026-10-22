@@ -129,7 +129,7 @@ fn a_probe_runs_with_nothing_but_its_home_its_temporary_directory_and_its_place(
             // A coverage run's profile file, which the probe keeps.
             .filter(|l| !l.starts_with("PWD=") && !l.starts_with("LLVM_PROFILE_FILE="))
             .collect::<Vec<_>>(),
-        ["PARINN_GUARD_PROBE=parinn-home", "HOME=/h", "TMPDIR=/t"]
+        ["HOME=/h", "PARINN_GUARD_PROBE=parinn-home", "TMPDIR=/t"]
     );
 }
 
