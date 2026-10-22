@@ -89,6 +89,14 @@ lines, previews and a recall tool's whole output.
 The sample, with each text and its counts, is
 [sample.jsonl](sample.jsonl): 771 KB of text, 371,000 model tokens.
 
+The sample, the authored pins ([authored.txt](calibrate/authored.txt)) and
+the collector ([collect.py](calibrate/collect.py)) keep the product's
+earlier name, Cairn, on purpose. The texts are verbatim from commit
+`99e06e5`, and each count is the model's count for that exact text, so
+renaming a text would leave a count that belongs to another one. The
+collector reads that commit's files by their paths then, such as
+`crates/cairn`. ParleyInn is the same product under its new name.
+
 ### One tokenizer
 
 Every sample was counted on Haiku 5.5. Every 16th, 41 samples, was
