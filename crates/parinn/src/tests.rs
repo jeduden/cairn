@@ -220,6 +220,14 @@ fn invoke(args: &[&str], build: &Build) -> (u8, String, String) {
 }
 
 #[test]
+fn licenses_is_a_command_that_prints_the_embedded_texts() {
+    let (code, out, err) = invoke(&["licenses"], &DEV);
+
+    assert_eq!((code, err.as_str()), (0, ""));
+    assert_eq!(out, crate::licenses::THIRD_PARTY_LICENSES);
+}
+
+#[test]
 fn no_command_is_a_usage_error() {
     let (code, out, err) = invoke(&[], &DEV);
 

@@ -40,8 +40,8 @@ Outcome:
   key alone, in one place that recall and `parinn verify` share. A
   replaced key's writers read `peer`, so do another node's. `parinn
   rebuild` writes the `origins` table and the search index, appending no
-  event; `parinn verify` exits 3 on a kept origin that differs. `@PRV-13` stays pending: no arrival event
-  exists yet.
+  event; `parinn verify` exits 3 on a kept origin that differs.
+  `@PRV-13` stays pending: no arrival event exists yet.
 - LANE-01 and LANE-31's M1 part is proven by the `room` crate's unit and
   property tests: `standing_link` lets the first link in causal order
   stand, the lower commitment among concurrent ones, whatever the
