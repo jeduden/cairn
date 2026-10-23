@@ -289,7 +289,7 @@ fn license_check_cases() -> Vec<Case> {
                 r#"include_str!("../../../licenses/aarch64-unknown-linux-musl/THIRD_PARTY_LICENSES")"#,
             ),
             scenario("ENG-31"),
-            "the core does not select and name licenses/aarch64-apple-darwin/THIRD_PARTY_LICENSES",
+            "the core does not select licenses/aarch64-apple-darwin/THIRD_PARTY_LICENSES",
         ),
     ]
 }
