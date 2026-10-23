@@ -84,12 +84,13 @@ fn a_dot_git_file_that_names_no_directory_is_corrupt() {
         "",
         "not a gitdir line\n",
         "gitdir:\n",
-        "gitdir: missing/dir\n",
-        "gitdir: plain\n",
+        "gitdir: x/.git/worktrees/missing\n",
+        "gitdir: plain/.git/worktrees/w\n",
     ] {
         let work = dir.path().join("work");
         fs::create_dir_all(&work).unwrap();
-        fs::write(work.join("plain"), "a file").unwrap();
+        fs::create_dir_all(work.join("plain/.git/worktrees")).unwrap();
+        fs::write(work.join("plain/.git/worktrees/w"), "a file").unwrap();
         fs::write(work.join(".git"), text).unwrap();
         let result = git_dir(&work, None);
         assert!(matches!(result, Err(Error::Corrupt(_))), "{text:?}");
@@ -146,7 +147,7 @@ fn a_path_through_a_file_is_looked_for_above_the_file() {
 fn a_gitdir_through_a_file_is_an_io_error() {
     let dir = TempDir::new().unwrap();
     fs::write(dir.path().join("plain"), "a file").unwrap();
-    fs::write(dir.path().join(".git"), "gitdir: plain/below\n").unwrap();
+    fs::write(dir.path().join(".git"), "gitdir: plain/.git/worktrees/w\n").unwrap();
     assert!(matches!(git_dir(dir.path(), None), Err(Error::Io { .. })));
 }
 

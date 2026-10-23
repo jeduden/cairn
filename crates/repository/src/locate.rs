@@ -12,6 +12,19 @@ const MAX_GITDIR_FILE: u64 = 4096;
 
 const BAD_GITDIR: Error = Error::Corrupt("gitdir file names no directory");
 
+/// Whether `path` lies where git keeps a linked worktree's or a
+/// submodule's git directory: below `.git/worktrees` or `.git/modules`.
+/// Any other directory a `.git` file names, an unrelated repository's
+/// included, is not followed, so a clone cannot bind someone else's
+/// commit as its identity.
+fn is_linked_git_dir(path: &Path) -> bool {
+    let parts: Vec<_> = path.components().map(|c| c.as_os_str()).collect();
+
+    parts
+        .windows(3)
+        .any(|w| w[0] == ".git" && (w[1] == "worktrees" || w[1] == "modules") && w[2] != "..")
+}
+
 /// The directory a `.git` file in `dir` names with `gitdir: <path>`.
 fn gitdir_file(dir: &Path) -> Result<PathBuf, Error> {
     let bytes = read_limited(dir, ".git", MAX_GITDIR_FILE)?.unwrap_or_default();
@@ -24,6 +37,11 @@ fn gitdir_file(dir: &Path) -> Result<PathBuf, Error> {
         .filter(|target| !target.is_empty())
         .ok_or(BAD_GITDIR)?;
     let path = dir.join(target);
+    if !is_linked_git_dir(&path) {
+        return Err(Error::Unsupported(
+            "gitdir that is no linked worktree's or submodule's",
+        ));
+    }
     match fs::symlink_metadata(&path) {
         Ok(meta) if meta.is_symlink() => {
             Err(Error::Unsupported("symbolic link as a git directory"))
@@ -69,8 +87,9 @@ fn from_dot_git(dir: &Path, dot_git: &Path, meta: &Metadata) -> Result<Option<Pa
 /// compared as the path spells it, like the walk. `None` is for tests.
 ///
 /// A `gitdir:` file's target is followed only as git's linked
-/// worktrees and separate git directories need it: it must exist as a
-/// real directory and not be a symbolic link. The git directory it
+/// worktrees and submodules need it: it must lie below a `.git/worktrees`
+/// or a `.git/modules` directory, exist as a real directory and not be a
+/// symbolic link. A separate git directory is refused. The git directory it
 /// names is read by [`crate::root_commit`] and [`crate::has_commit`],
 /// which hold its `commondir`, if it has one, to an ancestor of it or
 /// itself, as a linked worktree's `../..` is, and refuse any other.
