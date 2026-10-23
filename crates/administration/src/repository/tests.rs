@@ -262,7 +262,8 @@ fn a_repository_with_no_commit_gets_a_provisional_identity_and_binds_later() {
 }
 
 #[test]
-fn a_provisional_directory_whose_clone_gains_a_bound_commit_joins_that_identity_without_a_second_bind() {
+fn a_provisional_directory_whose_clone_gains_a_bound_commit_joins_that_identity_without_a_second_bind()
+ {
     let mut f = fixture();
     let (one, blank) = (f.path("one"), f.path("blank"));
     let root = rooted(&one, "x");
@@ -544,4 +545,16 @@ fn a_look_that_runs_out_of_time_is_told_from_a_clone_that_cannot_be_read_and_is_
     assert!(f.binds().is_empty());
     // Nothing was kept, so the next look, with time, binds it.
     assert_eq!(f.bind(&app), Outcome::Bound { provisional: false });
+}
+
+#[test]
+fn show_names_a_provisional_directory_that_gained_a_commit_as_waiting_to_bind() {
+    let mut f = fixture();
+    let blank = f.path("blank");
+    empty(&blank);
+    f.bind(&blank);
+    let root = commit(&blank, &[], "first");
+    point(&blank, &root);
+
+    assert_eq!(f.show(&blank), Shown::Unbound(Some(root)));
 }

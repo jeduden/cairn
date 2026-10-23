@@ -293,25 +293,59 @@ fn no_local_name_reveals_it(w: &mut World) -> Result<(), String> {
     Ok(())
 }
 
+/// How many times the change of a repository identity is counted.
+fn changed(w: &mut World) -> Result<u64, String> {
+    run_core(w, &["status", "--json"], None)?;
+    let status: Value = serde_json::from_slice(&last_run(w)?.stdout).map_err(|e| e.to_string())?;
+    Ok(status["counters"]["repository_identity_changed"]["total"]
+        .as_u64()
+        .unwrap_or(0))
+}
+
+/// Replaces the repository in `dir` with a new one whose root commit
+/// is `message`.
+fn swap_repository(w: &World, dir: &Path, message: &str) -> Result<(), String> {
+    fs::remove_dir_all(dir.join(".git")).map_err(|e| e.to_string())?;
+    fs::write(dir.join("b.txt"), message).map_err(|e| e.to_string())?;
+    git(w, dir, &["init", "-q"])?;
+    git(w, dir, &["add", "."])?;
+    git(w, dir, &["commit", "-q", "-m", message])?;
+    Ok(())
+}
+
 #[then(
     regex = r#"^a later change in the identity the directory resolves to is audited, rewrites no room's branch links silently, rebinds only on the widening principal act "parinn repository bind", the same act that binds by hand, and scopes no ParleyInn state$"#
 )]
 fn a_later_change(w: &mut World) -> Result<(), String> {
     let dir = clone_dir(w)?;
+    if lane(w).root.is_none() {
+        // A provisional identity binds on its own once its clone names a
+        // commit: no change, and the record is not rewritten.
+        swap_repository(w, &dir, "first root")?;
+        first_hook_event(w, &dir, "lane-02-binds-later")?;
+        if shown(w, &dir)?["status"] != "bound" || changed(w)? != 0 {
+            return Err("a provisional identity did not bind on its own".to_owned());
+        }
+    }
     let before = events(w, "repository_bind")?;
     // The directory now holds another repository.
-    fs::remove_dir_all(dir.join(".git")).map_err(|e| e.to_string())?;
-    fs::write(dir.join("b.txt"), "b").map_err(|e| e.to_string())?;
-    git(w, &dir, &["init", "-q"])?;
-    git(w, &dir, &["add", "."])?;
-    git(w, &dir, &["commit", "-q", "-m", "another root"])?;
+    swap_repository(w, &dir, "another root")?;
     first_hook_event(w, &dir, "lane-02-later")?;
     first_hook_event(w, &dir, "lane-02-later-again")?;
-    run_core(w, &["status", "--json"], None)?;
-    let status: Value = serde_json::from_slice(&last_run(w)?.stdout).map_err(|e| e.to_string())?;
-    if status["counters"]["repository_identity_changed"]["total"] != 1 {
-        return Err(format!("the change is not counted once: {status}"));
+    if changed(w)? != 1 {
+        return Err("the change is not counted once".to_owned());
     }
+    let audit = audit::log::Log::new(home(w)?.audit())
+        .entries()
+        .map_err(|e| e.to_string())?;
+    if !audit
+        .iter()
+        .any(|e| e.detail.contains("repository identity changed"))
+    {
+        return Err("no audit entry records the change".to_owned());
+    }
+    // M1 holds no room, so no branch link exists to be rewritten: the
+    // clauses on branch links and on state hold vacuously.
     if events(w, "repository_bind")? != before || shown(w, &dir)?["status"] != "changed" {
         return Err("the change rebound the directory or relinked it".to_owned());
     }

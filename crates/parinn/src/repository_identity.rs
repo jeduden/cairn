@@ -150,7 +150,10 @@ fn bind_held(
             }
             Ok(_) => continue,
         };
-        let _ = ctx.audit(&occurrence);
+        // A failed audit is said in the log: nothing else can say it.
+        let _ = ctx.audit(&occurrence).map_err(|e| {
+            tracing::warn!(error = e.to_string().as_str(), "audit a repository look");
+        });
     }
 }
 

@@ -129,6 +129,9 @@ fn resolve(
     deadline: &dyn Deadline,
 ) -> Result<Current, repository::Error> {
     for id in bound {
+        if deadline.expired() {
+            return Err(repository::Error::Deadline);
+        }
         if repository::has_commit(git_dir, id)? {
             return Ok(Current::Bound(id.clone()));
         }
@@ -194,8 +197,12 @@ pub fn bind(
         directory_key(&secret, directory),
         identity_key(&secret, &current),
     );
+    let provisional_key = identity_key(&secret, &Current::Provisional);
     match store.directory_identity(&directory)? {
         Some(kept) if kept == now => return Ok(Outcome::Unchanged),
+        // A provisional identity binds later, on its own, once its clone
+        // names a commit: no change, and the record is not rewritten.
+        Some(kept) if kept == provisional_key => {}
         Some(_) => {
             let marker = format!("reported:{directory}");
             if store.directory_identity(&marker)?.as_deref() == Some(now.as_str()) {
@@ -272,9 +279,13 @@ pub fn show(
         Current::Provisional => None,
     };
 
+    let provisional = identity_key(&secret, &Current::Provisional);
+
     Ok(match kept {
         None => Shown::Unbound(commit),
         Some(kept) if kept == identity_key(&secret, &current) => Shown::Bound(commit),
+        // Binds on its own at the next look (see `bind`).
+        Some(kept) if kept == provisional => Shown::Unbound(commit),
         Some(_) => Shown::Changed(commit),
     })
 }

@@ -78,14 +78,13 @@ Inherited:
 
 For phases 13 to 16: the envelope's shape is untouched, its `origin` and
 `trust` come from `administration`; restore (M2) reads `trust_level`;
-phase 14's quarantine must change no origin; phase 15's SEC-01 row
-counts the `repository` crate as reached.
+quarantine (phase 14) must change no origin.
 
 For the stakeholder:
 
-- Deviation: the bind is recorded when `parinn ingest` or an MCP server
-  starts, not in the hook handler: reading git cannot stay within
-  NFR-02's 150 ms.
+- Needs a ruling: LANE-02 binds at the first hook event; here it is
+  recorded when `parinn ingest` or an MCP server starts, as reading git
+  cannot stay within NFR-02's 150 ms.
 - Deviation, PRV-13: after a node identity change every writer reads
   `peer` until a PRV-12 confirm, which no M1 command makes.
 - Residual after the review, raised: a file swapped for a FIFO between
