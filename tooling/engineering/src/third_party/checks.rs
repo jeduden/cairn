@@ -84,14 +84,30 @@ pub fn unlinked_present(
         .collect())
 }
 
-/// Problems with a file that does not name the code `entries` say the
-/// target compiles in.
+/// What a target's file must name beyond its crates, fixed here and
+/// not taken from the generator's own list: SQLite and the Rust standard
+/// library everywhere, the C library on a musl target, and on the Windows
+/// target the mingw-w64 runtime and libgcc its GCC links statically.
+fn required_names(target: &str) -> Vec<&'static str> {
+    let mut names = vec!["SQLite", "Rust standard library"];
+    if target.ends_with("-linux-musl") {
+        names.push("musl C library");
+    }
+    if target.ends_with("-windows-gnu") {
+        names.extend(["mingw-w64 runtime", "libgcc"]);
+    }
+
+    names
+}
+
+/// Problems with a file that does not name the code its target compiles
+/// in without being a crate.
 #[must_use]
 pub fn names_compiled_in(target: &str, rendered: &str) -> Vec<String> {
-    super::non_crate(target)
+    required_names(target)
         .into_iter()
-        .filter(|e| !rendered.contains(&e.name))
-        .map(|e| format!("{target}: {} is not named", e.name))
+        .filter(|name| !rendered.contains(name))
+        .map(|name| format!("{target}: {name} is not named"))
         .collect()
 }
 

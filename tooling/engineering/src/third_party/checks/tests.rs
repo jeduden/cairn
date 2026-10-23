@@ -114,6 +114,15 @@ fn a_file_must_name_what_its_target_compiles_in() {
         names_compiled_in("x86_64-unknown-linux-musl", "SQLite, Rust standard library"),
         ["x86_64-unknown-linux-musl: musl C library is not named"]
     );
+    let windows = render(&non_crate("x86_64-pc-windows-gnu"));
+    assert!(names_compiled_in("x86_64-pc-windows-gnu", &windows).is_empty());
+    assert_eq!(
+        names_compiled_in("x86_64-pc-windows-gnu", &musl),
+        [
+            "x86_64-pc-windows-gnu: mingw-w64 runtime is not named",
+            "x86_64-pc-windows-gnu: libgcc is not named"
+        ]
+    );
 }
 
 #[test]

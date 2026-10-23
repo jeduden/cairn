@@ -32,6 +32,20 @@ pub fn committed_path(target: &str) -> String {
 /// The blessing SQLite carries in place of a copyright notice.
 const SQLITE: &str = "The author disclaims copyright to this source code.  In place of\na legal notice, here is a blessing:\n\n   * May you do good and not evil.\n   * May you find forgiveness for yourself and forgive others.\n   * May you share freely, never taking more than you give.";
 
+/// The license of the mingw-w64 runtime, as its project publishes it. The
+/// stakeholder verifies this text against the release the Windows build
+/// links before a release (ENG-31).
+const MINGW_W64: &str = include_str!("third_party/runtime/mingw-w64.txt");
+
+/// The GNU General Public License, version 3, which the GCC runtime
+/// libraries carry with the exception below.
+const GPL_3: &str = include_str!("third_party/runtime/GPL-3.0.txt");
+
+/// A summary of the GCC Runtime Library Exception, version 3.1, which
+/// points to its published text. The stakeholder replaces it with the
+/// exception's full text before a release (ENG-31).
+const GCC_EXCEPTION: &str = include_str!("third_party/runtime/gcc-exception.txt");
+
 /// One piece of third-party code in a file: its name, the license it
 /// declares, the copyright lines its texts state and those texts.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -67,6 +81,9 @@ pub fn non_crate(target: &str) -> Vec<Entry> {
             texts: vec![canon("MIT"), canon("Apache-2.0")],
         },
     ];
+    if target.ends_with("-windows-gnu") {
+        entries.extend(mingw_runtime());
+    }
     if target.ends_with("-linux-musl") {
         entries.push(Entry {
             name: "musl C library".to_owned(),
@@ -77,6 +94,33 @@ pub fn non_crate(target: &str) -> Vec<Entry> {
     }
 
     entries
+}
+
+/// The runtime the Windows target links statically through mingw-w64's
+/// GCC: the mingw-w64 start-up code and libraries, and libgcc.
+fn mingw_runtime() -> [Entry; 2] {
+    [
+        Entry {
+            name: "mingw-w64 runtime (crt, libmingw32, libmingwex)".to_owned(),
+            license: "ZPL-2.1 and public domain, per file".to_owned(),
+            copyrights: vec![
+                "Copyright (c) 2009, 2010, 2011, 2012, 2013 by the mingw-w64 project".to_owned(),
+            ],
+            texts: vec![("mingw-w64 runtime".to_owned(), MINGW_W64.to_owned())],
+        },
+        Entry {
+            name: "libgcc and libgcc_eh".to_owned(),
+            license: "GPL-3.0-or-later WITH GCC-exception-3.1".to_owned(),
+            copyrights: vec!["Copyright (C) Free Software Foundation, Inc.".to_owned()],
+            texts: vec![
+                ("GPL-3.0".to_owned(), GPL_3.to_owned()),
+                (
+                    "GCC Runtime Library Exception".to_owned(),
+                    GCC_EXCEPTION.to_owned(),
+                ),
+            ],
+        },
+    ]
 }
 
 /// A crate as an [`Entry`]: its declared license and the copyright lines

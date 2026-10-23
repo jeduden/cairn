@@ -39,7 +39,12 @@ fn every_target_names_sqlite_and_std_and_a_musl_target_its_c_library() {
 
     assert_eq!(
         names("x86_64-pc-windows-gnu"),
-        ["SQLite", "Rust standard library"]
+        [
+            "SQLite",
+            "Rust standard library",
+            "mingw-w64 runtime (crt, libmingw32, libmingwex)",
+            "libgcc and libgcc_eh"
+        ]
     );
     assert_eq!(
         names("aarch64-unknown-linux-musl"),

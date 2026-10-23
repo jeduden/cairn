@@ -37,6 +37,11 @@ Done, red then green, in `tooling/engineering`:
 Drift cases (ENG-27): a committed file out of step with the lockfile, and
 a release target with no committed file.
 
-Open for the stakeholder: the fixed list of non-crate code is short and
-unreviewed by a lawyer. The Windows target links a mingw-w64 runtime that
-the list does not name.
+Open for the stakeholder, before a release:
+
+- The fixed list of non-crate code is short. No lawyer has reviewed it.
+- The Windows file names the mingw-w64 runtime and libgcc. The
+  mingw-w64 text is written from memory of its published license, and
+  the GCC Runtime Library Exception is a summary that points to its
+  published text. Both need replacing with the exact texts of the
+  release the Windows build links.
