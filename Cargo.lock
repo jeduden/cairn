@@ -1238,6 +1238,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "room"
+version = "0.0.0"
+dependencies = [
+ "provenance",
+ "record",
+]
+
+[[package]]
 name = "rusqlite"
 version = "0.40.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
