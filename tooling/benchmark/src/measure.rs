@@ -84,6 +84,10 @@ const ATTEMPTS: usize = 4;
 /// sample again.
 const SETTLE: Duration = Duration::from_millis(300);
 
+/// How long the benchmark lets a flush of the disk take before it samples
+/// anyway.
+const FLUSH_DEADLINE: Duration = Duration::from_secs(5);
+
 /// Waits [`SETTLE`] for the disk to calm down.
 fn settle() {
     thread::sleep(SETTLE);
@@ -126,8 +130,9 @@ fn hook_sample(
         fixture::Home::with_transcript(&std::env::temp_dir(), &fixture::transcript(HOOK_LINES))
             .map_err(|e| Attempt::Failed(format!("make the fixture of {}: {e}", benchmark.name)))?;
     // Flush what earlier work left dirty, so the handler's own durable
-    // commit does not wait on it; a failed flush only costs a retry.
-    let _ = Command::new("sync").status();
+    // commit does not wait on it. A flush that fails or times out only
+    // costs a retry, and the host may have no `sync` at all.
+    let _ = time_program(Path::new("sync"), &[], FLUSH_DEADLINE);
     let input = home.hook_input(hook).into_bytes();
     let took = time_program_fed(program, benchmark.args, &home.env(), input, deadline)
         .map_err(Attempt::Failed)?;

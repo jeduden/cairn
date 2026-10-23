@@ -1,12 +1,12 @@
-//! ENG-30: every crate in the workspace's dependency tree carries a
-//! license text in its published source, and each text fits the
+//! ENG-30: every crate a release target links into a shipped executable
+//! carries a license text in its published source, and each text fits the
 //! canonical text of a license in the crate's declared SPDX expression.
 //! The canonical texts are kept here, one file each under
 //! `license_texts/canon`, with `{{}}` for the holder or name a template
 //! fills in. The check reads only `cargo metadata` and the sources cargo
 //! has already fetched. The checks of the repository's own records (the
 //! substitute texts it keeps, `deny.toml`'s grants against the canonical
-//! texts) land with the scenario and its drift case (ENG-27).
+//! texts) have their drift cases (ENG-27).
 
 pub mod cli;
 
