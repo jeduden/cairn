@@ -2,6 +2,9 @@
 
 use std::collections::BTreeSet;
 
+use crate::deadline::check;
+use crate::fsio::read_limited;
+use crate::object::Kind;
 use crate::objects::Objects;
 use crate::repo::Repo;
 use crate::{CommitId, Deadline, Error};
@@ -14,13 +17,24 @@ pub(crate) const MAX_COMMITS: usize = 2_000_000;
 /// The largest `shallow` file read.
 pub(crate) const MAX_SHALLOW: u64 = 16 << 20;
 
+const BAD_PARENT: Error = Error::Corrupt("commit has a parent that is not a commit id");
+const BAD_SHALLOW: Error = Error::Corrupt("shallow file lists something that is not a commit id");
+const NOT_A_COMMIT: Error = Error::Corrupt("object is not a commit");
+
 /// The commits `parent` headers name in a commit object's bytes.
 ///
 /// # Errors
 ///
 /// [`Error::Corrupt`] for a `parent` header that is not a commit id.
-pub(crate) fn parents(_commit: &[u8]) -> Result<Vec<CommitId>, Error> {
-    Ok(Vec::new())
+pub(crate) fn parents(commit: &[u8]) -> Result<Vec<CommitId>, Error> {
+    let mut found = Vec::new();
+    for line in commit.split(|&b| b == b'\n').take_while(|l| !l.is_empty()) {
+        if let Some(text) = line.strip_prefix(b"parent ") {
+            let id = std::str::from_utf8(text).ok().and_then(CommitId::parse);
+            found.push(id.ok_or(BAD_PARENT)?);
+        }
+    }
+    Ok(found)
 }
 
 /// The commits the clone's `shallow` file lists: where its history was
@@ -30,8 +44,14 @@ pub(crate) fn parents(_commit: &[u8]) -> Result<Vec<CommitId>, Error> {
 ///
 /// [`Error::Corrupt`] for a line that is not a commit id;
 /// [`Error::TooLarge`] for a file past `limit` bytes.
-pub(crate) fn read_shallow(_repo: &Repo, _limit: u64) -> Result<BTreeSet<CommitId>, Error> {
-    Ok(BTreeSet::new())
+pub(crate) fn read_shallow(repo: &Repo, limit: u64) -> Result<BTreeSet<CommitId>, Error> {
+    let bytes = read_limited(&repo.common_dir.join("shallow"), limit)?.unwrap_or_default();
+    String::from_utf8_lossy(&bytes)
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .map(|line| CommitId::parse(line).ok_or(BAD_SHALLOW))
+        .collect()
 }
 
 /// The parentless commit with the lowest id among those reachable from
@@ -45,13 +65,39 @@ pub(crate) fn read_shallow(_repo: &Repo, _limit: u64) -> Result<BTreeSet<CommitI
 /// [`Error::TooLarge`] past `max_commits`; [`Error::Deadline`] when the
 /// deadline passes.
 pub(crate) fn lowest_root(
-    _objects: &Objects,
-    _shallow: &BTreeSet<CommitId>,
-    _tip: CommitId,
-    _deadline: &dyn Deadline,
-    _max_commits: usize,
+    objects: &Objects,
+    shallow: &BTreeSet<CommitId>,
+    tip: CommitId,
+    deadline: &dyn Deadline,
+    max_commits: usize,
 ) -> Result<Option<CommitId>, Error> {
-    Ok(None)
+    let mut seen = BTreeSet::new();
+    let mut pending = vec![tip];
+    let mut lowest: Option<CommitId> = None;
+    while let Some(id) = pending.pop() {
+        if !seen.insert(id.to_bytes()) {
+            continue;
+        }
+        if seen.len() > max_commits {
+            return Err(Error::TooLarge("number of commits"));
+        }
+        check(deadline)?;
+        let object = objects
+            .read(&id)?
+            .ok_or_else(|| Error::Missing(id.clone()))?;
+        if object.kind != Kind::Commit {
+            return Err(NOT_A_COMMIT);
+        }
+        if shallow.contains(&id) {
+            continue;
+        }
+        let behind = parents(&object.data)?;
+        if behind.is_empty() && lowest.as_ref().is_none_or(|low| id < *low) {
+            lowest = Some(id);
+        }
+        pending.extend(behind);
+    }
+    Ok(lowest)
 }
 
 #[cfg(test)]

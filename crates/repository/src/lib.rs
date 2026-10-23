@@ -30,6 +30,9 @@ pub use locate::git_dir;
 
 use std::path::Path;
 
+use objects::Objects;
+use repo::Repo;
+
 /// The root commit that names the repository whose git directory is
 /// `git_dir`: the parentless commit with the lowest id among those
 /// reachable from the default branch.
@@ -37,8 +40,14 @@ use std::path::Path;
 /// # Errors
 ///
 /// See [`Error`].
-pub fn root_commit(_git_dir: &Path, _deadline: &dyn Deadline) -> Result<Option<CommitId>, Error> {
-    Ok(None)
+pub fn root_commit(git_dir: &Path, deadline: &dyn Deadline) -> Result<Option<CommitId>, Error> {
+    let repo = Repo::open(git_dir)?;
+    let Some(tip) = refs::default_branch_tip(&repo, deadline)? else {
+        return Ok(None);
+    };
+    let objects = Objects::open(&repo.objects_dir())?;
+    let shallow = walk::read_shallow(&repo, walk::MAX_SHALLOW)?;
+    walk::lowest_root(&objects, &shallow, tip, deadline, walk::MAX_COMMITS)
 }
 
 /// Whether the clone whose git directory is `git_dir` holds the object
@@ -47,8 +56,9 @@ pub fn root_commit(_git_dir: &Path, _deadline: &dyn Deadline) -> Result<Option<C
 /// # Errors
 ///
 /// See [`Error`].
-pub fn has_commit(_git_dir: &Path, _id: &CommitId) -> Result<bool, Error> {
-    Ok(false)
+pub fn has_commit(git_dir: &Path, id: &CommitId) -> Result<bool, Error> {
+    let repo = Repo::open(git_dir)?;
+    Objects::open(&repo.objects_dir())?.contains(id)
 }
 
 /// The identity of the repository whose git directory is `git_dir`.
@@ -56,8 +66,8 @@ pub fn has_commit(_git_dir: &Path, _id: &CommitId) -> Result<bool, Error> {
 /// # Errors
 ///
 /// See [`Error`].
-pub fn identity(_git_dir: &Path, _deadline: &dyn Deadline) -> Result<RepositoryIdentity, Error> {
-    Ok(RepositoryIdentity::Provisional)
+pub fn identity(git_dir: &Path, deadline: &dyn Deadline) -> Result<RepositoryIdentity, Error> {
+    root_commit(git_dir, deadline).map(RepositoryIdentity::from_root)
 }
 
 #[cfg(test)]
