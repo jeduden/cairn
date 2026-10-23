@@ -180,7 +180,7 @@ fn a_fifo_for_the_dot_git_file_does_not_stall() {
     let dir = TempDir::new().unwrap();
     mkfifo(&dir.path().join(".git"));
     let at = dir.path().to_path_buf();
-    let found = prompt(move || git_dir(&at));
+    let found = prompt(move || git_dir(&at, None));
     assert!(matches!(found, Ok(None) | Err(_)));
 }
 

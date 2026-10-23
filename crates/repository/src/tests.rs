@@ -294,7 +294,7 @@ fn reading_a_repository_changes_nothing_in_it() {
     let work = dir.path().join("work/sub");
     fs::create_dir_all(&work).unwrap();
     let before = snapshot(dir.path());
-    let found = git_dir(&work).unwrap().unwrap();
+    let found = git_dir(&work, None).unwrap().unwrap();
     assert_eq!(found, git);
     root(&found).unwrap();
     has_commit(&found, &first).unwrap();

@@ -67,7 +67,8 @@ fn from_dot_git(dir: &Path, dot_git: &Path, meta: &Metadata) -> Result<Option<Pa
 /// `.git` file that names no directory; [`Error::TooLarge`] for one
 /// that is not a few bytes long; [`Error::Io`] when the file system
 /// cannot say.
-pub fn git_dir(directory: &Path) -> Result<Option<PathBuf>, Error> {
+pub fn git_dir(directory: &Path, ceiling: Option<&Path>) -> Result<Option<PathBuf>, Error> {
+    let _ = ceiling;
     for dir in directory.ancestors() {
         let dot_git = dir.join(".git");
         match fs::symlink_metadata(&dot_git) {
