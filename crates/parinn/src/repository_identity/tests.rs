@@ -455,7 +455,7 @@ fn a_look_that_runs_out_of_the_shared_time_is_counted_as_that_and_not_as_a_broke
         administration::node::Node::open(&home, &mut store, &mut key::random::OsEntropy).unwrap();
     let held = store.hook_observations().unwrap();
 
-    super::bind_held(&ctx, &mut store, &node, held, &|| true);
+    super::bind_held(&say(&ctx), None, &mut store, &node, held, &|| true);
 
     assert_eq!(counter(&p, "repository_read_timed_out"), 1);
     assert_eq!(counter(&p, "repository_read_failed"), 0);
@@ -478,7 +478,70 @@ fn a_look_the_audit_log_takes_no_note_of_goes_on_and_leaves_the_record_as_it_was
     fs::write(&audit_dir, "").unwrap();
     crate::tests::set_mode(&audit_dir, 0o600);
 
-    super::bind_held(&ctx, &mut store, &node, held, &|| true);
+    super::bind_held(&say(&ctx), None, &mut store, &node, held, &|| true);
 
     assert!(binds(&p).is_empty());
+}
+
+/// What reports an occurrence to `ctx`'s audit log.
+fn say<'a>(ctx: &'a crate::Context<'a>) -> impl Fn(&audit::entry::Occurrence) + 'a {
+    move |occurrence| {
+        let _ = ctx.audit(occurrence);
+    }
+}
+
+/// A store with `p`'s node, and the observations it holds.
+fn node_and_held(
+    p: &Process,
+) -> (
+    crate::Context<'static>,
+    store::Store,
+    administration::node::Node,
+) {
+    let ctx = crate::settings::tests::ctx_of(p);
+    let home = ctx.home().unwrap();
+    home.create().unwrap();
+    let mut store = store::Store::open(&home.store()).unwrap();
+    let node = administration::node::Node::open(&home, &mut store, &mut key::random::OsEntropy)
+        .unwrap();
+    (ctx, store, node)
+}
+
+#[test]
+fn an_observation_already_in_the_record_is_still_looked_at_if_no_look_marked_it() {
+    let mut p = Process::new();
+    let app = clone(&p, "app", Some("a"));
+    start_in(&mut p, "s1", &app);
+    let (ctx, mut store, node) = node_and_held(&p);
+    // A server's live ingest recorded the observation before any look.
+    rusqlite::Connection::open(p.parinn_home().join("store.db"))
+        .unwrap()
+        .execute("UPDATE hook_observations SET appended = 1", [])
+        .unwrap();
+    let held = store.hook_observations().unwrap();
+    assert!(held.iter().all(|h| h.appended));
+
+    super::bind_held(&say(&ctx), None, &mut store, &node, held, &|| false);
+
+    assert_eq!(binds(&p).len(), 1);
+}
+
+#[test]
+fn a_look_that_ran_out_of_time_is_not_made_or_counted_again_for_the_same_observation() {
+    let mut p = Process::new();
+    let app = clone(&p, "app", Some("a"));
+    start_in(&mut p, "s1", &app);
+    let (ctx, mut store, node) = node_and_held(&p);
+
+    for _ in 0..3 {
+        let held = store.hook_observations().unwrap();
+        super::bind_held(&say(&ctx), None, &mut store, &node, held, &|| true);
+    }
+
+    assert_eq!(counter(&p, "repository_read_timed_out"), 1);
+    // A new hook event for the directory looks again, with time.
+    start_in(&mut p, "s2", &app);
+    let held = store.hook_observations().unwrap();
+    super::bind_held(&say(&ctx), None, &mut store, &node, held, &|| false);
+    assert_eq!(binds(&p).len(), 1);
 }
