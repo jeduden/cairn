@@ -40,3 +40,11 @@ fn a_directory_is_an_io_error() {
     let dir = TempDir::new().unwrap();
     assert!(matches!(read_limited(dir.path(), 5), Err(Error::Io { .. })));
 }
+
+#[test]
+fn a_path_through_a_file_is_an_io_error() {
+    let dir = TempDir::new().unwrap();
+    fs::write(dir.path().join("file"), "x").unwrap();
+    let result = read_limited(&dir.path().join("file/below"), 5);
+    assert!(matches!(result, Err(Error::Io { .. })));
+}

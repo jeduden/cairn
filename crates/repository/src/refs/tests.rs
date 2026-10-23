@@ -283,3 +283,15 @@ fn packed_refs_that_cannot_be_read_are_an_io_error() {
         Err(Error::Io { .. })
     ));
 }
+
+#[cfg(unix)]
+#[test]
+fn packed_refs_that_cannot_be_opened_are_an_io_error() {
+    let dir = TempDir::new().unwrap();
+    let packed = dir.path().join("packed-refs");
+    std::os::unix::fs::symlink(&packed, &packed).unwrap();
+    assert!(matches!(
+        named(&dir, "refs/heads/main"),
+        Err(Error::Io { .. })
+    ));
+}

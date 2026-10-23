@@ -141,3 +141,25 @@ fn corrupted_loose_files_never_panic() {
         let _ = read_up_to(dir.path(), &id(1), 1 << 10);
     }
 }
+
+#[test]
+fn a_fan_out_directory_that_is_a_file_is_an_io_error() {
+    let dir = TempDir::new().unwrap();
+    fs::write(dir.path().join("ab"), "not a directory").unwrap();
+    assert!(matches!(
+        read_up_to(dir.path(), &id(0xab), MAX),
+        Err(Error::Io { .. })
+    ));
+    assert!(matches!(
+        exists(dir.path(), &id(0xab)),
+        Err(Error::Io { .. })
+    ));
+}
+
+#[test]
+fn a_body_past_the_maximum_by_less_than_a_header_is_too_large() {
+    let dir = TempDir::new().unwrap();
+    put_object(dir.path(), &id(1), "blob", &[b'x'; 60]);
+    let result = read_up_to(dir.path(), &id(1), 50);
+    assert!(matches!(result, Err(Error::TooLarge(_))));
+}

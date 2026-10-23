@@ -74,7 +74,6 @@ fn a_dot_git_file_may_name_an_absolute_path() {
 #[test]
 fn a_dot_git_file_that_names_no_directory_is_corrupt() {
     let dir = TempDir::new().unwrap();
-    fs::write(dir.path().join("plain"), "a file").unwrap();
     for text in [
         "",
         "not a gitdir line\n",
@@ -84,6 +83,7 @@ fn a_dot_git_file_that_names_no_directory_is_corrupt() {
     ] {
         let work = dir.path().join("work");
         fs::create_dir_all(&work).unwrap();
+        fs::write(work.join("plain"), "a file").unwrap();
         fs::write(work.join(".git"), text).unwrap();
         let result = git_dir(&work);
         assert!(matches!(result, Err(Error::Corrupt(_))), "{text:?}");
@@ -131,4 +131,24 @@ fn a_path_through_a_file_is_looked_for_above_the_file() {
     fs::write(dir.path().join("file"), "x").unwrap();
     let through = dir.path().join("file/below");
     assert_eq!(git_dir(&through).unwrap(), Some(dir.path().join(".git")));
+}
+
+#[test]
+fn a_gitdir_through_a_file_is_an_io_error() {
+    let dir = TempDir::new().unwrap();
+    fs::write(dir.path().join("plain"), "a file").unwrap();
+    fs::write(dir.path().join(".git"), "gitdir: plain/below\n").unwrap();
+    assert!(matches!(git_dir(dir.path()), Err(Error::Io { .. })));
+}
+
+#[cfg(unix)]
+#[test]
+fn a_path_through_a_symbolic_link_loop_is_an_io_error() {
+    let dir = TempDir::new().unwrap();
+    let again = dir.path().join("again");
+    std::os::unix::fs::symlink(&again, &again).unwrap();
+    assert!(matches!(
+        git_dir(&again.join("below")),
+        Err(Error::Io { .. })
+    ));
 }

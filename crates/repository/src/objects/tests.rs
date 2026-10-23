@@ -315,3 +315,30 @@ fn corrupted_packs_and_indexes_never_panic() {
         }
     }
 }
+
+#[cfg(unix)]
+#[test]
+fn a_pack_that_cannot_be_opened_is_an_io_error() {
+    let dir = TempDir::new().unwrap();
+    let packs = dir.path().join("pack");
+    fs::create_dir_all(&packs).unwrap();
+    fs::write(packs.join("pack-a.idx"), "").unwrap();
+    let pack = packs.join("pack-a.pack");
+    std::os::unix::fs::symlink(&pack, &pack).unwrap();
+    assert!(matches!(Objects::open(dir.path()), Err(Error::Io { .. })));
+}
+
+#[cfg(unix)]
+#[test]
+fn an_index_that_vanished_leaves_its_pack_out() {
+    let dir = TempDir::new().unwrap();
+    let mut pack = PackBuilder::new();
+    pack.whole(raw(1), 1, b"first");
+    let (bytes, _) = pack.finish();
+    let packs = dir.path().join("pack");
+    fs::create_dir_all(&packs).unwrap();
+    fs::write(packs.join("pack-a.pack"), bytes).unwrap();
+    std::os::unix::fs::symlink(packs.join("gone"), packs.join("pack-a.idx")).unwrap();
+    let objects = Objects::open(dir.path()).unwrap();
+    assert_eq!(objects.read(&id(1)).unwrap(), None);
+}
