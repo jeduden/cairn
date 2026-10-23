@@ -211,6 +211,7 @@ fn a_clone_whose_git_data_cannot_be_read_is_unreadable() {
     .unwrap();
 
     assert_eq!(f.bind(&app), Outcome::Unreadable);
+    assert_eq!(f.bind(&app), Outcome::StillUnreadable);
     assert!(f.binds().is_empty());
 }
 

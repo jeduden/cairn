@@ -58,6 +58,8 @@ pub enum Outcome {
     StillChanged,
     /// The clone's git data could not be read.
     Unreadable,
+    /// It could not be read, and that was reported already.
+    StillUnreadable,
 }
 
 /// What the clone of a directory says its identity is now: a bound
