@@ -35,10 +35,7 @@ impl Repo {
     /// be read.
     pub(crate) fn open(git_dir: &Path) -> Result<Self, Error> {
         fs::metadata(git_dir).map_err(Error::io("a git directory"))?;
-        let common_dir = match read_limited(git_dir, "commondir", MAX_COMMONDIR)? {
-            Some(bytes) => git_dir.join(String::from_utf8_lossy(&bytes).trim()),
-            None => git_dir.to_path_buf(),
-        };
+        let common_dir = common_dir_of(git_dir)?;
         if let Some(config) = read_limited(&common_dir, "config", MAX_CONFIG)? {
             check_config(&String::from_utf8_lossy(&config))?;
         }
@@ -51,6 +48,29 @@ impl Repo {
     /// The directory of the loose objects and packs.
     pub(crate) fn objects_dir(&self) -> PathBuf {
         self.common_dir.join("objects")
+    }
+}
+
+/// The directory the objects, references and configuration of the git
+/// directory `git_dir` are in: `git_dir` itself, or the one its
+/// `commondir` names. A linked worktree's `commondir` is `../..`, an
+/// ancestor of its git directory; a `commondir` naming any other place
+/// is a hostile clone pointing the reader elsewhere and is refused. Both
+/// are resolved first, so a link cannot make a place look like an
+/// ancestor.
+fn common_dir_of(git_dir: &Path) -> Result<PathBuf, Error> {
+    let Some(bytes) = read_limited(git_dir, "commondir", MAX_COMMONDIR)? else {
+        return Ok(git_dir.to_path_buf());
+    };
+    let target = git_dir.join(String::from_utf8_lossy(&bytes).trim());
+    let common = fs::canonicalize(target).map_err(Error::io("a git directory"))?;
+    let own = fs::canonicalize(git_dir).map_err(Error::io("a git directory"))?;
+    if own.starts_with(&common) {
+        Ok(common)
+    } else {
+        Err(Error::Unsupported(
+            "common directory outside the git directory's ancestors",
+        ))
     }
 }
 

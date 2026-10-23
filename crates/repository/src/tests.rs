@@ -142,6 +142,21 @@ fn a_linked_worktree_names_the_repository_it_belongs_to() {
 }
 
 #[test]
+fn a_hostile_common_directory_is_not_followed() {
+    let dir = TempDir::new().unwrap();
+    let elsewhere = dir.path().join("elsewhere");
+    let tip = commit(&elsewhere, "tip", &[]);
+    let linked = dir.path().join("clone/.git");
+    write(&linked, "commondir", &format!("{}\n", elsewhere.display()));
+    checked_out(&linked, &tip);
+    assert!(matches!(root(&linked), Err(Error::Unsupported(_))));
+    assert!(matches!(
+        has_commit(&linked, &tip),
+        Err(Error::Unsupported(_))
+    ));
+}
+
+#[test]
 fn a_sha256_repository_is_not_read() {
     let dir = TempDir::new().unwrap();
     write(
