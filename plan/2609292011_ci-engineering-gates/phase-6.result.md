@@ -54,8 +54,9 @@ number a ruleset or CODEOWNERS holds, so a required check enforces it:
   the pull request, its files and reviews through the API without
   checking anything out, and reports a check run named `Security
   approvals` on the head. Its token can write checks, not approve or
-  write code. A review on a fork's pull request recounts on its next
-  push.
+  write code. A review on a fork's pull request does not recount; its
+  `pull_request_target` run is re-run after the approvals (a push would
+  make them stale).
 - Residual risk: the ruleset matches the check by name, so any workflow
   on a pull request with `checks: write` could post it; the CODEOWNERS
   review of `.github/workflows/` is what holds that, not the check.

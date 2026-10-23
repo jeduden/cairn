@@ -86,5 +86,9 @@ fn security_crates_need_two_approvals(w: &mut World) -> Result<(), String> {
             Err(e) => vec![e],
         },
     );
+    problems.extend(match checkout().read(branch_protection::SECURITY_TRIGGER) {
+        Ok(workflow) => branch_protection::security_trigger_is_inert(&workflow),
+        Err(e) => vec![e],
+    });
     outcome(problems)
 }

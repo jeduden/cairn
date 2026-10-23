@@ -16,8 +16,8 @@ name: Security approvals
 # the API whatever started it. Nothing from the pull request is checked
 # out or run. The token can read pull requests and write check runs; it
 # cannot approve or write code. A pull request from a fork has no pull
-# request on the trigger's run, so a review there recounts on its next
-# push, not at once.
+# request on the trigger's run, so a review there does not recount: its
+# `pull_request_target` run has to be re-run after the approvals.
 on: # zizmor: ignore[dangerous-triggers] main's definition runs by design; the pull request's tree is never checked out
   pull_request_target:
     types: [opened, reopened, synchronize, ready_for_review]
