@@ -39,9 +39,10 @@ use std::panic::{self, AssertUnwindSafe};
 use std::sync::mpsc::{Receiver, RecvTimeoutError};
 use std::time::Duration;
 
-use administration::origin::{KeySet, Origin as Derived};
+use administration::origin::{KeySet, Origin as Derived, is_device_seat};
 use administration::trust_policy::{self, TrustLevel as Level};
 use envelope::{Envelope, IntegrityStatus, Item, Origin, Run, TrustLevel};
+use key::signing::PublicKey;
 use record::commitment::commit;
 use record::digest::Digest;
 use record::event::{EventKind, Provenance};
@@ -91,6 +92,7 @@ const NO_INDEX: &str = "the search index cannot be read: run parinn verify";
 pub struct Server {
     store: Store,
     version: String,
+    device_key: PublicKey,
     personal_room: RoomId,
     /// What finds the run of each tool call: the server's live ingest.
     runs: Option<Box<dyn tool_call::Runs>>,
@@ -112,13 +114,15 @@ impl std::fmt::Debug for Server {
 }
 
 impl Server {
-    /// A server answering from `store` for the node whose personal room
-    /// is `personal_room`, naming itself as parinn `version`.
+    /// A server answering from `store` for the node whose device key is
+    /// `device_key` and whose personal room is `personal_room`, naming
+    /// itself as parinn `version`.
     #[must_use]
-    pub fn new(store: Store, version: &str, personal_room: RoomId) -> Self {
+    pub fn new(store: Store, version: &str, device_key: PublicKey, personal_room: RoomId) -> Self {
         Self {
             store,
             version: version.to_owned(),
+            device_key,
             personal_room,
             runs: None,
             found: RefCell::new(Vec::new()),
@@ -265,7 +269,10 @@ impl Server {
             ));
         }
         let header = &stored.link.header;
-        let origin = self.origin(&KeySet::load(&self.store).map_err(unreadable)?, &seat);
+        let origin = self.origin(
+            &KeySet::load(&self.store, &self.device_key).map_err(unreadable)?,
+            &seat,
+        );
         let content = match content {
             Value::Object(fields) if fields.get("text").is_some_and(Value::is_string) => {
                 fields["text"].as_str().unwrap_or_default().to_owned()
@@ -280,7 +287,12 @@ impl Server {
             run: Run::Other,
             kind: header.kind.as_str().to_owned(),
             provenance: header.provenance.name(),
-            trust: trust_of(&header.provenance, header.kind, origin),
+            trust: trust_of(
+                &header.provenance,
+                header.kind,
+                origin,
+                is_device_seat(&seat),
+            ),
             flags: Vec::new(),
             integrity: IntegrityStatus::Unsigned,
             score: None,
@@ -311,7 +323,7 @@ impl Server {
             }
             Err(_) => return Err(NO_INDEX.to_owned()),
         };
-        let keys = KeySet::load(&self.store).map_err(|_| NO_INDEX.to_owned())?;
+        let keys = KeySet::load(&self.store, &self.device_key).map_err(|_| NO_INDEX.to_owned())?;
         let mut seats = BTreeMap::new();
         let mut items = Vec::new();
         for hit in &found {
@@ -340,7 +352,7 @@ impl Server {
         hit: &Hit,
         room: RoomId,
         keys: &KeySet,
-        seats: &mut BTreeMap<WriterId, (String, Origin)>,
+        seats: &mut BTreeMap<WriterId, (String, Origin, bool)>,
     ) -> Result<Item, String> {
         let unreadable = |_| NO_INDEX.to_owned();
         let address = hit.address;
@@ -354,7 +366,7 @@ impl Server {
             .preview(address)
             .map_err(unreadable)?
             .unwrap_or_default();
-        let (author, origin) = match seats.entry(address.writer) {
+        let (author, origin, device) = match seats.entry(address.writer) {
             Entry::Occupied(known) => known.into_mut(),
             Entry::Vacant(new) => new.insert(self.author_and_origin(keys, address.writer)?),
         };
@@ -367,7 +379,7 @@ impl Server {
             run: Run::Other,
             kind: kind.as_str().to_owned(),
             provenance: provenance.name(),
-            trust: trust_of(&provenance, kind, *origin),
+            trust: trust_of(&provenance, kind, *origin, *device),
             flags: Vec::new(),
             integrity: IntegrityStatus::Unverified,
             score: Some(hit.score),
@@ -380,7 +392,7 @@ impl Server {
         &self,
         keys: &KeySet,
         writer: WriterId,
-    ) -> Result<(String, Origin), String> {
+    ) -> Result<(String, Origin, bool), String> {
         let unreadable = |_| NO_INDEX.to_owned();
         let seat = self
             .store
@@ -388,7 +400,11 @@ impl Server {
             .map_err(unreadable)?
             .ok_or(NO_SEAT)?;
 
-        Ok((seat.seat.to_string(), self.origin(keys, &seat)))
+        Ok((
+            seat.seat.to_string(),
+            self.origin(keys, &seat),
+            is_device_seat(&seat),
+        ))
     }
 
     /// Whether `stored` checks against the record: its content opens
@@ -429,7 +445,12 @@ impl Server {
 /// deployment mode, the prompt match and the attended mark matter only
 /// while no run leaves R3 and R8 open, which no run can show before
 /// OQ-40, so a `user` event is never trusted here.
-fn trust_of(provenance: &Provenance, kind: EventKind, origin: Origin) -> TrustLevel {
+fn trust_of(
+    provenance: &Provenance,
+    kind: EventKind,
+    origin: Origin,
+    device_seat: bool,
+) -> TrustLevel {
     let level = trust_policy::trust_level(&trust_policy::Input {
         provenance,
         kind,
@@ -439,11 +460,11 @@ fn trust_of(provenance: &Provenance, kind: EventKind, origin: Origin) -> TrustLe
             Origin::Bundle => Derived::Bundle,
             Origin::Peer => Derived::Peer,
         },
+        device_seat,
         launcher_signed: false,
         interactive: false,
         prompt_matched: false,
         attended: false,
-        risk_open: trust_policy::RISK_OPEN,
     });
     match level {
         Level::Trusted => TrustLevel::Trusted,

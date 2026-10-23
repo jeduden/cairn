@@ -39,8 +39,15 @@ impl TrustLevel {
 }
 
 /// Whether a run on the node leaves R3 or R8 open: until OQ-40 every
-/// run does (OWN-22).
-pub const RISK_OPEN: bool = true;
+/// run does (OWN-22), so no caller may say otherwise.
+const RISK_OPEN: bool = true;
+
+/// Whether a `user` event is trusted: only in `interactive` mode, matched
+/// to a prompt whose hook handler found the attended mark, while no run
+/// leaves R3 or R8 open (PRV-02, PRV-08).
+fn user_trusted(input: &Input<'_>, risk_open: bool) -> bool {
+    input.interactive && input.prompt_matched && input.attended && !risk_open
+}
 
 /// The structural events the core records itself. A hook observation, a
 /// prompt match and a repeat record are derived from a transcript line or
@@ -91,6 +98,10 @@ pub struct Input<'a> {
     /// Derived by [`crate::origin`]; `witnessed` means this node's own
     /// capture or core recorded it.
     pub origin: Origin,
+    /// The event lies in a device seat's writer, as the certificate of
+    /// its seat says (PRV-11): only one records the operator and
+    /// structural events this policy trusts.
+    pub device_seat: bool,
     /// A `harness_meta` event the launcher recorded and signed.
     pub launcher_signed: bool,
     /// The recorded deployment mode is `interactive`.
@@ -99,8 +110,6 @@ pub struct Input<'a> {
     pub prompt_matched: bool,
     /// That hook handler found the attended mark.
     pub attended: bool,
-    /// A run on the node leaves R3 or R8 open.
-    pub risk_open: bool,
 }
 
 /// The trust level the policy gives the event `input` describes.
@@ -110,12 +119,10 @@ pub fn trust_level(input: &Input<'_>) -> TrustLevel {
         return TrustLevel::Untrusted;
     }
     let trusted = match input.provenance {
-        Provenance::Operator => true,
-        Provenance::Structural => STRUCTURAL.contains(&input.kind),
+        Provenance::Operator => input.device_seat,
+        Provenance::Structural => input.device_seat && STRUCTURAL.contains(&input.kind),
         Provenance::HarnessMeta => input.launcher_signed,
-        Provenance::User => {
-            input.interactive && input.prompt_matched && input.attended && !input.risk_open
-        }
+        Provenance::User => user_trusted(input, RISK_OPEN),
         _ => false,
     };
 

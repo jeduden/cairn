@@ -19,6 +19,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use key::certificate::{SeatCertificate, SeatKind};
 use key::key_event::NodeIdentityChange;
+use key::signing::PublicKey;
 use record::digest::Digest;
 use record::event::EventKind;
 use record::id::{Address, Seq, WriterId};
@@ -58,14 +59,19 @@ pub struct KeySet {
 }
 
 impl KeySet {
-    /// The key set `store` holds.
+    /// The key set `store` holds for the node whose device key is
+    /// `node_key`: that key alone, and only while its device seat begins
+    /// with its `minted` and no node identity change replaced it. A
+    /// device log of another node's, held in the store, is no key of
+    /// this one's.
     ///
     /// # Errors
     ///
     /// Fails when the store does.
-    pub fn load(store: &Store) -> Result<Self, StoreError> {
-        let mut genesis = BTreeMap::new();
-        let mut replaced = BTreeSet::new();
+    pub fn load(store: &Store, node_key: &PublicKey) -> Result<Self, StoreError> {
+        let fingerprint = node_key.fingerprint();
+        let mut device = None;
+        let mut replaced = false;
         for seat in store.seats()? {
             let Some(cert) = SeatCertificate::from_value(&seat.certificate)
                 .ok()
@@ -74,21 +80,19 @@ impl KeySet {
                 continue;
             };
             let first = store.event(Address::new(seat.writer, Seq::FIRST))?;
-            let key = cert.certifying_key;
-            if begins_genesis(first.as_ref(), &key) {
-                genesis.insert(key.fingerprint(), seat.writer);
-            } else if let Some(change) = first
+            if cert.certifying_key == *node_key && begins_genesis(first.as_ref(), node_key) {
+                device = Some(seat.writer);
+            }
+            replaced |= first
                 .as_ref()
                 .filter(|s| s.link.header.kind == EventKind::NodeIdentityChange)
                 .and_then(|s| s.content.as_ref())
                 .and_then(|c| NodeIdentityChange::from_value(c).ok())
-            {
-                replaced.insert(change.replaces);
-            }
+                .is_some_and(|change| change.replaces == fingerprint);
         }
         let mut records = BTreeMap::new();
-        for (fingerprint, writer) in genesis.iter().filter(|(f, _)| !replaced.contains(f)) {
-            records.insert(*fingerprint, certificate_records(&store.log(*writer)?));
+        if let (Some(writer), false) = (device, replaced) {
+            records.insert(fingerprint, certificate_records(&store.log(writer)?));
         }
 
         Ok(Self { records })
@@ -115,6 +119,14 @@ impl KeySet {
     }
 }
 
+/// Whether the certificate of `seat` names a device seat, as opposed to
+/// a run seat: only a device seat records the operator and structural
+/// events the trust policy trusts (PRV-02).
+#[must_use]
+pub fn is_device_seat(seat: &StoredSeat) -> bool {
+    SeatCertificate::from_value(&seat.certificate).is_ok_and(|c| c.seat_kind == SeatKind::Device)
+}
+
 /// The certificate records `log` holds: each one's certificate digest
 /// and writer.
 fn certificate_records(log: &[Stored]) -> BTreeSet<(String, String)> {
@@ -126,13 +138,17 @@ fn certificate_records(log: &[Stored]) -> BTreeSet<(String, String)> {
         .collect()
 }
 
-/// The origin of every writer with a seat in `store`.
+/// The origin of every writer with a seat in `store`, for the node whose
+/// device key is `node_key`.
 ///
 /// # Errors
 ///
 /// Fails when the store does.
-pub fn derive(store: &Store) -> Result<BTreeMap<WriterId, Origin>, StoreError> {
-    let keys = KeySet::load(store)?;
+pub fn derive(
+    store: &Store,
+    node_key: &PublicKey,
+) -> Result<BTreeMap<WriterId, Origin>, StoreError> {
+    let keys = KeySet::load(store, node_key)?;
 
     Ok(store
         .seats()?

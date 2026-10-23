@@ -33,7 +33,10 @@ fn the_device_seat_and_a_run_seat_a_key_of_this_node_certified_are_witnessed() {
         .certify_run_seat(&mut store, &key, &mut OsEntropy)
         .unwrap();
 
-    assert_eq!(origin(&store, &node, node.device_writer()), Origin::Witnessed);
+    assert_eq!(
+        origin(&store, &node, node.device_writer()),
+        Origin::Witnessed
+    );
     assert_eq!(origin(&store, &node, run.writer), Origin::Witnessed);
 }
 
@@ -160,11 +163,9 @@ fn a_second_genesis_log_in_the_store_is_no_key_of_this_node() {
     let node = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
     // Another node's whole genesis, as a later plan may store it.
     let other_dir = TempDir::new().unwrap();
-    let other_home = crate::home::Home::locate(
-        Some(other_dir.path().join(".parinn").as_os_str()),
-        None,
-    )
-    .unwrap();
+    let other_home =
+        crate::home::Home::locate(Some(other_dir.path().join(".parinn").as_os_str()), None)
+            .unwrap();
     other_home.create().unwrap();
     let mut other_store = Store::open(&other_home.store()).unwrap();
     let other = Node::open(&other_home, &mut other_store, &mut OsEntropy).unwrap();
@@ -203,6 +204,8 @@ fn a_device_seat_is_told_from_a_run_seat_by_its_certificate() {
         .certify_run_seat(&mut store, &key, &mut OsEntropy)
         .unwrap();
 
-    assert!(is_device_seat(&store.seat(node.device_writer()).unwrap().unwrap()));
+    assert!(is_device_seat(
+        &store.seat(node.device_writer()).unwrap().unwrap()
+    ));
     assert!(!is_device_seat(&run));
 }

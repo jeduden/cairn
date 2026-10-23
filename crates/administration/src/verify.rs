@@ -308,7 +308,7 @@ pub fn verify(store: &Store, node_key: &PublicKey) -> Result<Report, VerifyError
         events(log, device, witnessed, &full)?;
     }
     let order = chain::causal_order(&record).map_err(broken)?;
-    kept_origins_agree(store)?;
+    kept_origins_agree(store, node_key)?;
 
     Ok(Report {
         writers: writers.len(),
@@ -323,8 +323,8 @@ pub fn verify(store: &Store, node_key: &PublicKey) -> Result<Report, VerifyError
 /// Checks that every origin the store keeps is the one the record and
 /// the node's key set derive (PRV-13, I10). A writer with no kept origin
 /// is not yet derived, and a store that keeps none holds no claim.
-fn kept_origins_agree(store: &Store) -> Result<(), VerifyError> {
-    let derived = origin::derive(store)?;
+fn kept_origins_agree(store: &Store, node_key: &PublicKey) -> Result<(), VerifyError> {
+    let derived = origin::derive(store, node_key)?;
     for (writer, kept) in store.origins()? {
         if derived.get(&writer).map(|o| o.as_str()) != Some(kept.as_str()) {
             return Err(VerifyError::Derived { writer });

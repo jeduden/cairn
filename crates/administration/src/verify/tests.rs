@@ -1142,7 +1142,7 @@ fn no_kept_origins_is_consistent_and_rebuilt_ones_are() {
     let mut f = fixture();
     assert!(verify(&f.store, &f.node.device().public()).is_ok());
 
-    let derived = crate::origin::derive(&f.store).unwrap();
+    let derived = crate::origin::derive(&f.store, &f.node.device().public()).unwrap();
     f.store
         .replace_origins(
             &derived
@@ -1158,7 +1158,7 @@ fn no_kept_origins_is_consistent_and_rebuilt_ones_are() {
 #[test]
 fn a_kept_origin_that_differs_from_the_derived_one_is_named_by_its_writer() {
     let mut f = fixture();
-    let mut kept: BTreeMap<_, _> = crate::origin::derive(&f.store)
+    let mut kept: BTreeMap<_, _> = crate::origin::derive(&f.store, &f.node.device().public())
         .unwrap()
         .iter()
         .map(|(w, o)| (*w, o.as_str().to_owned()))

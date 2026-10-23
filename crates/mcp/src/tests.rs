@@ -32,7 +32,7 @@ impl Fixture {
     fn server(&self) -> Server {
         let store = Store::open(&self.home.store()).unwrap();
         let node = Node::find(&self.home, &store).unwrap();
-        Server::new(store, "v9", node.personal_room())
+        Server::new(store, "v9", node.device().public(), node.personal_room())
     }
 
     fn sql(&self, statement: &str) {

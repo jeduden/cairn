@@ -1086,6 +1086,7 @@ fn mcp(
         Ok(mcp::Server::new(
             store,
             ctx.build.version,
+            node.device().public(),
             node.personal_room(),
         ))
     });

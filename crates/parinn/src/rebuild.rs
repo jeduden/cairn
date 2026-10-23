@@ -4,7 +4,9 @@
 
 use std::io::Write;
 
+use administration::node::Node;
 use administration::origin;
+use key::signing::PublicKey;
 use store::{Store, StoreError};
 
 use crate::{Context, failed, json_flag, store_failed, written};
@@ -34,7 +36,11 @@ pub(crate) fn rebuild(
         Ok(store) => store,
         Err(e) => return store_failed("rebuild", &e, stderr),
     };
-    let (origins, indexed) = match derive_again(&mut store) {
+    let key = match Node::find(&home, &store) {
+        Ok(node) => node.device().public(),
+        Err(e) => return failed("rebuild", &e, stderr),
+    };
+    let (origins, indexed) = match derive_again(&mut store, &key) {
         Ok(counts) => counts,
         Err(e) => return failed("rebuild", &e, stderr),
     };
@@ -49,8 +55,8 @@ pub(crate) fn rebuild(
 
 /// Derives the origins and the search index again; how many writers'
 /// origins and how many events it read.
-fn derive_again(store: &mut Store) -> Result<(usize, u64), StoreError> {
-    let derived = origin::derive(store)?;
+fn derive_again(store: &mut Store, key: &PublicKey) -> Result<(usize, u64), StoreError> {
+    let derived = origin::derive(store, key)?;
     let kept = derived
         .iter()
         .map(|(writer, origin)| (*writer, origin.as_str().to_owned()))

@@ -90,14 +90,20 @@ fn harness_meta_is_trusted_only_when_the_launcher_signed_it() {
 
 #[test]
 fn a_user_event_is_trusted_only_when_every_condition_holds() {
-    assert!(user_trusted(true, true, true, false));
+    let mut i = input(&Provenance::User, EventKind::TranscriptLine);
+    i.interactive = true;
+    i.prompt_matched = true;
+    i.attended = true;
+    assert!(user_trusted(&i, false));
+    assert!(!user_trusted(&i, true));
     for spoil in [
-        (false, true, true, false),
-        (true, false, true, false),
-        (true, true, false, false),
-        (true, true, true, true),
+        |i: &mut Input<'_>| i.interactive = false,
+        |i: &mut Input<'_>| i.prompt_matched = false,
+        |i: &mut Input<'_>| i.attended = false,
     ] {
-        assert!(!user_trusted(spoil.0, spoil.1, spoil.2, spoil.3), "{spoil:?}");
+        let mut j = i;
+        spoil(&mut j);
+        assert!(!user_trusted(&j, false));
     }
 }
 
