@@ -153,10 +153,28 @@ fn identity_is(w: &mut World, which: String) -> Result<(), String> {
     } else {
         Value::Null
     };
-    if v["status"] == "bound" && v["repository"] == wanted {
-        return Ok(());
+    if v["status"] != "bound" || v["repository"] != wanted {
+        return Err(format!("the directory shows {v}, wanting {which}"));
     }
-    Err(format!("the directory shows {v}, wanting {which}"))
+    if root.is_none() {
+        let id = provisional_id(w)?;
+        if id.len() != 32 || !id.bytes().all(|b| b.is_ascii_hexdigit()) {
+            return Err(format!("the provisional id is not 32 hex digits: {id}"));
+        }
+    }
+    Ok(())
+}
+
+/// The provisional id the record's one bind carries.
+fn provisional_id(w: &World) -> Result<String, String> {
+    let binds = events(w, "repository_bind")?;
+    match binds.as_slice() {
+        [(_, c)] => c["repository_provisional"]
+            .as_str()
+            .map(str::to_owned)
+            .ok_or_else(|| format!("the bind holds no provisional id: {c}")),
+        _ => Err(format!("wanting one bind, the record holds {binds:?}")),
+    }
 }
 
 /// The events of `kind` the record holds, with their provenance and
@@ -221,6 +239,19 @@ fn no_identity_from_the_path(w: &mut World) -> Result<(), String> {
         let v = shown(w, &second)?;
         if v["repository"] != json!(root) || events(w, "repository_bind")?.len() != 1 {
             return Err(format!("the copy at another path shows {v}"));
+        }
+    } else {
+        let first_id = provisional_id(w)?;
+        let second = w.home.join("elsewhere").join("empty");
+        fs::create_dir_all(&second).map_err(|e| e.to_string())?;
+        git(w, &second, &["init", "-q"])?;
+        first_hook_event(w, &second, "lane-02-empty")?;
+        let ids: Vec<String> = events(w, "repository_bind")?
+            .iter()
+            .filter_map(|(_, c)| c["repository_provisional"].as_str().map(str::to_owned))
+            .collect();
+        if ids.len() != 2 || ids[0] == ids[1] || !ids.contains(&first_id) {
+            return Err(format!("two empty clones share a provisional id: {ids:?}"));
         }
     }
     for (_, content) in events(w, "repository_bind")? {

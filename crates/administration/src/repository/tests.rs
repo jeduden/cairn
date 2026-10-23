@@ -606,3 +606,24 @@ fn only_a_repository_bind_act_binds_a_commit_not_another_act_naming_one() {
     );
     assert_eq!(bound_commits(&f.store, &f.node).unwrap(), vec![root]);
 }
+
+#[test]
+fn an_unreadable_look_does_not_make_the_next_change_report_a_change_twice() {
+    let mut f = fixture();
+    let app = f.path("app");
+    rooted(&app, "a");
+    f.bind(&app);
+    reinit(&app);
+    rooted(&app, "b");
+    assert_eq!(f.bind(&app), Outcome::Changed);
+    // The clone cannot be read for a while, then reads again, unchanged.
+    std::fs::write(
+        app.join(".git/config"),
+        "[extensions]\n\tobjectformat = sha256\n",
+    )
+    .unwrap();
+    assert_eq!(f.bind(&app), Outcome::Unreadable);
+    std::fs::write(app.join(".git/config"), "").unwrap();
+
+    assert_eq!(f.bind(&app), Outcome::StillChanged);
+}

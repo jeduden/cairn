@@ -626,3 +626,25 @@ fn a_session_binding_taken_after_the_server_started_binds_the_repository_it_show
         .unwrap();
     assert_eq!(binds, 1);
 }
+
+#[test]
+fn a_clone_a_taken_binding_shows_unreadable_is_counted_by_the_server() {
+    let f = Fixture::new();
+    let mut store = Store::open(&f.home.store()).unwrap();
+    administration::node::Node::open(&f.home, &mut store, &mut key::random::OsEntropy).unwrap();
+    drop(store);
+    let app = f.dir.path().join("app");
+    std::fs::create_dir_all(app.join(".git/refs/heads")).unwrap();
+    std::fs::write(app.join(".git/HEAD"), "ref: refs/heads/main\n").unwrap();
+    std::fs::write(
+        app.join(".git/config"),
+        "[extensions]\n\tobjectformat = sha256\n",
+    )
+    .unwrap();
+    f.bind_in(SESSION, &f.main(), HARNESS, &app);
+    let mut running = f.running(Some(HARNESS), None);
+
+    running.bind();
+
+    assert!(f.counted().contains(&"repository_read_failed".to_owned()));
+}

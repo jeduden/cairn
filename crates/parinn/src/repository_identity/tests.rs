@@ -545,3 +545,43 @@ fn a_look_that_ran_out_of_time_is_not_made_or_counted_again_for_the_same_observa
     super::bind_held(&say(&ctx), None, &mut store, &node, held, &|| false);
     assert_eq!(binds(&p).len(), 1);
 }
+
+#[test]
+fn a_server_start_audits_a_change_it_finds_and_says_a_failed_audit_in_the_log() {
+    let mut p = Process::new();
+    let app = clone(&p, "app", Some("a"));
+    start_in(&mut p, "s1", &app);
+    let (ctx, mut store, _) = node_and_held(&p);
+    let home = ctx.home().unwrap();
+    super::bind_observed(&ctx, &home, &mut store);
+    fs::remove_dir_all(app.join(".git")).unwrap();
+    repository(&app, Some("b"));
+    start_in(&mut p, "s2", &app);
+
+    super::bind_observed(&ctx, &home, &mut store);
+
+    assert_eq!(counter(&p, "repository_identity_changed"), 1);
+    // The audit log cannot take the next note; the start goes on.
+    fs::remove_dir_all(app.join(".git")).unwrap();
+    repository(&app, Some("c"));
+    start_in(&mut p, "s3", &app);
+    let audit_dir = p.parinn_home().join("audit");
+    let _ = fs::remove_dir_all(&audit_dir);
+    fs::write(&audit_dir, "").unwrap();
+    crate::tests::set_mode(&audit_dir, 0o600);
+    super::bind_observed(&ctx, &home, &mut store);
+    assert_eq!(binds(&p).len(), 1);
+}
+
+#[test]
+fn a_server_start_in_a_home_without_a_node_looks_at_nothing() {
+    let p = Process::new();
+    let ctx = crate::settings::tests::ctx_of(&p);
+    let home = ctx.home().unwrap();
+    home.create().unwrap();
+    let mut store = store::Store::open(&home.store()).unwrap();
+
+    super::bind_observed(&ctx, &home, &mut store);
+
+    assert!(binds(&p).is_empty());
+}

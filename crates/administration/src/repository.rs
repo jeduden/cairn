@@ -154,7 +154,7 @@ fn unreadable(
     directory: &Path,
 ) -> Result<Outcome, AdminError> {
     let secret = store.local_secret("repository", draw(entropy)?)?;
-    let marker = format!("reported:{}", directory_key(&secret, directory)?);
+    let marker = format!("unreadable:{}", directory_key(&secret, directory)?);
     if store.directory_identity(&marker)?.as_deref() == Some(UNREADABLE) {
         return Ok(Outcome::StillUnreadable);
     }
