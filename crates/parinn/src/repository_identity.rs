@@ -25,6 +25,11 @@ use crate::{Context, EXIT_USAGE, failed, written};
 /// How long a look at a clone's git data may take (ENG-03).
 const WITHIN: Duration = Duration::from_secs(10);
 
+/// How long all the clones an ingest or an MCP server start looks at may
+/// take together: the server's start must not wait on a large or hostile
+/// clone (I9).
+const START_WITHIN: Duration = Duration::from_secs(2);
+
 /// What a command line asked for.
 struct Asked {
     directory: PathBuf,
@@ -62,21 +67,27 @@ fn parse(args: impl Iterator<Item = String>, bind: bool, ctx: &Context) -> Resul
     })
 }
 
-/// A deadline `WITHIN` from now.
+/// A deadline `within` from now.
 #[expect(
     clippy::disallowed_methods,
     reason = "a deadline is wall-clock time (ENG-03); no derived artifact reads it (I10)"
 )]
-fn deadline() -> impl Fn() -> bool {
-    let end = Instant::now() + WITHIN;
+fn deadline(within: Duration) -> impl Fn() -> bool {
+    let end = Instant::now() + within;
 
     move || Instant::now() >= end
 }
 
 /// Binds the identity of every repository the `SessionStart` hook
-/// observations not yet in the record showed, once each (LANE-02): a change in one is audited
-/// and counted, and a clone that cannot be read counted, each once (I6).
-/// Nothing is relinked, and a failure leaves the record as it was (I9).
+/// observations not yet in the record showed, once each (LANE-02).
+///
+/// The bind is recorded here, as an observation reaches the record, not
+/// in the hook handler: reading git cannot stay within the handler's
+/// hook budget (NFR-02), and the observation is the first hook event.
+/// A change in a bound identity is audited and counted, a clone that
+/// cannot be read counted, and a bind the record refuses counted under
+/// its own name, each once (I6). Nothing is relinked, and a failure
+/// leaves the record as it was (I9).
 pub(crate) fn bind_observed(ctx: &Context, home: &Home, store: &mut Store) {
     if let (Ok(node), Ok(held)) = (Node::find(home, store), store.hook_observations()) {
         bind_held(ctx, store, &node, held);
@@ -93,7 +104,7 @@ fn bind_held(ctx: &Context, store: &mut Store, node: &Node, held: Vec<store::Hel
         .map(|o| o.cwd)
         .collect();
     // One budget for every directory this call looks at (ENG-03, I9).
-    let deadline = deadline();
+    let deadline = deadline(START_WITHIN);
     for directory in directories {
         let outcome = repository::bind(
             store,
@@ -110,11 +121,17 @@ fn bind_held(ctx: &Context, store: &mut Store, node: &Node, held: Vec<store::Hel
                 operation: "repository bind",
                 detail: "repository identity changed: no branch link is relinked until a widening bind",
             },
-            Ok(Outcome::Unreadable) | Err(_) => Occurrence::Degraded {
+            Ok(Outcome::Unreadable) => Occurrence::Degraded {
                 kind: Kind::Failed,
                 counter: Counter::RepositoryReadFailed,
                 operation: "repository bind",
                 detail: "repository could not be read: its identity stays as it was",
+            },
+            Err(_) => Occurrence::Degraded {
+                kind: Kind::Failed,
+                counter: Counter::RepositoryBindFailed,
+                operation: "repository bind",
+                detail: "repository identity could not be bound: the record or the random source failed",
             },
             Ok(_) => continue,
         };
@@ -175,7 +192,7 @@ fn shown_line(ctx: &Context, asked: &Asked) -> Result<String, String> {
         &mut OsEntropy,
         &asked.directory,
         ctx.home.as_deref().map(Path::new),
-        &deadline(),
+        &deadline(WITHIN),
     )
     .map_err(|e| e.to_string())?;
     let (status, commit) = match shown {
@@ -219,7 +236,7 @@ fn bound_line(ctx: &Context, asked: &Asked, stderr: &mut dyn Write) -> Result<St
         &asked.directory,
         ctx.home.as_deref().map(Path::new),
         asked.commit.clone(),
-        &deadline(),
+        &deadline(WITHIN),
     )
     .map_err(|e| failed(OP, &e, stderr))?;
     let act = Act::RepositoryBind {
