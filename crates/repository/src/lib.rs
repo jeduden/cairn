@@ -59,6 +59,25 @@ pub fn root_commit(git_dir: &Path, deadline: &dyn Deadline) -> Result<Option<Com
     walk::lowest_root(&objects, &shallow, tip, deadline, walk::MAX_COMMITS)
 }
 
+/// Every parentless commit reachable from the default branch of the
+/// repository whose git directory is `git_dir`, the lowest id first: none
+/// for a repository with no commit, or a shallow clone that reaches no
+/// root. A commit the branch does not reach is not one of them, whatever
+/// the clone holds.
+///
+/// # Errors
+///
+/// See [`Error`].
+pub fn roots(git_dir: &Path, deadline: &dyn Deadline) -> Result<Vec<CommitId>, Error> {
+    let repo = Repo::open(git_dir)?;
+    let Some(tip) = refs::default_branch_tip(&repo, deadline)? else {
+        return Ok(Vec::new());
+    };
+    let objects = Objects::open(&repo.objects_dir())?;
+    let shallow = walk::read_shallow(&repo, walk::MAX_SHALLOW)?;
+    walk::roots(&objects, &shallow, tip, deadline, walk::MAX_COMMITS)
+}
+
 /// Whether the clone whose git directory is `git_dir` holds the commit
 /// `id`, loose or packed. The object is read and hashed: one that does
 /// not hash to `id` is an error, and one that is not a commit is not a

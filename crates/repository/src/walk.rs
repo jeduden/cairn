@@ -80,16 +80,16 @@ pub(crate) fn read_shallow(repo: &Repo, limit: u64) -> Result<BTreeSet<CommitId>
 /// shallow; [`Error::Corrupt`] for a commit that is not one;
 /// [`Error::TooLarge`] past `max_commits`; [`Error::Deadline`] when the
 /// deadline passes.
-pub(crate) fn lowest_root(
+pub(crate) fn roots(
     objects: &Objects,
     shallow: &BTreeSet<CommitId>,
     tip: CommitId,
     deadline: &dyn Deadline,
     max_commits: usize,
-) -> Result<Option<CommitId>, Error> {
+) -> Result<Vec<CommitId>, Error> {
     let mut seen = BTreeSet::new();
     let mut pending = vec![tip];
-    let mut lowest: Option<CommitId> = None;
+    let mut found = BTreeSet::new();
     while let Some(id) = pending.pop() {
         if !seen.insert(id.to_bytes()) {
             continue;
@@ -109,12 +109,29 @@ pub(crate) fn lowest_root(
         }
         check_commit(&object.data)?;
         let behind = parents(&object.data)?;
-        if behind.is_empty() && lowest.as_ref().is_none_or(|low| id < *low) {
-            lowest = Some(id);
+        if behind.is_empty() {
+            found.insert(id);
         }
         pending.extend(behind);
     }
-    Ok(lowest)
+    Ok(found.into_iter().collect())
+}
+
+/// The parentless commit with the lowest id among those [`roots`] finds.
+///
+/// # Errors
+///
+/// As [`roots`].
+pub(crate) fn lowest_root(
+    objects: &Objects,
+    shallow: &BTreeSet<CommitId>,
+    tip: CommitId,
+    deadline: &dyn Deadline,
+    max_commits: usize,
+) -> Result<Option<CommitId>, Error> {
+    Ok(roots(objects, shallow, tip, deadline, max_commits)?
+        .into_iter()
+        .next())
 }
 
 #[cfg(test)]
