@@ -55,3 +55,12 @@ fn a_store_that_never_kept_a_directory_has_no_table_and_none_resolved() {
         .query_row("SELECT 1", [], |r| r.get::<_, i64>(0))
         .optional();
 }
+
+#[test]
+fn a_store_that_takes_no_write_keeps_neither_a_secret_nor_a_directory() {
+    let conn = conn();
+    conn.execute_batch("PRAGMA query_only = ON").unwrap();
+
+    assert!(secret(&conn, "repository", [1; 32]).is_err());
+    assert!(set_identity(&conn, "d", "i").is_err());
+}

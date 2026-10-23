@@ -463,3 +463,36 @@ fn a_repository_in_the_home_directory_is_bound_for_no_directory_below_it() {
         Outcome::Bound { provisional: false }
     );
 }
+
+#[test]
+fn a_git_directory_that_is_a_symlink_is_unreadable_to_bind_and_show() {
+    let mut f = fixture();
+    let app = f.path("app");
+    let elsewhere = f.path("elsewhere");
+    rooted(&elsewhere, "x");
+    std::os::unix::fs::symlink(elsewhere.join(".git"), app.join(".git")).unwrap();
+
+    assert_eq!(f.bind(&app), Outcome::Unreadable);
+    assert_eq!(f.show(&app), Shown::Unreadable);
+}
+
+#[test]
+fn a_rebind_records_the_commit_or_the_provisional_id_it_names() {
+    let rebind = |commit: Option<&str>, provisional: Option<&str>| Rebind {
+        commit: commit.and_then(CommitId::parse),
+        provisional: provisional.map(str::to_owned),
+        directory: String::new(),
+        identity: String::new(),
+    };
+
+    let a = commit_id(&[], "a");
+    assert_eq!(
+        rebind(Some(a.as_str()), None).content(),
+        serde_json::json!({"repository": a.as_str()})
+    );
+    assert_eq!(
+        rebind(None, Some("ab")).content(),
+        serde_json::json!({"repository_provisional": "ab"})
+    );
+    assert_eq!(rebind(None, None).content(), serde_json::json!({}));
+}

@@ -41,3 +41,24 @@ fn replacing_drops_the_origins_not_offered() {
 
     assert_eq!(all(&conn).unwrap(), second);
 }
+
+#[test]
+fn a_kept_writer_that_does_not_parse_is_corrupt() {
+    let conn = conn();
+    conn.execute(
+        "INSERT INTO origins (writer, origin) VALUES ('nope', 'peer')",
+        [],
+    )
+    .unwrap();
+
+    assert!(matches!(all(&conn), Err(StoreError::Corrupt { .. })));
+}
+
+#[test]
+fn a_store_that_takes_no_write_refuses_to_keep_origins() {
+    let conn = conn();
+    conn.execute_batch("PRAGMA query_only = ON").unwrap();
+    let kept: BTreeMap<_, _> = [(writer(1), "peer".to_owned())].into();
+
+    assert!(replace(&conn, &kept).is_err());
+}
