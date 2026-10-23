@@ -9,6 +9,7 @@ dependencies = [
  "key",
  "platform",
  "record",
+ "repository",
  "rusqlite",
  "serde_json",
  "store",

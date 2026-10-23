@@ -11,6 +11,7 @@ pub mod home;
 pub mod node;
 pub mod node_identity;
 pub mod origin;
+pub mod repository;
 pub mod role;
 pub mod trust_policy;
 pub mod verify;
