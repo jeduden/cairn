@@ -116,7 +116,7 @@ fn under_m1_no_user_event_is_trusted() {
     i.prompt_matched = true;
     i.attended = true;
 
-    assert!(RISK_OPEN);
+    i.risk_open = RISK_OPEN;
     assert_eq!(trust_level(&i), TrustLevel::Untrusted);
 }
 

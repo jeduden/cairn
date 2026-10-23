@@ -181,14 +181,8 @@ fn a_search_past_its_deadline_is_cancelled_counted_and_told_in_fixed_text() {
     ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();
     let store = Store::open(&home.store()).unwrap();
     let node = Node::find(&home, &store).unwrap();
-    let mut server = Server::new(
-        store,
-        "v9",
-        node.device().public(),
-        node.device_writer(),
-        node.personal_room(),
-    )
-    .with_query_deadline(Duration::ZERO);
+    let mut server =
+        Server::new(store, "v9", node.personal_room()).with_query_deadline(Duration::ZERO);
 
     let result = ask(&mut server, "alpha", json!({}));
 
@@ -216,13 +210,7 @@ fn a_store_with_no_index_makes_a_search_say_to_run_verify() {
     }
     let store = Store::open_read_only(&f.home.store()).unwrap();
     let node = Node::find(&f.home, &store).unwrap();
-    let mut server = Server::new(
-        store,
-        "v9",
-        node.device().public(),
-        node.device_writer(),
-        node.personal_room(),
-    );
+    let mut server = Server::new(store, "v9", node.personal_room());
 
     let result = ask(&mut server, "instructions", json!({}));
 
@@ -238,13 +226,7 @@ fn hits_of_one_run_share_its_author_and_origin() {
     let ingested = ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();
     let store = Store::open(&home.store()).unwrap();
     let node = Node::find(&home, &store).unwrap();
-    let mut server = Server::new(
-        store,
-        "v9",
-        node.device().public(),
-        node.device_writer(),
-        node.personal_room(),
-    );
+    let mut server = Server::new(store, "v9", node.personal_room());
 
     let result = ask(&mut server, "alpha", json!({}));
 

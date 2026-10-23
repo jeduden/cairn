@@ -1074,14 +1074,10 @@ fn mcp(
     // ingest does (REC-13).
     let served = start_node(ctx, &home, stderr).and_then(|store| {
         let node = Node::find(&home, &store).map_err(|e| e.to_string())?;
-        let key = node.device().public();
-        let (writer, room) = (node.device_writer(), node.personal_room());
         Ok(mcp::Server::new(
             store,
             ctx.build.version,
-            key,
-            writer,
-            room,
+            node.personal_room(),
         ))
     });
     let server = match served {
