@@ -27,7 +27,7 @@ mod walk;
 pub use deadline::Deadline;
 pub use error::Error;
 pub use identity::{CommitId, RepositoryIdentity};
-pub use locate::git_dir;
+pub use locate::{Located, git_dir, locate};
 
 use std::path::Path;
 

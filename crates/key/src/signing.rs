@@ -279,6 +279,16 @@ macro_rules! signing_key {
                 hex(&self.0.to_bytes())
             }
 
+            /// A secret only this key's holder knows, named by `label`:
+            /// the same for the same key and label and unrelated to any
+            /// other label's, so a node's local names derive from its key
+            /// set and rebuild with it (I10).
+            #[must_use]
+            pub fn derive_secret(&self, label: &[u8]) -> [u8; 32] {
+                let seed = self.0.to_bytes();
+                *Digest::of(&[b"parinn derived secret v1\0", label, b"\0", &seed]).as_bytes()
+            }
+
             /// Its public half.
             #[must_use]
             pub fn public(&self) -> PublicKey {

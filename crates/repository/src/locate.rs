@@ -101,6 +101,25 @@ fn from_dot_git(dir: &Path, dot_git: &Path, meta: &Metadata) -> Result<Option<Pa
 /// that is not a few bytes long; [`Error::Io`] when the file system
 /// cannot say.
 pub fn git_dir(directory: &Path, ceiling: Option<&Path>) -> Result<Option<PathBuf>, Error> {
+    Ok(locate(directory, ceiling)?.map(|found| found.git_dir))
+}
+
+/// Where a repository's worktree and git directory are.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Located {
+    /// The directory holding `.git`: the root of the worktree, however
+    /// deep below it the search began.
+    pub worktree: PathBuf,
+    /// The git directory, as [`git_dir`] finds it.
+    pub git_dir: PathBuf,
+}
+
+/// [`git_dir`], with the worktree it was found for.
+///
+/// # Errors
+///
+/// As [`git_dir`].
+pub fn locate(directory: &Path, ceiling: Option<&Path>) -> Result<Option<Located>, Error> {
     for dir in directory.ancestors() {
         if ceiling == Some(dir) {
             break;
@@ -108,8 +127,11 @@ pub fn git_dir(directory: &Path, ceiling: Option<&Path>) -> Result<Option<PathBu
         let dot_git = dir.join(".git");
         match fs::symlink_metadata(&dot_git) {
             Ok(meta) => {
-                if let Some(found) = from_dot_git(dir, &dot_git, &meta)? {
-                    return Ok(Some(found));
+                if let Some(git_dir) = from_dot_git(dir, &dot_git, &meta)? {
+                    return Ok(Some(Located {
+                        worktree: dir.to_path_buf(),
+                        git_dir,
+                    }));
                 }
             }
             Err(e) if matches!(e.kind(), ErrorKind::NotFound | ErrorKind::NotADirectory) => {}

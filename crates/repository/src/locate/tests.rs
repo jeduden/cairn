@@ -297,3 +297,20 @@ fn only_a_worktrees_or_a_modules_directory_below_a_dot_git_is_followed() {
         assert_eq!(git_dir(&work, None).unwrap(), Some(real));
     }
 }
+
+#[test]
+fn the_worktree_is_the_directory_holding_dot_git_however_deep_the_search_began() {
+    let dir = TempDir::new().unwrap();
+    fs::create_dir(dir.path().join(".git")).unwrap();
+    let deep = dir.path().join("a/b");
+    fs::create_dir_all(&deep).unwrap();
+
+    let found = super::locate(&deep, None).unwrap().unwrap();
+
+    assert_eq!(found.worktree, dir.path());
+    assert_eq!(found.git_dir, dir.path().join(".git"));
+    assert_eq!(
+        super::locate(&dir.path().join("none"), Some(dir.path())).unwrap(),
+        None
+    );
+}
