@@ -27,6 +27,7 @@ empty: |
 | 2609292011 | sonnet | [The remaining engineering gates in CI](plan/2609292011_ci-engineering-gates/plan.md)                            |
 | 2609292012 | opus   | [M1: record and recall](plan/2609292012_m1-record-and-recall/plan.md)                                            |
 | 2609292156 | sonnet | [The repository's knowledge follows ParleyInn's layers](plan/2609292156_knowledge-follows-parinn-layers/plan.md) |
+| 2610190944 | sonnet | [Ship third-party license texts inside every executable](plan/2610190944_third-party-licenses/plan.md)           |
 <?/catalog?>
 
 ## All plans
