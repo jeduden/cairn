@@ -112,11 +112,14 @@ fn bound_commits(store: &Store, node: &Node) -> Result<Vec<CommitId>, AdminError
     let mut bound: Vec<CommitId> = store
         .log(node.device_writer())?
         .iter()
-        .filter(|s| {
-            matches!(
-                s.link.header.kind,
-                EventKind::RepositoryBind | EventKind::PrincipalAct
-            )
+        .filter(|s| match s.link.header.kind {
+            EventKind::RepositoryBind => true,
+            // Only the act that binds by hand, not any act naming a commit.
+            EventKind::PrincipalAct => s
+                .content
+                .as_ref()
+                .is_some_and(|c| c["act"] == "repository_bind"),
+            _ => false,
         })
         .filter_map(|s| s.content.as_ref()?["repository"].as_str())
         .filter_map(CommitId::parse)

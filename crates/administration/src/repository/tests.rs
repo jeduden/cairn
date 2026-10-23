@@ -579,16 +579,17 @@ fn a_bound_commit_the_default_branch_does_not_reach_names_no_clone() {
 fn only_a_repository_bind_act_binds_a_commit_not_another_act_naming_one() {
     let mut f = fixture();
     let root = commit_id(&[], "x");
-    let append = |f: &mut Fixture, kind: EventKind, provenance: Provenance, content: serde_json::Value| {
-        let event = store::NewEvent {
-            kind,
-            provenance,
-            content,
-            commitment_key: record::commitment::CommitmentKey::from_bytes([3; 32]),
-            transcript_timestamp: None,
+    let append =
+        |f: &mut Fixture, kind: EventKind, provenance: Provenance, content: serde_json::Value| {
+            let event = store::NewEvent {
+                kind,
+                provenance,
+                content,
+                commitment_key: record::commitment::CommitmentKey::from_bytes([3; 32]),
+                transcript_timestamp: None,
+            };
+            f.store.append(f.node.device_writer(), &[event]).unwrap();
         };
-        f.store.append(f.node.device_writer(), &[event]).unwrap();
-    };
     append(
         &mut f,
         EventKind::PrincipalAct,

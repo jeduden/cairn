@@ -353,6 +353,12 @@ fn a_later_change(w: &mut World) -> Result<(), String> {
     if !last_run(w)?.status.success() || shown(w, &dir)?["status"] != "bound" {
         return Err("the widening bind did not rebind the directory".to_owned());
     }
+    // Only that act rebinds: away from a terminal the same bind is refused.
+    let before_acts = events(w, "principal_act")?.len();
+    run_core(w, &["repository", "bind", &dir.display().to_string()], None)?;
+    if last_run(w)?.status.success() || events(w, "principal_act")?.len() != before_acts {
+        return Err("a bind away from a terminal was not refused".to_owned());
+    }
     // The same act binds by hand a directory no hook event has shown.
     let by_hand = w.home.join("work").join("by-hand");
     make(w, &by_hand, true)?;

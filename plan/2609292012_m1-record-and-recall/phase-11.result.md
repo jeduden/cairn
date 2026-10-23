@@ -87,11 +87,10 @@ For the stakeholder:
   cannot stay within NFR-02's 150 ms.
 - Deviation, PRV-13: after a node identity change every writer reads
   `peer` until a PRV-12 confirm, which no M1 command makes.
-- Residual after the review, raised: a file swapped for a FIFO between
-  the check and the open still blocks (closing it needs `O_NONBLOCK`
-  through `libc`, a new dependency); a `gitdir:` file may name any
-  directory, so a hostile clone can bind another repository's commit id,
-  which replicates. Its first bind should be a principal act.
+- Residual after the review: a `.git` file may still name a worktree
+  or submodule git directory of another repository, which then binds
+  its commit id; a separate git directory is refused. M1 holds no room,
+  so two `@LANE-02` clauses (branch links, state) hold vacuously.
 - Stakeholder paths touched: `tooling/scenario`, `features/`, `fuzz/`
   (LMK-03's sanitizer and its `field_sanitizer` target) and `reach.rs`.
 
