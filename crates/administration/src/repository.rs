@@ -137,6 +137,27 @@ fn resolve(
     })
 }
 
+/// Reports `directory`'s clone unreadable the first time it is, and
+/// never again until it reads.
+fn unreadable(
+    store: &mut Store,
+    entropy: &mut dyn Entropy,
+    directory: &Path,
+) -> Result<Outcome, AdminError> {
+    let secret = store.local_secret("repository", draw(entropy)?)?;
+    let marker = format!("reported:{}", directory_key(&secret, directory));
+    if store.directory_identity(&marker)?.as_deref() == Some(UNREADABLE) {
+        return Ok(Outcome::StillUnreadable);
+    }
+    store.set_directory_identity(&marker, UNREADABLE)?;
+
+    Ok(Outcome::Unreadable)
+}
+
+/// What a directory's marker holds while its clone is reported
+/// unreadable; no identity key is this short.
+const UNREADABLE: &str = "unreadable";
+
 /// Looks at `directory` as a hook event shows it: binds its repository's
 /// identity if this node never has.
 ///
@@ -153,11 +174,11 @@ pub fn bind(
     let git_dir = match repository::git_dir(directory) {
         Ok(Some(git_dir)) => git_dir,
         Ok(None) => return Ok(Outcome::NoRepository),
-        Err(_) => return Ok(Outcome::Unreadable),
+        Err(_) => return unreadable(store, entropy, directory),
     };
     let bound = bound_commits(store, node)?;
     let Ok(current) = resolve(&git_dir, &bound, deadline) else {
-        return Ok(Outcome::Unreadable);
+        return unreadable(store, entropy, directory);
     };
     let secret = store.local_secret("repository", draw(entropy)?)?;
     let (directory, now) = (
