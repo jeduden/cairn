@@ -4,9 +4,6 @@ use std::path::{Path, PathBuf};
 use crate::tests::{DEV, Process};
 use crate::{EXIT_FAILURE, EXIT_OK, EXIT_USAGE};
 
-const A: &str = "1111111111111111111111111111111111111111";
-const B: &str = "2222222222222222222222222222222222222222";
-
 /// A zlib stream of `data` in stored blocks.
 fn zlib(data: &[u8]) -> Vec<u8> {
     let mut out = vec![0x78, 0x01, 1];
@@ -22,13 +19,27 @@ fn zlib(data: &[u8]) -> Vec<u8> {
     out
 }
 
-/// A repository at `dir` with one root commit `id`, on `main`.
-fn repository(dir: &Path, id: Option<&str>) {
+/// The body of a root commit of the empty tree with `message`.
+fn root_body(message: &str) -> String {
+    format!("tree {}\n\n{message}\n", "0".repeat(40))
+}
+
+/// The id the root commit with `message` has.
+fn root_id(message: &str) -> String {
+    ::repository::commit_object_id(root_body(message).as_bytes())
+        .as_str()
+        .to_owned()
+}
+
+/// A repository at `dir` with one root commit with `message`, on `main`,
+/// stored under its real id.
+fn repository(dir: &Path, message: Option<&str>) {
     let git = dir.join(".git");
     fs::create_dir_all(git.join("refs/heads")).unwrap();
     fs::write(git.join("HEAD"), "ref: refs/heads/main\n").unwrap();
-    if let Some(id) = id {
-        let body = format!("tree {}\n\nmessage\n", "0".repeat(40));
+    if let Some(message) = message {
+        let id = root_id(message);
+        let body = root_body(message);
         let object = format!("commit {}\0{body}", body.len());
         let path = git.join("objects").join(&id[..2]).join(&id[2..]);
         fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -37,10 +48,10 @@ fn repository(dir: &Path, id: Option<&str>) {
     }
 }
 
-fn clone(p: &Process, name: &str, id: Option<&str>) -> PathBuf {
+fn clone(p: &Process, name: &str, message: Option<&str>) -> PathBuf {
     let dir = p.dir.path().join(name);
     fs::create_dir_all(&dir).unwrap();
-    repository(&dir, id);
+    repository(&dir, message);
     dir
 }
 
@@ -60,21 +71,23 @@ fn shown(p: &Process, dir: &Path) -> serde_json::Value {
 #[test]
 fn show_says_a_directory_is_unbound_with_the_identity_its_clone_names() {
     let p = Process::new();
-    let app = clone(&p, "app", Some(A));
+    let a = root_id("a");
+    let app = clone(&p, "app", Some("a"));
 
     let v = shown(&p, &app);
 
     assert_eq!(v["status"], "unbound");
-    assert_eq!(v["repository"], A);
+    assert_eq!(v["repository"], a);
     let (code, text, _) = run(&p, &["repository", "show", &app.display().to_string()]);
     assert_eq!(code, EXIT_OK);
-    assert_eq!(text.trim(), format!("unbound: {A}"));
+    assert_eq!(text.trim(), format!("unbound: {a}"));
 }
 
 #[test]
 fn show_defaults_to_the_working_directory_and_names_a_provisional_identity() {
-    let p = Process::new();
-    repository(p.dir.path(), None);
+    let mut p = Process::new();
+    let work = clone(&p, "work", None);
+    p.working_dir = Some(work);
 
     let (code, out, _) = run(&p, &["repository", "show"]);
 
@@ -83,11 +96,28 @@ fn show_defaults_to_the_working_directory_and_names_a_provisional_identity() {
 }
 
 #[test]
+fn a_repository_in_the_home_directory_is_the_repository_of_no_directory_below_it() {
+    let mut p = Process::new();
+    // A dotfiles repository at the home directory, which is `HOME`.
+    repository(p.dir.path(), Some("dotfiles"));
+    let notes = p.dir.path().join("notes");
+    fs::create_dir_all(&notes).unwrap();
+    p.working_dir = Some(notes.clone());
+
+    assert_eq!(shown(&p, &notes)["status"], "no repository");
+    let (code, out, _) = run(&p, &["repository", "show"]);
+    assert_eq!((code, out.trim()), (EXIT_OK, "no repository"));
+    let (code, _, err) = run(&p, &["repository", "bind", &notes.display().to_string()]);
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.contains("lies in no repository"), "{err}");
+}
+
+#[test]
 fn show_names_a_directory_in_no_repository_and_one_it_cannot_read() {
     let p = Process::new();
     let plain = p.dir.path().join("plain");
     fs::create_dir_all(&plain).unwrap();
-    let bad = clone(&p, "bad", Some(A));
+    let bad = clone(&p, "bad", Some("a"));
     fs::write(
         bad.join(".git/config"),
         "[extensions]\n\tobjectformat = sha256\n",
@@ -102,7 +132,7 @@ fn show_names_a_directory_in_no_repository_and_one_it_cannot_read() {
 fn a_widening_bind_needs_a_terminal() {
     let mut p = Process::new();
     p.terminal = false;
-    let app = clone(&p, "app", Some(A));
+    let app = clone(&p, "app", Some("a"));
 
     let (code, _, err) = run(&p, &["repository", "bind", &app.display().to_string()]);
 
@@ -113,7 +143,8 @@ fn a_widening_bind_needs_a_terminal() {
 #[test]
 fn a_widening_bind_records_the_act_and_binds_the_directory() {
     let p = Process::new();
-    let app = clone(&p, "app", Some(A));
+    let a = root_id("a");
+    let app = clone(&p, "app", Some("a"));
 
     let (code, out, err) = run(
         &p,
@@ -122,7 +153,7 @@ fn a_widening_bind_records_the_act_and_binds_the_directory() {
 
     assert_eq!((code, err.as_str()), (EXIT_OK, ""));
     let v: serde_json::Value = serde_json::from_str(&out).unwrap();
-    assert_eq!(v["repository"], A);
+    assert_eq!(v["repository"], a);
     assert_eq!(shown(&p, &app)["status"], "bound");
     let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
     let acts: i64 = conn
@@ -138,16 +169,17 @@ fn a_widening_bind_records_the_act_and_binds_the_directory() {
 #[test]
 fn a_widening_bind_rebinds_after_a_change_and_may_name_a_commit_the_clone_lacks() {
     let p = Process::new();
-    let app = clone(&p, "app", Some(A));
+    let a = root_id("a");
+    let app = clone(&p, "app", Some("a"));
     let at = app.display().to_string();
     assert_eq!(run(&p, &["repository", "bind", &at]).0, EXIT_OK);
     fs::remove_dir_all(app.join(".git")).unwrap();
-    repository(&app, Some(B));
+    repository(&app, Some("b"));
     assert_eq!(shown(&p, &app)["status"], "changed");
 
     assert_eq!(run(&p, &["repository", "bind", &at]).0, EXIT_OK);
     assert_eq!(shown(&p, &app)["status"], "bound");
-    let lacking = clone(&p, "lacking", Some(B));
+    let lacking = clone(&p, "lacking", Some("b"));
     let (code, out, _) = run(
         &p,
         &[
@@ -155,12 +187,12 @@ fn a_widening_bind_rebinds_after_a_change_and_may_name_a_commit_the_clone_lacks(
             "bind",
             &lacking.display().to_string(),
             "--commit",
-            A,
+            &a,
             "--json",
         ],
     );
     assert_eq!(code, EXIT_OK);
-    assert!(out.contains(A), "{out}");
+    assert!(out.contains(&a), "{out}");
 }
 
 #[test]
@@ -168,7 +200,7 @@ fn a_bind_of_a_directory_in_no_repository_or_with_a_bad_commit_fails() {
     let p = Process::new();
     let plain = p.dir.path().join("plain");
     fs::create_dir_all(&plain).unwrap();
-    let app = clone(&p, "app", Some(A));
+    let app = clone(&p, "app", Some("a"));
 
     let (code, _, err) = run(&p, &["repository", "bind", &plain.display().to_string()]);
     assert_eq!(code, EXIT_FAILURE);
@@ -190,13 +222,14 @@ fn a_bind_of_a_directory_in_no_repository_or_with_a_bad_commit_fails() {
 #[test]
 fn the_repository_verbs_refuse_what_they_do_not_know() {
     let p = Process::new();
+    let a = root_id("a");
 
     for args in [
         &["repository"][..],
         &["repository", "forget"][..],
         &["repository", "show", "--now"][..],
         &["repository", "show", "a", "b"][..],
-        &["repository", "show", "--commit", A][..],
+        &["repository", "show", "--commit", a.as_str()][..],
         &["repository", "bind", "--commit"][..],
     ] {
         assert_eq!(run(&p, args).0, EXIT_USAGE, "{args:?}");
@@ -242,21 +275,22 @@ fn counter(p: &Process, name: &str) -> u64 {
 #[test]
 fn the_first_hook_event_in_a_clone_binds_its_identity_when_ingest_next_runs_once() {
     let mut p = Process::new();
-    let app = clone(&p, "app", Some(A));
+    let a = root_id("a");
+    let app = clone(&p, "app", Some("a"));
     start_in(&mut p, "s1", &app);
 
     assert_eq!(run(&p, &["ingest", "--all"]).0, EXIT_OK);
     start_in(&mut p, "s2", &app);
     assert_eq!(run(&p, &["ingest", "--all"]).0, EXIT_OK);
 
-    assert_eq!(binds(&p), [serde_json::json!({"repository": A})]);
+    assert_eq!(binds(&p), [serde_json::json!({"repository": a})]);
     assert_eq!(shown(&p, &app)["status"], "bound");
 }
 
 #[test]
 fn an_mcp_server_binds_the_identity_of_the_clones_its_hooks_showed_too() {
     let mut p = Process::new();
-    let app = clone(&p, "app", Some(A));
+    let app = clone(&p, "app", Some("a"));
     start_in(&mut p, "s1", &app);
 
     assert_eq!(run(&p, &["mcp"]).0, EXIT_OK);
@@ -267,11 +301,12 @@ fn an_mcp_server_binds_the_identity_of_the_clones_its_hooks_showed_too() {
 #[test]
 fn a_change_of_identity_is_audited_and_counted_once_and_relinks_nothing() {
     let mut p = Process::new();
-    let app = clone(&p, "app", Some(A));
+    let (a, b) = (root_id("a"), root_id("b"));
+    let app = clone(&p, "app", Some("a"));
     start_in(&mut p, "s1", &app);
     run(&p, &["ingest", "--all"]);
     fs::remove_dir_all(app.join(".git")).unwrap();
-    repository(&app, Some(B));
+    repository(&app, Some("b"));
     start_in(&mut p, "s2", &app);
 
     run(&p, &["ingest", "--all"]);
@@ -289,14 +324,14 @@ fn a_change_of_identity_is_audited_and_counted_once_and_relinks_nothing() {
     assert!(
         audit
             .iter()
-            .all(|e| !e.detail.contains(A) && !e.detail.contains(B))
+            .all(|e| !e.detail.contains(&a) && !e.detail.contains(&b))
     );
 }
 
 #[test]
 fn a_clone_that_cannot_be_read_is_counted_once() {
     let mut p = Process::new();
-    let bad = clone(&p, "bad", Some(A));
+    let bad = clone(&p, "bad", Some("a"));
     fs::write(
         bad.join(".git/config"),
         "[extensions]\n\tobjectformat = sha256\n",
