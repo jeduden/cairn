@@ -31,6 +31,7 @@ mod engineering_reach;
 mod engineering_release;
 mod engineering_review;
 mod live;
+mod memory_boundary;
 mod non_functional;
 mod observability;
 mod principal_acts;
