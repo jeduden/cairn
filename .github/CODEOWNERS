@@ -32,8 +32,6 @@
 /rust-toolchain.toml          @jeduden
 /mise.toml                    @jeduden
 /mise.lock                    @jeduden
-/mise.dev.toml                @jeduden
-/mise.dev.lock                @jeduden
 /clippy.toml                  @jeduden
 /deny.toml                    @jeduden
 /codecov.yml                  @jeduden

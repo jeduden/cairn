@@ -59,8 +59,11 @@ trap 'rm -rf "$tmp"' EXIT
 url=https://github.com/jdx/mise/releases/download/v$version/$file
 curl --proto '=https' --tlsv1.2 -fsSL --retry 3 --max-time 120 -o "$tmp/$file" "$url"
 
-if command -v sha256sum >/dev/null; then check="sha256sum -c"; else check="shasum -a 256 -c"; fi
-if ! (cd "$tmp" && echo "$pin" | $check >/dev/null); then
+# GNU sha256sum, or shasum where sha256sum is missing or BSD's (macOS),
+# which both check a list file. BSD's sha256sum cannot read one on stdin.
+if sha256sum --version >/dev/null 2>&1; then check="sha256sum -c"; else check="shasum -a 256 -c"; fi
+echo "$pin" > "$tmp/mise.sha256"
+if ! (cd "$tmp" && $check mise.sha256 >/dev/null); then
   echo "setup-tools: mise $version does not match $sums" >&2
   exit 1
 fi
