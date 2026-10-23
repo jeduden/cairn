@@ -3305,7 +3305,8 @@ fn a_kept_origin_changed_in_place_fails_verify_until_rebuild_derives_it_again() 
     assert_eq!(p.invoke(&["ingest", "--all"], &DEV).0, EXIT_OK);
     assert_eq!(p.invoke(&["rebuild"], &DEV).0, EXIT_OK);
     let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
-    conn.execute("UPDATE origins SET origin = 'peer'", []).unwrap();
+    conn.execute("UPDATE origins SET origin = 'peer'", [])
+        .unwrap();
     drop(conn);
 
     let (code, _, err) = p.invoke(&["verify"], &DEV);
