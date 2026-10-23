@@ -5,6 +5,7 @@ idiomatic_version_file_enable_tools = ["rust"]
 cargo.binstall = false
 
 [tools]
+"github:jeduden/frit" = { version = "0.17.0", bin = "frit" }
 "github:jeduden/mdsmith" = { version = "0.55.1", bin = "mdsmith" }
 "github:taiki-e/cargo-llvm-cov" = "0.9.1"
 "github:EmbarkStudios/cargo-deny" = "0.20.2"
