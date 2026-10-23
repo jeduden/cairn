@@ -123,3 +123,12 @@ fn a_gitdir_that_is_a_symbolic_link_is_refused() {
     fs::write(work.join(".git"), "gitdir: ../link\n").unwrap();
     assert!(matches!(git_dir(&work), Err(Error::Unsupported(_))));
 }
+
+#[test]
+fn a_path_through_a_file_is_looked_for_above_the_file() {
+    let dir = TempDir::new().unwrap();
+    fs::create_dir(dir.path().join(".git")).unwrap();
+    fs::write(dir.path().join("file"), "x").unwrap();
+    let through = dir.path().join("file/below");
+    assert_eq!(git_dir(&through).unwrap(), Some(dir.path().join(".git")));
+}
