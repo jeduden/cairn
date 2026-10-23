@@ -1,7 +1,7 @@
 ---
 id: 2610190944
 title: "Ship third-party license texts inside every executable"
-status: "🔲"
+status: "🔳"
 summary: >-
   Fail the pull request that adds a crate with no license text
   (ENG-30), and embed in every executable its release target's
@@ -104,7 +104,7 @@ footer: |
 
 | #   | Status | Phase                                                                      |
 | --- | ------ | -------------------------------------------------------------------------- |
-| 1   | 🔲     | [Every crate has a license text, checked on each pull request](phase-1.md) |
+| 1   | 🔳     | [Every crate has a license text, checked on each pull request](phase-1.md) |
 <?/catalog?>
 
 ## Acceptance Criteria

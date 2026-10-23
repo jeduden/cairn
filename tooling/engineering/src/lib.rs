@@ -16,6 +16,7 @@ pub mod confinement;
 pub mod decisions;
 pub mod dependencies;
 pub mod isolation_guard;
+pub mod license_texts;
 pub mod product_crates;
 pub mod registry;
 pub mod release_budgets;
