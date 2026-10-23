@@ -37,6 +37,7 @@ mod observability;
 mod principal_acts;
 mod provenance;
 mod provenance_hooks;
+mod provenance_policy;
 mod provenance_seats;
 mod provenance_tool_calls;
 mod provenance_trust;
