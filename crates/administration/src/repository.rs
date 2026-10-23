@@ -60,6 +60,9 @@ pub enum Outcome {
     Unreadable,
     /// It could not be read, and that was reported already.
     StillUnreadable,
+    /// The look ran out of its time; nothing was kept, so the next look
+    /// tries again.
+    TimedOut,
 }
 
 /// What the clone of a directory says its identity is now: a bound

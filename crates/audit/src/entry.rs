@@ -190,6 +190,9 @@ pub enum Counter {
     /// The identity of a clone could not be bound: the record or the
     /// random source failed, not the clone (LANE-02, I6).
     RepositoryBindFailed,
+    /// A look at a clone ran out of its time, so its identity stays as it
+    /// was and the next look tries again (LANE-02, ENG-03, I6).
+    RepositoryReadTimedOut,
 }
 
 impl Counter {
@@ -246,6 +249,7 @@ impl Counter {
             Self::RepositoryIdentityChanged => "repository_identity_changed",
             Self::RepositoryReadFailed => "repository_read_failed",
             Self::RepositoryBindFailed => "repository_bind_failed",
+            Self::RepositoryReadTimedOut => "repository_read_timed_out",
         }
     }
 }

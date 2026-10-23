@@ -496,3 +496,17 @@ fn a_rebind_records_the_commit_or_the_provisional_id_it_names() {
     );
     assert_eq!(rebind(None, None).content(), serde_json::json!({}));
 }
+
+#[test]
+fn a_look_that_runs_out_of_time_is_told_from_a_clone_that_cannot_be_read_and_is_tried_again() {
+    let mut f = fixture();
+    let app = f.path("app");
+    rooted(&app, "x");
+
+    let expired = bind(&mut f.store, &f.node, &mut OsEntropy, &app, None, &|| true).unwrap();
+
+    assert_eq!(expired, Outcome::TimedOut);
+    assert!(f.binds().is_empty());
+    // Nothing was kept, so the next look, with time, binds it.
+    assert_eq!(f.bind(&app), Outcome::Bound { provisional: false });
+}
