@@ -14,7 +14,7 @@ pub(crate) fn hex(text: &str) -> Vec<u8> {
             _ => b.to_ascii_lowercase() - b'a' + 10,
         })
         .collect();
-    digits.chunks(2).map(|p| p[0] << 4 | p[1]).collect()
+    digits.chunks(2).map(|p| (p[0] << 4) | p[1]).collect()
 }
 
 /// `data` as a zlib stream of stored blocks.

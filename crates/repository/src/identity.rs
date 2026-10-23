@@ -36,7 +36,7 @@ impl CommitId {
         let digit = |b: u8| if b > b'9' { b - b'a' + 10 } else { b - b'0' };
         let mut out = [0; 20];
         for (byte, pair) in out.iter_mut().zip(self.0.as_bytes().chunks(2)) {
-            *byte = pair.iter().fold(0, |acc, &d| acc << 4 | digit(d));
+            *byte = pair.iter().fold(0, |acc, &d| (acc << 4) | digit(d));
         }
         out
     }
