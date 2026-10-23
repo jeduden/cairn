@@ -7,7 +7,7 @@ use testkit::TempDir;
 
 use super::{
     CommitId, Error, RepositoryIdentity, commit_object_id, git_dir, has_commit, identity,
-    root_commit,
+    root_commit, roots,
 };
 use crate::fixture::{put_commit, put_object};
 use crate::loose::rel_of;
@@ -331,4 +331,33 @@ fn reading_a_repository_changes_nothing_in_it() {
     has_commit(&found, &id(7)).unwrap();
     identity(&found, &|| false).unwrap();
     assert_eq!(snapshot(dir.path()), before);
+}
+
+#[test]
+fn every_root_reachable_from_the_default_branch_is_named_lowest_first_and_no_other() {
+    let dir = TempDir::new().unwrap();
+    let one = commit(dir.path(), "one", &[]);
+    let two = commit(dir.path(), "two", &[]);
+    let merge = commit(dir.path(), "merge", &[&one, &two]);
+    // A root the branch does not reach, stored in the clone all the same.
+    let stray = commit(dir.path(), "stray", &[]);
+    checked_out(dir.path(), &merge);
+
+    let named = roots(dir.path(), &|| false).unwrap();
+
+    let mut both = vec![one, two];
+    both.sort();
+    assert_eq!(named, both);
+    assert!(!named.contains(&stray));
+}
+
+#[test]
+fn a_repository_with_no_commit_has_no_roots_and_a_deadline_stops_the_walk() {
+    let dir = TempDir::new().unwrap();
+    write(dir.path(), "HEAD", "ref: refs/heads/main\n");
+    assert_eq!(roots(dir.path(), &|| false).unwrap(), vec![]);
+    let tip = commit(dir.path(), "tip", &[]);
+    checked_out(dir.path(), &tip);
+
+    assert!(matches!(roots(dir.path(), &|| true), Err(Error::Deadline)));
 }
