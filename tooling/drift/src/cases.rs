@@ -2,8 +2,8 @@
 //! exists to catch.
 
 use crate::{
-    Case, Check, Injection, cargo_lib_test, cargo_test, clippy, mdsmith, scenario, taplo_fmt,
-    taplo_lint,
+    Case, Check, Injection, cargo_lib_test, cargo_test, clippy, mdsmith, scenario, setup_tools,
+    taplo_fmt, taplo_lint,
 };
 
 /// The dependency decision the ENG-18 and ENG-26 cases drift.
@@ -71,6 +71,7 @@ pub fn cases() -> Vec<Case> {
         static_analysis_cases(),
         complexity_cases(),
         toml_cases(),
+        setup_cases(),
         release_cases(),
         protection_cases(),
         architecture_cases(),
@@ -1122,6 +1123,22 @@ fn static_analysis_cases() -> Vec<Case> {
     ]
 }
 
+/// The tool setup installs only released binaries: a tool whose backend
+/// would build from source is refused before anything downloads.
+fn setup_cases() -> Vec<Case> {
+    vec![case(
+        "a tool that builds from source",
+        "scripts/setup-tools.sh --check",
+        Injection::replace(
+            "mise.toml",
+            "[tools]\n",
+            "[tools]\n\"cargo:cargo-audit\" = \"0.22.2\"\n",
+        ),
+        setup_tools(),
+        "refusing tools that are not released binaries",
+    )]
+}
+
 /// The drifts the TOML checks exist to catch: CI no longer running one
 /// or no longer gating on its job, which the gate test catches, and a
 /// misspelt manifest key and a TOML file out of its layout, which taplo
@@ -1503,6 +1520,17 @@ fn mise_owner_case() -> Case {
     )
 }
 
+/// The developer tool pins, which CI's install step reads, must remain
+/// owned by the stakeholder.
+fn mise_dev_owner_case() -> Case {
+    protection_case(
+        "the developer tool pin without the stakeholder",
+        Injection::replace(CODEOWNERS, "/mise.dev.toml                @jeduden\n", ""),
+        "the_checkout_s_codeowners_name_the_stakeholder_on_the_enforcing_paths",
+        "mise.dev.toml (gate, CI,) is owned by [], want @jeduden",
+    )
+}
+
 fn signed_commits_case() -> Case {
     protection_case(
         "commits no longer required to be signed",
@@ -1570,6 +1598,7 @@ fn protection_cases() -> Vec<Case> {
             "CLAUDE.md (the agent instructions) is owned by [], want @jeduden",
         ),
         mise_owner_case(),
+        mise_dev_owner_case(),
         protection_case(
             "an owner on a path outside the allowed classes",
             Injection::replace(

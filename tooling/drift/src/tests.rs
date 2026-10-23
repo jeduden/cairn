@@ -118,6 +118,10 @@ fn check_constructors_name_the_command() {
     assert_eq!(taplo_fmt().to_string(), "taplo fmt --check");
     assert_eq!(taplo_lint().to_string(), "taplo lint");
     assert_eq!(
+        setup_tools().to_string(),
+        "sh scripts/setup-tools.sh --check"
+    );
+    assert_eq!(
         clippy("parinn").to_string(),
         "cargo clippy --locked -p parinn -- -D warnings"
     );

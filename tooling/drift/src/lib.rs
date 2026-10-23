@@ -191,6 +191,13 @@ pub fn taplo_lint() -> Check {
     Check::new("taplo", &["lint"])
 }
 
+/// Checks the tool setup's records without installing anything: the
+/// mise pin for this platform, and that every tool is a released binary.
+#[must_use]
+pub fn setup_tools() -> Check {
+    Check::new("sh", &["scripts/setup-tools.sh", "--check"])
+}
+
 /// What validating or applying an injection can fail with.
 #[derive(Debug)]
 pub enum Error {

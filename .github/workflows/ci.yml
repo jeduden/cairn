@@ -232,7 +232,7 @@ jobs:
       - name: Install pinned tools with mise
         uses: ./.github/actions/setup-mise
         with:
-          tools: "rust github:EmbarkStudios/cargo-deny cargo:cargo-audit"
+          tools: "rust github:EmbarkStudios/cargo-deny github:rustsec/rustsec"
           cache: true
       - run: cargo fetch --locked
       - run: cargo deny check licenses bans sources
