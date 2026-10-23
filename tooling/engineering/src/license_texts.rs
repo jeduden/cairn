@@ -64,6 +64,12 @@ pub struct Package {
     pub dir: PathBuf,
 }
 
+/// The ids of the licenses the tool keeps a canonical text for.
+#[must_use]
+pub fn ids() -> Vec<&'static str> {
+    CANON.iter().map(|(id, _)| *id).collect()
+}
+
 /// The canonical text of license `id`, if the tool keeps one.
 #[must_use]
 pub fn canonical(id: &str) -> Option<&'static str> {
@@ -87,7 +93,7 @@ pub fn normalize(text: &str) -> String {
 /// Whether `line` states who holds the copyright and since when,
 /// rather than wrapping a sentence that mentions the word. A clause that
 /// starts "(c)", such as Apache-2.0's section 4(c), is license text.
-fn copyright_line(line: &str) -> bool {
+pub(crate) fn copyright_line(line: &str) -> bool {
     let line = line.trim().to_lowercase();
     let stated = line.starts_with("copyright")
         && (line.contains("(c)")
@@ -505,7 +511,8 @@ fn walk(dir: &Path, files: &mut Vec<PathBuf>, problems: &mut Vec<String>) {
 /// The registry crates linked into a shipped executable: those reached
 /// through normal dependencies from each binary under `product`, which
 /// `cargo metadata --filter-platform <target>` resolved. A crate that
-/// only builds, tests or fuzzes is not linked.
+/// only builds, tests or fuzzes, and a proc-macro with what only it
+/// reaches, is not linked.
 ///
 /// # Errors
 ///
@@ -530,9 +537,25 @@ pub fn linked(metadata: &str, product: &Path) -> Result<Vec<Package>, String> {
         .filter(|p| dependencies::ships(p, &product))
         .filter_map(|p| p["id"].as_str())
         .collect();
+    let proc_macros: BTreeSet<&str> = value["packages"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|p| {
+            p["targets"].as_array().into_iter().flatten().any(|t| {
+                t["kind"]
+                    .as_array()
+                    .into_iter()
+                    .flatten()
+                    .any(|k| k == "proc-macro")
+            })
+        })
+        .filter_map(|p| p["id"].as_str())
+        .collect();
     let mut seen = BTreeSet::new();
     while let Some(id) = todo.pop() {
-        if !seen.insert(id) {
+        // A proc-macro runs in the compiler and links into nothing.
+        if proc_macros.contains(id) || !seen.insert(id) {
             continue;
         }
         let deps = nodes.get(id).map_or(&[][..], |n| {
@@ -738,28 +761,5 @@ pub fn product_links_check(metadata: &str) -> Result<Vec<String>, String> {
 /// The workflow that names the release targets.
 pub const BUILD_WORKFLOW: &str = ".github/workflows/build.yml";
 
-/// Checks the repository at `root` for ENG-30: the crates linked into
-/// a shipped executable for each release target, whose sources cargo
-/// has fetched, and the repository's own records. It runs `cargo
-/// metadata` once per target, with `PARINN_HOME` pointed at an empty
-/// directory of its own (ENG-14).
-///
-/// # Errors
-///
-/// Fails when the build workflow, cargo or a crate's directory cannot be
-/// read.
-pub fn check_release(cargo: &OsStr, root: &Path) -> Result<Vec<String>, String> {
-    let checkout = Checkout::new(root);
-    let targets = release_targets(&checkout.read(BUILD_WORKFLOW)?)?;
-    let home = std::env::temp_dir().join(format!("license-check-{}", std::process::id()));
-    fs::create_dir_all(&home).map_err(|e| format!("create {}: {e}", home.display()))?;
-    let linked = linked_for_release(&targets, |target| {
-        cargo_metadata_for(cargo, &root.join("Cargo.toml"), &home, target)
-    });
-    let _ = fs::remove_dir_all(&home);
-
-    Ok(check_repository(&checkout, &linked?))
-}
-
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

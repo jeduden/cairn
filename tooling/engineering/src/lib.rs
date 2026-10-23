@@ -23,6 +23,7 @@ pub mod release_budgets;
 pub mod release_provenance;
 pub mod review_workflow;
 pub mod static_analysis;
+pub mod third_party;
 pub mod toolchain;
 
 use std::fs;

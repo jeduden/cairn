@@ -3,7 +3,9 @@
 //! and exits non-zero when there is any.
 
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+
+use crate::third_party::Options;
 
 /// Every crate a release links has a license text that fits.
 pub const EXIT_OK: u8 = 0;
@@ -12,24 +14,28 @@ pub const EXIT_FAILURE: u8 = 1;
 /// The command line is wrong.
 pub const EXIT_USAGE: u8 = 2;
 
-const USAGE: &str = "usage: license-check [--root DIR]";
+/// ENG-30's and ENG-31's checks on a checkout root, as the command runs
+/// them.
+pub type Check<'a> = &'a dyn Fn(&Path, &Options) -> Result<Vec<String>, String>;
+
+const USAGE: &str = "usage: license-check [--root DIR] [--write] [--out DIR]";
 
 /// Runs the command on `args` and returns its exit code. It is `main`
-/// without the process: `check` runs ENG-30's check on a checkout root.
+/// without the process: `check` runs ENG-30's and ENG-31's checks on a checkout root.
 pub fn run(
     args: impl IntoIterator<Item = String>,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
-    check: &dyn Fn(&Path) -> Result<Vec<String>, String>,
+    check: Check,
 ) -> u8 {
-    let root = match root(args) {
-        Ok(root) => root,
+    let (root, options) = match flags(args) {
+        Ok(parsed) => parsed,
         Err(msg) => {
             let _ = writeln!(stderr, "license-check: {msg}\n{USAGE}");
             return EXIT_USAGE;
         }
     };
-    match check(Path::new(&root)) {
+    match check(Path::new(&root), &options) {
         Err(msg) => {
             let _ = writeln!(stderr, "license-check: {msg}");
             EXIT_FAILURE
@@ -48,21 +54,30 @@ pub fn run(
 }
 
 /// The checkout root, from `--root DIR`, the current directory when
-/// absent.
-fn root(args: impl IntoIterator<Item = String>) -> Result<String, String> {
+/// absent, and the options `--write` and `--out DIR` set.
+fn flags(args: impl IntoIterator<Item = String>) -> Result<(String, Options), String> {
     let mut root = ".".to_owned();
+    let mut options = Options::default();
     let mut args = args.into_iter();
     while let Some(arg) = args.next() {
-        if arg != "--root" {
-            return Err(format!("unexpected argument {arg:?}"));
+        match arg.as_str() {
+            "--write" => options.write = true,
+            "--root" | "--out" => {
+                let value = args
+                    .next()
+                    .filter(|v| !v.is_empty())
+                    .ok_or_else(|| format!("{arg} needs a value"))?;
+                if arg == "--root" {
+                    root = value;
+                } else {
+                    options.out = Some(PathBuf::from(value));
+                }
+            }
+            _ => return Err(format!("unexpected argument {arg:?}")),
         }
-        root = args
-            .next()
-            .filter(|v| !v.is_empty())
-            .ok_or("--root needs a value")?;
     }
 
-    Ok(root)
+    Ok((root, options))
 }
 
 #[cfg(test)]

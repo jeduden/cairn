@@ -12,7 +12,7 @@ use std::process::{Command, Output};
 use testkit::TempDir;
 
 /// A workspace with one product binary and no dependencies.
-fn license_check(deny: &str) -> Output {
+fn fixture(deny: &str) -> TempDir {
     let dir = TempDir::new().unwrap();
     let files = [
         (
@@ -40,24 +40,43 @@ fn license_check(deny: &str) -> Output {
         fs::write(path, body).unwrap();
     }
 
+    dir
+}
+
+/// Runs `license-check --root DIR` with `args`.
+fn license_check(dir: &TempDir, args: &[&str]) -> Output {
     Command::new(env!("CARGO_BIN_EXE_license-check"))
-        .args(["--root"])
+        .arg("--root")
         .arg(dir.path())
+        .args(args)
         .output()
         .unwrap()
 }
 
 #[test]
-fn the_executable_passes_a_checkout_that_links_no_unlicensed_crate() {
-    let out = license_check("[licenses]\nallow = [\"MIT\"]\n");
+fn the_executable_writes_the_license_files_and_then_passes_a_checkout_that_matches_them() {
+    let dir = fixture("[licenses]\nallow = [\"MIT\"]\n");
 
+    let stale = license_check(&dir, &[]);
+    assert_eq!(stale.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&stale.stderr).contains("run license-check --write"));
+
+    assert!(license_check(&dir, &["--write"]).status.success());
+    let file = dir
+        .path()
+        .join("licenses/x86_64-unknown-linux-musl/THIRD_PARTY_LICENSES");
+    assert!(fs::read_to_string(file).unwrap().contains("SQLite"));
+
+    let out = license_check(&dir, &[]);
     assert!(out.status.success(), "{out:?}");
     assert!(String::from_utf8_lossy(&out.stdout).contains("has a license text"));
 }
 
 #[test]
 fn the_executable_fails_a_license_deny_toml_grants_without_a_text() {
-    let out = license_check("[licenses]\nallow = [\"WTFPL\"]\n");
+    let dir = fixture("[licenses]\nallow = [\"WTFPL\"]\n");
+
+    let out = license_check(&dir, &["--write"]);
 
     assert_eq!(out.status.code(), Some(1));
     assert!(String::from_utf8_lossy(&out.stderr).contains("license-check: deny.toml grants WTFPL"));

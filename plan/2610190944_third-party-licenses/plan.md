@@ -1,7 +1,7 @@
 ---
 id: 2610190944
 title: "Ship third-party license texts inside every executable"
-status: "🔳"
+status: "✅"
 summary: >-
   Fail the pull request that adds a crate with no license text
   (ENG-30), and embed in every executable its release target's
@@ -102,9 +102,11 @@ footer: |
 
 ?>
 
-| #   | Status | Phase                                                                      |
-| --- | ------ | -------------------------------------------------------------------------- |
-| 1   | ✅     | [Every crate has a license text, checked on each pull request](phase-1.md) |
+| #   | Status | Phase                                                                                |
+| --- | ------ | ------------------------------------------------------------------------------------ |
+| 1   | ✅     | [Every crate has a license text, checked on each pull request](phase-1.md)           |
+| 2   | ✅     | [A generated license file for every release target, kept in step by CI](phase-2.md)  |
+| 3   | ✅     | [The core prints its target's license file; the release build checks it](phase-3.md) |
 <?/catalog?>
 
 ## Acceptance Criteria
@@ -112,15 +114,15 @@ footer: |
 - [x] ENG-30 is off `@pending` and its scenario passes in the scenario
   suite; a crate with no recoverable license text fails CI in the pull
   request that adds it
-- [ ] ENG-31 is off `@pending` and its scenario passes; each target's
+- [x] ENG-31 is off `@pending` and its scenario passes; each target's
   committed `THIRD_PARTY_LICENSES` is embedded in the core executable
   and printed by `parinn licenses`, and the release build fails when a
   built executable's output differs from its target's regenerated file
-- [ ] Generating the file twice gives identical bytes; it names every
+- [x] Generating the file twice gives identical bytes; it names every
   crate linked into its target, SQLite, the Rust standard library and the musl C
   library, and no build-only, test, fuzz or tooling crate
-- [ ] Drift cases for the ENG-30 check and the ENG-31 verification are
-  caught (ENG-27); the ENG-30 cases are
-- [ ] No module is added to any shipped executable; ENG-18's list is
+- [x] Drift cases for the ENG-30 check and the ENG-31 verification are
+  caught (ENG-27)
+- [x] No module is added to any shipped executable; ENG-18's list is
   unchanged, or an accepted ADR covers any addition
-- [ ] `mdsmith check .` passes
+- [x] `mdsmith check .` passes

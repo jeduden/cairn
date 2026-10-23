@@ -1,0 +1,208 @@
+//! The ENG-31 checks the scenario binds, each over text it is handed so
+//! a test can give it a file that is wrong: what a rendered file holds,
+//! what it leaves out, which committed files must differ, where the core
+//! selects its file and what the workflows run.
+
+use std::collections::BTreeMap;
+use std::path::Path;
+
+use super::{committed_path, crate_entry};
+use crate::license_texts::{self, Package};
+
+/// The release target a host builds for, as the core embeds its file:
+/// the release target on the host's operating system and architecture.
+#[must_use]
+pub fn host_target(os: &str, arch: &str) -> Option<&'static str> {
+    match (os, arch) {
+        ("linux", "x86_64") => Some("x86_64-unknown-linux-musl"),
+        ("linux", "aarch64") => Some("aarch64-unknown-linux-musl"),
+        ("windows", _) => Some("x86_64-pc-windows-gnu"),
+        ("macos", _) => Some("aarch64-apple-darwin"),
+        _ => None,
+    }
+}
+
+/// Problems with a file that does not hold what `linked` links: a crate
+/// missing, a crate's copyright line missing, a crate's license text
+/// missing. Each crate's files are read through `read`.
+#[must_use]
+pub fn holds_every_crate(
+    rendered: &str,
+    linked: &[Package],
+    read: impl Fn(&Path) -> Result<Vec<(String, String)>, String>,
+) -> Vec<String> {
+    let text = license_texts::normalize(rendered);
+    let mut problems = Vec::new();
+    for package in linked {
+        let who = format!("{} {}", package.name, package.version);
+        let files = match read(&package.dir) {
+            Ok(files) => files,
+            Err(e) => {
+                problems.push(e);
+                continue;
+            }
+        };
+        if !rendered.contains(&format!("{who} (")) {
+            problems.push(format!("{who} is missing"));
+        }
+        for line in crate_entry(package, &files).copyrights {
+            if !rendered.contains(&line) {
+                problems.push(format!("{who}: the copyright line {line:?} is missing"));
+            }
+        }
+        for (name, body) in &files {
+            if !text.contains(&license_texts::normalize(body)) {
+                problems.push(format!("{who}: the text of {name} is missing"));
+            }
+        }
+    }
+
+    problems
+}
+
+/// Problems with a file that names a crate `metadata` lists that the
+/// target does not link: a build-only, proc-macro, test, fuzz or tooling
+/// crate.
+///
+/// # Errors
+///
+/// Fails when `metadata` is not cargo's JSON.
+pub fn unlinked_present(
+    rendered: &str,
+    metadata: &str,
+    linked: &[Package],
+) -> Result<Vec<String>, String> {
+    Ok(license_texts::packages(metadata)?
+        .into_iter()
+        .filter(|p| {
+            !linked
+                .iter()
+                .any(|l| (&l.name, &l.version) == (&p.name, &p.version))
+        })
+        .filter(|p| rendered.contains(&format!("{} {} (", p.name, p.version)))
+        .map(|p| format!("{} {} is not linked into the executable", p.name, p.version))
+        .collect())
+}
+
+/// Problems with a file that does not name the code `entries` say the
+/// target compiles in.
+#[must_use]
+pub fn names_compiled_in(target: &str, rendered: &str) -> Vec<String> {
+    super::non_crate(target)
+        .into_iter()
+        .filter(|e| !rendered.contains(&e.name))
+        .map(|e| format!("{target}: {} is not named", e.name))
+        .collect()
+}
+
+/// Problems with the committed files of `files`, by target: two targets
+/// whose linked crates differ must differ in bytes, and two that link the
+/// same crates must be identical.
+#[must_use]
+pub fn files_follow_crates(
+    linked: &BTreeMap<String, Vec<Package>>,
+    files: &BTreeMap<String, String>,
+) -> Vec<String> {
+    let key = |t: &str| -> Vec<(String, String)> {
+        linked[t]
+            .iter()
+            .map(|p| (p.name.clone(), p.version.clone()))
+            .collect()
+    };
+    let targets: Vec<&String> = linked.keys().collect();
+    let mut problems = Vec::new();
+    for (i, a) in targets.iter().enumerate() {
+        for b in &targets[i + 1..] {
+            let same_crates = key(a) == key(b);
+            let same_bytes = files.get(*a) == files.get(*b);
+            if same_crates != same_bytes {
+                problems.push(format!(
+                    "{a} and {b} link {} crates but their files {} in bytes",
+                    if same_crates { "the same" } else { "different" },
+                    if same_bytes {
+                        "do not differ"
+                    } else {
+                        "differ"
+                    },
+                ));
+            }
+        }
+    }
+
+    problems
+}
+
+/// Problems with the core's source that embeds the files: a release
+/// target whose file it neither includes nor names for the test that
+/// compares the two.
+#[must_use]
+pub fn embedding_selects(source: &str, targets: &[String]) -> Vec<String> {
+    targets
+        .iter()
+        .filter(|t| source.matches(&committed_path(t)).count() < 2)
+        .map(|t| format!("the core does not select and name {}", committed_path(t)))
+        .collect()
+}
+
+/// Problems with the executables the repository ships: any binary but
+/// the core, which would need the same texts for its crates (OQ-32).
+///
+/// # Errors
+///
+/// Fails when `metadata` is not cargo's JSON.
+pub fn other_executables(metadata: &str) -> Result<Vec<String>, String> {
+    let value: serde_json::Value =
+        serde_json::from_str(metadata).map_err(|e| format!("read cargo metadata: {e}"))?;
+    let root = value["workspace_root"].as_str().unwrap_or_default();
+    let product = Path::new(root).join(crate::architecture::PRODUCT);
+
+    Ok(value["packages"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|p| {
+            p["manifest_path"]
+                .as_str()
+                .is_some_and(|m| Path::new(m).starts_with(&product))
+        })
+        .flat_map(|p| p["targets"].as_array().into_iter().flatten())
+        .filter(|t| {
+            t["kind"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .any(|k| k == "bin")
+        })
+        .filter_map(|t| t["name"].as_str())
+        .filter(|name| *name != "parinn")
+        .map(|name| format!("the executable {name} ships without the texts of its crates"))
+        .collect())
+}
+
+/// Problems with the build workflow: the release build must regenerate
+/// the files and compare each platform's executable with them.
+#[must_use]
+pub fn release_compares_output(build_workflow: &str) -> Vec<String> {
+    let mut problems = Vec::new();
+    let regenerates = build_workflow.lines().any(|l| {
+        l.contains("--bin license-check") && l.contains("--out") && l.contains("--locked")
+    });
+    if !regenerates {
+        problems.push(
+            "the build workflow does not regenerate the license files with license-check --out"
+                .to_owned(),
+        );
+    }
+    // The Linux and Darwin build, the linux/arm64 job and the Windows job
+    // each run an executable on its own platform.
+    if build_workflow.matches("scripts/check-licenses.sh").count() < 3 {
+        problems.push(
+            "the build workflow does not compare every platform's licenses output".to_owned(),
+        );
+    }
+
+    problems
+}
+
+#[cfg(test)]
+mod tests;

@@ -481,6 +481,8 @@ const GRAPH: &str = r#"{"workspace_root":"/w","packages":[
   {"id":"serde 1","name":"serde","version":"1.0.0","source":"registry+x","license":"MIT","manifest_path":"/r/serde/Cargo.toml","targets":[{"kind":["lib"]}]},
   {"id":"cc 1","name":"cc","version":"1.0.0","source":"registry+x","license":"MIT","manifest_path":"/r/cc/Cargo.toml","targets":[{"kind":["lib"]}]},
   {"id":"dev 1","name":"dev","version":"1.0.0","source":"registry+x","license":"MIT","manifest_path":"/r/dev/Cargo.toml","targets":[{"kind":["lib"]}]},
+  {"id":"derive 1","name":"derive","version":"1.0.0","source":"registry+x","license":"MIT","manifest_path":"/r/derive/Cargo.toml","targets":[{"kind":["proc-macro"]}]},
+  {"id":"syn 1","name":"syn","version":"1.0.0","source":"registry+x","license":"MIT","manifest_path":"/r/syn/Cargo.toml","targets":[{"kind":["lib"]}]},
   {"id":"util 1","name":"util","version":"1.0.0","source":"registry+x","license":"MIT","manifest_path":"/r/util/Cargo.toml","targets":[{"kind":["lib"]}]},
   {"id":"tool-only 1","name":"tool-only","version":"1.0.0","source":"registry+x","license":"MIT","manifest_path":"/r/tool-only/Cargo.toml","targets":[{"kind":["lib"]}]}
  ],"resolve":{"nodes":[
@@ -491,7 +493,8 @@ const GRAPH: &str = r#"{"workspace_root":"/w","packages":[
     {"pkg":"dev 1","dep_kinds":[{"kind":"dev","target":null}]}]},
   {"id":"tool 0","deps":[{"pkg":"tool-only 1","dep_kinds":[{"kind":null,"target":null}]}]},
   {"id":"util 1","deps":[{"pkg":"serde 1","dep_kinds":[{"kind":null,"target":null}]}]},
-  {"id":"serde 1","deps":[]}]}}"#;
+  {"id":"derive 1","deps":[{"pkg":"syn 1","dep_kinds":[{"kind":null,"target":null}]}]},
+  {"id":"serde 1","deps":[{"pkg":"derive 1","dep_kinds":[{"kind":null,"target":null}]}]}]}}"#;
 
 #[test]
 fn linked_follows_only_normal_dependencies_from_the_products_binaries() {
@@ -601,11 +604,12 @@ fn ci_must_run_license_check_with_the_locked_tree() {
 
 const APP: &str = "[package]\nname = \"app\"\nversion = \"0.0.0\"\nedition = \"2024\"\n";
 
-const BUILD: &str = "env:\n  LINUX_TARGETS: >-\n    x86_64-unknown-linux-musl:linux-amd64\n";
+pub(crate) const BUILD_FIXTURE: &str =
+    "env:\n  LINUX_TARGETS: >-\n    x86_64-unknown-linux-musl:linux-amd64\n";
 
 /// A workspace with one product binary, no dependencies, and the files
 /// the check reads.
-fn workspace(deny: &str) -> (testkit::TempDir, Checkout) {
+pub(crate) fn workspace(deny: &str) -> (testkit::TempDir, Checkout) {
     checkout(&[
         (
             "Cargo.toml",
@@ -617,7 +621,7 @@ fn workspace(deny: &str) -> (testkit::TempDir, Checkout) {
         ),
         ("crates/app/Cargo.toml", APP),
         ("crates/app/src/main.rs", "fn main() {}\n"),
-        (".github/workflows/build.yml", BUILD),
+        (".github/workflows/build.yml", BUILD_FIXTURE),
         ("deny.toml", deny),
     ])
 }
@@ -649,48 +653,6 @@ fn cargo_metadata_for_resolves_a_workspace_for_a_target_and_names_a_failure() {
         "t",
     );
     assert!(err.unwrap_err().starts_with("run cargo metadata: "));
-}
-
-#[test]
-fn check_release_passes_a_workspace_that_links_nothing_unlicensed() {
-    let (_dir, c) = workspace("[licenses]\nallow = [\"MIT\"]\n");
-
-    assert_eq!(
-        check_release(&cargo(), &c.root).unwrap(),
-        Vec::<String>::new()
-    );
-}
-
-#[test]
-fn check_release_reports_the_records_it_checks() {
-    let (_dir, c) = workspace("[licenses]\nallow = [\"WTFPL\"]\n");
-
-    assert_eq!(
-        check_release(&cargo(), &c.root).unwrap(),
-        ["deny.toml grants WTFPL, which the license tool keeps no text for"]
-    );
-    let (_dir, no_deny) = checkout(&[("Cargo.toml", "")]);
-    assert!(check_repository(&no_deny, &[])[0].starts_with("read deny.toml: "));
-}
-
-#[test]
-fn check_release_names_what_it_cannot_read() {
-    let (_dir, c) = checkout(&[("Cargo.toml", "")]);
-    assert!(
-        check_release(&cargo(), &c.root)
-            .unwrap_err()
-            .starts_with("read .github/workflows/build.yml: ")
-    );
-
-    let (_dir, broken) = checkout(&[
-        ("Cargo.toml", "not toml"),
-        (".github/workflows/build.yml", BUILD),
-    ]);
-    assert!(
-        check_release(&cargo(), &broken.root)
-            .unwrap_err()
-            .starts_with("cargo metadata for ")
-    );
 }
 
 #[test]

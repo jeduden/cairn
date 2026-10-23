@@ -1,6 +1,7 @@
 //! The `license-check` command checks that every crate a release links
-//! carries a license text that fits its declared license (ENG-30). CI
-//! runs it on every pull request. It reads the checkout and the sources
+//! carries a license text that fits its declared license (ENG-30) and
+//! that each target's committed `THIRD_PARTY_LICENSES` equals its
+//! regeneration (ENG-31). CI runs it on every pull request. It reads the checkout and the sources
 //! cargo has fetched, and writes the terminal only. It is CI tooling and
 //! never ships.
 
@@ -13,7 +14,7 @@ fn main() -> ExitCode {
         std::env::args().skip(1),
         &mut io::stdout(),
         &mut io::stderr(),
-        &|root| engineering::license_texts::check_release(&cargo, root),
+        &|root, options| engineering::third_party::run_release(&cargo, root, options),
     );
 
     ExitCode::from(code)

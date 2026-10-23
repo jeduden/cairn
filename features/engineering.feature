@@ -201,7 +201,7 @@ Feature: Engineering quality (ENG)
     And the CI workflow runs the check on every pull request, with the locked dependency tree
     And the check adds no dependency to any shipped executable
 
-  @ENG-31 @P0 @pending
+  @ENG-31 @P0
   Scenario: the core executable carries the license texts of what it links for its own target, kept in step by CI
     Given the repository checkout
     When the release targets are read from the build workflow

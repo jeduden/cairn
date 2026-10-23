@@ -54,7 +54,6 @@ pub fn cases() -> Vec<Case> {
         dependency_cases(),
         decision_cases(),
         repository_cases(),
-        license_text_cases(),
         review_cases(),
         review_gate_cases(),
         gate_cases(),
@@ -79,6 +78,8 @@ pub fn cases() -> Vec<Case> {
         isolation_cases(),
         instruction_cases(),
         transcript_contract_cases(),
+        // Last: its cases edit source the later cases would run stale.
+        license_text_cases(),
     ]
     .concat()
 }
@@ -219,6 +220,11 @@ fn decision_cases() -> Vec<Case> {
 /// for, a canonical text that no longer fits, and CI that no longer runs
 /// the check.
 fn license_text_cases() -> Vec<Case> {
+    [license_check_cases(), license_edit_cases()].concat()
+}
+
+/// The license cases that edit no source the checks are built from.
+fn license_check_cases() -> Vec<Case> {
     vec![
         case(
             "a license deny.toml grants with no canonical text",
@@ -238,10 +244,73 @@ fn license_text_cases() -> Vec<Case> {
             scenario("ENG-30"),
             "the CI workflow does not run license-check with --locked",
         ),
-        // Last: the suite restores the checkout with its original file
-        // times, and the canonical text is compiled in, so cargo keeps
-        // this case's build for the cases that follow. No other case of
-        // the license scenario may run after it.
+        case(
+            "a target's committed license file out of step with the lockfile",
+            "ENG-31",
+            Injection::replace(
+                "licenses/aarch64-unknown-linux-musl/THIRD_PARTY_LICENSES",
+                "Third-party licenses of ParleyInn",
+                "Third-party licenses of ParleyInn (stale)",
+            ),
+            scenario("ENG-31"),
+            "licenses/aarch64-unknown-linux-musl/THIRD_PARTY_LICENSES differs from its regeneration",
+        ),
+        case(
+            "a release target with no committed license file",
+            "ENG-31",
+            Injection::remove("licenses/aarch64-apple-darwin/THIRD_PARTY_LICENSES"),
+            scenario("ENG-31"),
+            "aarch64-apple-darwin has no committed file",
+        ),
+        case(
+            "the release build no longer regenerating the license files",
+            "ENG-31",
+            Injection::replace(
+                BUILD_WORKFLOW,
+                "--bin license-check -- --out",
+                "--bin license-check -- --write",
+            ),
+            scenario("ENG-31"),
+            "the build workflow does not regenerate the license files",
+        ),
+        case(
+            "the core no longer selecting a target's file",
+            "ENG-31",
+            Injection::replace(
+                "crates/parinn/src/licenses.rs",
+                r#"include_str!("../../../licenses/aarch64-apple-darwin/THIRD_PARTY_LICENSES")"#,
+                r#"include_str!("../../../licenses/aarch64-unknown-linux-musl/THIRD_PARTY_LICENSES")"#,
+            ),
+            scenario("ENG-31"),
+            "the core does not select and name licenses/aarch64-apple-darwin/THIRD_PARTY_LICENSES",
+        ),
+    ]
+}
+
+/// The license cases that edit source the checks are built from, which
+/// run last in the order they are listed.
+fn license_edit_cases() -> Vec<Case> {
+    vec![
+        // The two cases below are last. The suite restores the checkout
+        // with its original file times, so cargo keeps the build of the
+        // edited source for the cases that follow: the edit to the core
+        // costs the ENG-31 scenario its step that runs the core, and the
+        // edit to the canonical text, which is compiled into the check,
+        // fails every license scenario at its text step.
+        case(
+            "the core no longer answering parinn licenses",
+            "licenses_is_a_command_that_prints_the_embedded_texts",
+            Injection::replace(
+                "crates/parinn/src/lib.rs",
+                r#"Some("licenses") =>"#,
+                r#"Some("licences") =>"#,
+            ),
+            cargo_lib_test(
+                "parinn",
+                "tests::licenses_is_a_command_that_prints_the_embedded_texts",
+            ),
+            "licenses_is_a_command_that_prints_the_embedded_texts",
+        ),
         case(
             "a canonical text that no longer fits the license files",
             "ENG-30",
