@@ -101,12 +101,13 @@ After changing pins, run `mise lock` to refresh the platforms already
 recorded in the lockfile. Taplo publishes no checksums, so verify and
 record its asset SHA-256 values in the lockfile when bumping it.
 
-A Claude Code web environment sets [scripts/setup-web.sh](../scripts/setup-web.sh)
-as its setup script. It downloads the mise binary pinned in the setup action,
-refuses it unless its SHA-256 matches, then runs `mise install --locked`.
-mise also verifies the attestation of each GitHub release the lockfile
-records, which needs GitHub API access to those repositories; without it the
-install stops rather than skip the check.
+A Claude Code web environment sets
+[scripts/setup-web.sh](../scripts/setup-web.sh) as its setup script. It
+downloads the mise binary pinned in the setup action, refuses it unless its
+SHA-256 matches, then runs `mise install --locked`. mise also verifies the
+attestation of each GitHub release the lockfile records, which needs GitHub
+API access to those repositories; without it the install stops rather than
+skip the check.
 
 The shared setup action installs each job's selected tools and caches
 mise's installs and the exact Rustup toolchain. Release jobs disable
