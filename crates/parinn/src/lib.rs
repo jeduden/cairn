@@ -466,7 +466,10 @@ fn ingest(
     // not to, each transcript would fail with why.
     let redactor = redactor(ctx, settings, stderr);
     match start_node(ctx, &home, stderr) {
-        Ok(mut store) => count_untaken_bindings(ctx, &mut store),
+        Ok(mut store) => {
+            count_untaken_bindings(ctx, &mut store);
+            repository_identity::bind_observed(ctx, &home, &mut store);
+        }
         Err(e) => return failed("ingest", &e, stderr),
     }
     // What an MCP server killed before it stopped left is audited by
@@ -1077,7 +1080,8 @@ fn mcp(
     }
     // It records its harness session's runs, so it starts the node as
     // ingest does (REC-13).
-    let served = start_node(ctx, &home, stderr).and_then(|store| {
+    let served = start_node(ctx, &home, stderr).and_then(|mut store| {
+        repository_identity::bind_observed(ctx, &home, &mut store);
         let node = Node::find(&home, &store).map_err(|e| e.to_string())?;
         Ok(mcp::Server::new(
             store,

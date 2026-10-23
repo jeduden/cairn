@@ -7,11 +7,17 @@ use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
 use ::repository::CommitId;
+use std::collections::BTreeSet;
+use std::path::Path;
+
 use administration::act::Act;
-use administration::repository::{self, Shown};
-use audit::entry::Occurrence;
+use administration::home::Home;
+use administration::node::Node;
+use administration::repository::{self, Outcome, Shown};
+use audit::entry::{Counter, Kind, Occurrence};
 use key::random::OsEntropy;
 use serde_json::json;
+use store::Store;
 
 use crate::act::{Taking, at_terminal};
 use crate::{Context, EXIT_USAGE, failed, written};
@@ -67,6 +73,50 @@ fn deadline() -> impl Fn() -> bool {
     let end = Instant::now() + WITHIN;
 
     move || Instant::now() >= end
+}
+
+/// Binds the identity of every repository the `SessionStart` hook
+/// observations showed, once each (LANE-02): a change in one is audited
+/// and counted, and a clone that cannot be read counted, each once (I6).
+/// Nothing is relinked, and a failure leaves the record as it was (I9).
+pub(crate) fn bind_observed(ctx: &Context, home: &Home, store: &mut Store) {
+    let Ok(node) = Node::find(home, store) else {
+        return;
+    };
+    let Ok(held) = store.hook_observations() else {
+        return;
+    };
+    let directories: BTreeSet<String> = held
+        .into_iter()
+        .map(|h| h.observation)
+        .filter(|o| o.hook == "SessionStart" && !o.cwd.is_empty())
+        .map(|o| o.cwd)
+        .collect();
+    for directory in directories {
+        let outcome = repository::bind(
+            store,
+            &node,
+            &mut OsEntropy,
+            Path::new(&directory),
+            &deadline(),
+        );
+        let occurrence = match outcome {
+            Ok(Outcome::Changed) => Occurrence::Degraded {
+                kind: Kind::Rejected,
+                counter: Counter::RepositoryIdentityChanged,
+                operation: "repository bind",
+                detail: "repository identity changed: no branch link is relinked until a widening bind",
+            },
+            Ok(Outcome::Unreadable) | Err(_) => Occurrence::Degraded {
+                kind: Kind::Failed,
+                counter: Counter::RepositoryReadFailed,
+                operation: "repository bind",
+                detail: "repository could not be read: its identity stays as it was",
+            },
+            Ok(_) => continue,
+        };
+        let _ = ctx.audit(&occurrence);
+    }
 }
 
 /// `parinn repository show|bind [<directory>] [--commit <id>] [--json]`.
