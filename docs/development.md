@@ -188,10 +188,13 @@ passed `CI`. `no-other-tags-allowed` refuses every other tag. The
 stakeholder applies the rulesets on GitHub. The nightly `protection`
 job runs `protection-check` on each file under `.github/rulesets`. It
 fails when the live ruleset of that name is missing or weaker. The
-workflow's token cannot see a ruleset's bypass actors. One approval
-count holds for the whole branch, so no ruleset can require two
-approvals for the security-sensitive crates alone. That part of ENG-21
-stays open until a required check, `Security approvals`, enforces it.
+workflow's token cannot see a ruleset's bypass actors. The
+security-sensitive crates are owned by the designated security
+reviewer, so a change to one needs that reviewer's approval as a code
+owner. The stakeholder holds the role. One approval count holds for the
+whole branch, so a second approval on those crates alone would need a
+second reviewer account and a check that counts reviews; ENG-21 does
+not ask for it until one is named.
 
 [release.yml](../.github/workflows/release.yml) runs from the Actions
 "Run workflow" button on `main`, with a version like `v0.1.0`. A pushed
