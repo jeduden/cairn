@@ -226,7 +226,7 @@ jobs:
       - name: Install pinned tools with mise
         uses: ./.github/actions/setup-mise
         with:
-          tools: "rust github:EmbarkStudios/cargo-deny cargo:cargo-audit"
+          tools: "rust github:EmbarkStudios/cargo-deny github:rustsec/rustsec"
           cache: true
       - run: cargo deny check licenses bans sources
       # The fuzz workspace has its own manifest and lockfile (ENG-07),
