@@ -63,5 +63,12 @@ test = false
 doc = false
 bench = false
 
+[[bin]]
+name = "field_sanitizer"
+path = "fuzz_targets/field_sanitizer.rs"
+test = false
+doc = false
+bench = false
+
 [profile.release]
 debug = 1
