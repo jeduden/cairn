@@ -21,28 +21,10 @@ pub(crate) fn rebuild(
     let Some(as_json) = json_flag("rebuild", args, stderr) else {
         return crate::EXIT_USAGE;
     };
-    let home = match ctx.home() {
-        Ok(home) => home,
-        Err(e) => return failed("rebuild", &e, stderr),
-    };
-    if !home.store().exists() {
-        return failed(
-            "rebuild",
-            &format!("no store at {}", home.store().display()),
-            stderr,
-        );
-    }
-    let mut store = match Store::open(&home.store()) {
-        Ok(store) => store,
-        Err(e) => return store_failed("rebuild", &e, stderr),
-    };
-    let key = match Node::find(&home, &store) {
-        Ok(node) => node.device().public(),
-        Err(e) => return failed("rebuild", &e, stderr),
-    };
-    let (origins, indexed) = match derive_again(&mut store, &key) {
+    let (origins, indexed) = match counts(ctx) {
         Ok(counts) => counts,
-        Err(e) => return failed("rebuild", &e, stderr),
+        Err(Failure::Store(e)) => return store_failed("rebuild", &e, stderr),
+        Err(Failure::Plain(e)) => return failed("rebuild", &e, stderr),
     };
     let line = if as_json {
         format!("{{\"origins\":{origins},\"indexed\":{indexed}}}")
@@ -51,6 +33,36 @@ pub(crate) fn rebuild(
     };
 
     written(writeln!(stdout, "{line}"), stderr)
+}
+
+/// Why a rebuild failed: the store failed, so that a store of a newer
+/// version is told from the rest (ADM-05), or something else did.
+enum Failure {
+    Store(StoreError),
+    Plain(String),
+}
+
+impl From<StoreError> for Failure {
+    fn from(e: StoreError) -> Self {
+        Self::Store(e)
+    }
+}
+
+/// Derives everything again in `ctx`'s home; how many writers' origins
+/// and how many events it read.
+fn counts(ctx: &Context) -> Result<(usize, u64), Failure> {
+    let plain = |e: &dyn std::fmt::Display| Failure::Plain(e.to_string());
+    let home = ctx.home().map_err(|e| plain(&e))?;
+    if !home.store().exists() {
+        return Err(Failure::Plain(format!(
+            "no store at {}",
+            home.store().display()
+        )));
+    }
+    let mut store = Store::open(&home.store())?;
+    let node = Node::find(&home, &store).map_err(|e| plain(&e))?;
+
+    Ok(derive_again(&mut store, &node.device().public())?)
 }
 
 /// Derives the origins and the search index again; how many writers'

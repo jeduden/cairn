@@ -432,12 +432,27 @@ impl Server {
     /// Where the event of `seat` came from, as `administration::origin`
     /// derives it from the record and the node's key set (PRV-13).
     fn origin(&self, keys: &KeySet, seat: &StoredSeat) -> Origin {
-        match keys.origin_of(seat) {
-            Derived::Witnessed => Origin::Witnessed,
-            Derived::Ingested => Origin::Ingested,
-            Derived::Bundle => Origin::Bundle,
-            Derived::Peer => Origin::Peer,
-        }
+        shown_origin(keys.origin_of(seat))
+    }
+}
+
+/// The origin the envelope shows for a derived one.
+fn shown_origin(origin: Derived) -> Origin {
+    match origin {
+        Derived::Witnessed => Origin::Witnessed,
+        Derived::Ingested => Origin::Ingested,
+        Derived::Bundle => Origin::Bundle,
+        Derived::Peer => Origin::Peer,
+    }
+}
+
+/// The derived origin an envelope's one stands for.
+fn derived_origin(origin: Origin) -> Derived {
+    match origin {
+        Origin::Witnessed => Derived::Witnessed,
+        Origin::Ingested => Derived::Ingested,
+        Origin::Bundle => Derived::Bundle,
+        Origin::Peer => Derived::Peer,
     }
 }
 
@@ -454,12 +469,7 @@ fn trust_of(
     let level = trust_policy::trust_level(&trust_policy::Input {
         provenance,
         kind,
-        origin: match origin {
-            Origin::Witnessed => Derived::Witnessed,
-            Origin::Ingested => Derived::Ingested,
-            Origin::Bundle => Derived::Bundle,
-            Origin::Peer => Derived::Peer,
-        },
+        origin: derived_origin(origin),
         device_seat,
         launcher_signed: false,
         interactive: false,

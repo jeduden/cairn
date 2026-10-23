@@ -819,3 +819,16 @@ fn event_search_says_its_run_is_a_writer_id_and_its_damping_is_per_writer() {
         .unwrap();
     assert_eq!(run, "a writer id: a run is named by its writer for now");
 }
+
+#[test]
+fn every_origin_shows_as_itself_and_back() {
+    for (derived, shown) in [
+        (Derived::Witnessed, Origin::Witnessed),
+        (Derived::Ingested, Origin::Ingested),
+        (Derived::Bundle, Origin::Bundle),
+        (Derived::Peer, Origin::Peer),
+    ] {
+        assert_eq!(shown_origin(derived), shown);
+        assert_eq!(derived_origin(shown), derived);
+    }
+}

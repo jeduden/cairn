@@ -52,10 +52,8 @@ fn parse(args: impl Iterator<Item = String>, bind: bool, ctx: &Context) -> Resul
         }
     }
     let directory = directory.unwrap_or_default();
-    let directory = match &ctx.working_dir {
-        Some(base) => base.join(directory),
-        None => directory,
-    };
+    let base = ctx.working_dir.as_deref().unwrap_or_else(|| Path::new(""));
+    let directory = base.join(directory);
 
     Ok(Asked {
         directory,
@@ -80,10 +78,7 @@ fn deadline() -> impl Fn() -> bool {
 /// and counted, and a clone that cannot be read counted, each once (I6).
 /// Nothing is relinked, and a failure leaves the record as it was (I9).
 pub(crate) fn bind_observed(ctx: &Context, home: &Home, store: &mut Store) {
-    let Ok(node) = Node::find(home, store) else {
-        return;
-    };
-    let Ok(held) = store.hook_observations() else {
+    let (Ok(node), Ok(held)) = (Node::find(home, store), store.hook_observations()) else {
         return;
     };
     let directories: BTreeSet<String> = held
@@ -161,21 +156,24 @@ pub(crate) fn repository(
 /// `parinn repository show`.
 fn showing(ctx: &Context, asked: &Asked, stdout: &mut dyn Write, stderr: &mut dyn Write) -> u8 {
     const OP: &str = "repository show";
-    let mut taking = match Taking::open(ctx) {
-        Ok(t) => t,
-        Err(e) => return failed(OP, &e, stderr),
-    };
-    let shown = match repository::show(
+    match shown_line(ctx, asked) {
+        Ok(text) => written(writeln!(stdout, "{text}"), stderr),
+        Err(e) => failed(OP, &e, stderr),
+    }
+}
+
+/// What `parinn repository show` prints.
+fn shown_line(ctx: &Context, asked: &Asked) -> Result<String, String> {
+    let mut taking = Taking::open(ctx)?;
+    let shown = repository::show(
         &mut taking.store,
         &taking.node,
         &mut OsEntropy,
         &asked.directory,
         ctx.home.as_deref().map(Path::new),
         &deadline(),
-    ) {
-        Ok(shown) => shown,
-        Err(e) => return failed(OP, &e, stderr),
-    };
+    )
+    .map_err(|e| e.to_string())?;
     let (status, commit) = match shown {
         Shown::NoRepository => ("no repository", None),
         Shown::Unreadable => ("unreadable", None),
@@ -185,13 +183,12 @@ fn showing(ctx: &Context, asked: &Asked, stdout: &mut dyn Write, stderr: &mut dy
     };
     // A provisional identity has no commit to name.
     let named = commit.as_ref().map(|c| c.as_ref().map(CommitId::as_str));
-    let text = match (asked.json, named) {
+
+    Ok(match (asked.json, named) {
         (true, named) => json!({"status": status, "repository": named.flatten()}).to_string(),
         (false, Some(c)) => format!("{status}: {}", c.unwrap_or("provisional")),
         (false, None) => status.to_owned(),
-    };
-
-    written(writeln!(stdout, "{text}"), stderr)
+    })
 }
 
 /// `parinn repository bind`: the widening principal act.
@@ -200,11 +197,18 @@ fn binding(ctx: &Context, asked: &Asked, stdout: &mut dyn Write, stderr: &mut dy
     if let Err(code) = at_terminal(ctx, OP, stderr) {
         return code;
     }
-    let mut taking = match Taking::open(ctx) {
-        Ok(t) => t,
-        Err(e) => return failed(OP, &e, stderr),
-    };
-    let rebind = match repository::plan(
+    match bound_line(ctx, asked, stderr) {
+        Ok(line) => written(writeln!(stdout, "{line}"), stderr),
+        Err(code) => code,
+    }
+}
+
+/// Takes the act and prints what it bound, or the exit code of the
+/// failure it reported.
+fn bound_line(ctx: &Context, asked: &Asked, stderr: &mut dyn Write) -> Result<String, u8> {
+    const OP: &str = "repository bind";
+    let mut taking = Taking::open(ctx).map_err(|e| failed(OP, &e, stderr))?;
+    let rebind = repository::plan(
         &mut taking.store,
         &taking.node,
         &mut OsEntropy,
@@ -212,40 +216,28 @@ fn binding(ctx: &Context, asked: &Asked, stdout: &mut dyn Write, stderr: &mut dy
         ctx.home.as_deref().map(Path::new),
         asked.commit.clone(),
         &deadline(),
-    ) {
-        Ok(rebind) => rebind,
-        Err(e) => return failed(OP, &e, stderr),
-    };
+    )
+    .map_err(|e| failed(OP, &e, stderr))?;
     let act = Act::RepositoryBind {
         identity: rebind.content(),
     };
-    let address = match taking.take(ctx, OP, &act, stderr) {
-        Ok(address) => address,
-        Err(code) => return code,
-    };
-    if let Err(e) = repository::apply(&mut taking.store, &rebind) {
-        return failed(OP, &e, stderr);
-    }
-    let noted = ctx.audit(&Occurrence::PrincipalAct {
+    let address = taking.take(ctx, OP, &act, stderr)?;
+    repository::apply(&mut taking.store, &rebind).map_err(|e| failed(OP, &e, stderr))?;
+    ctx.audit(&Occurrence::PrincipalAct {
         operation: OP,
         detail: "repository identity bound",
-    });
-    if let Err(e) = noted {
+    })
+    .map_err(|e| {
         let why = format!("the bind is recorded, but the audit log took no note of it: {e}");
-        return failed(OP, &why, stderr);
-    }
-    let name = rebind
-        .commit
-        .as_ref()
-        .map_or("provisional", CommitId::as_str);
-    let line = if asked.json {
-        json!({"repository": rebind.commit.as_ref().map(CommitId::as_str), "act": address.to_string()})
-            .to_string()
-    } else {
-        format!("bound: {name}")
-    };
+        failed(OP, &why, stderr)
+    })?;
+    let commit = rebind.commit.as_ref().map(CommitId::as_str);
 
-    written(writeln!(stdout, "{line}"), stderr)
+    Ok(if asked.json {
+        json!({"repository": commit, "act": address.to_string()}).to_string()
+    } else {
+        format!("bound: {}", commit.unwrap_or("provisional"))
+    })
 }
 
 #[cfg(test)]
