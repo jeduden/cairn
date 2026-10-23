@@ -234,11 +234,11 @@ fn help_prints_the_usage_to_stdout() {
 
 #[test]
 fn an_unknown_command_is_a_usage_error() {
-    let (code, _, err) = invoke(&["rebuild"], &DEV);
+    let (code, _, err) = invoke(&["restructure"], &DEV);
 
     assert_eq!(code, EXIT_USAGE);
     assert!(
-        err.starts_with("parinn: unknown command \"rebuild\"\n\nusage: parinn"),
+        err.starts_with("parinn: unknown command \"restructure\"\n\nusage: parinn"),
         "{err}"
     );
 }
