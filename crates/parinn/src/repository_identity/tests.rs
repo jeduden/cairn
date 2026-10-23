@@ -345,3 +345,20 @@ fn a_clone_that_cannot_be_read_is_counted_once() {
     assert_eq!(counter(&p, "repository_read_failed"), 1);
     assert!(binds(&p).is_empty());
 }
+
+#[test]
+fn only_hook_observations_not_yet_in_the_record_are_looked_at() {
+    let mut p = Process::new();
+    let app = clone(&p, "app", Some(A));
+    start_in(&mut p, "s1", &app);
+    run(&p, &["ingest", "--all"]);
+    fs::remove_dir_all(app.join(".git")).unwrap();
+    repository(&app, Some(B));
+
+    // No new hook event: the earlier observation is in the record, and
+    // its clone is not walked again.
+    run(&p, &["ingest", "--all"]);
+    run(&p, &["mcp"]);
+
+    assert_eq!(counter(&p, "repository_identity_changed"), 0);
+}
