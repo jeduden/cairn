@@ -152,3 +152,39 @@ fn a_path_through_a_symbolic_link_loop_is_an_io_error() {
         Err(Error::Io { .. })
     ));
 }
+
+/// Makes a FIFO at `path` with `mkfifo`, which std cannot, waiting for
+/// it up to a deadline (ENG-03).
+#[cfg(unix)]
+#[expect(
+    clippy::disallowed_types,
+    reason = "a test makes a FIFO with mkfifo; the crate under test starts no program"
+)]
+fn mkfifo(path: &std::path::Path) {
+    let mut child = std::process::Command::new("mkfifo")
+        .arg(path)
+        .spawn()
+        .unwrap();
+    let step = std::time::Duration::from_millis(10);
+    let mut waited = std::time::Duration::ZERO;
+    while child.try_wait().unwrap().is_none() {
+        assert!(
+            waited < std::time::Duration::from_secs(10),
+            "mkfifo did not exit"
+        );
+        std::thread::sleep(step);
+        waited += step;
+    }
+    assert!(path.exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn a_dot_git_that_is_neither_a_file_nor_a_directory_is_passed_over() {
+    let dir = TempDir::new().unwrap();
+    fs::create_dir(dir.path().join(".git")).unwrap();
+    let below = dir.path().join("below");
+    fs::create_dir(&below).unwrap();
+    mkfifo(&below.join(".git"));
+    assert_eq!(git_dir(&below).unwrap(), Some(dir.path().join(".git")));
+}
