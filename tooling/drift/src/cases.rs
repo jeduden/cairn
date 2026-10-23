@@ -44,6 +44,9 @@ const CODEOWNERS: &str = ".github/CODEOWNERS";
 /// The workflow that reports the `Security approvals` check.
 const SECURITY_WORKFLOW: &str = ".github/workflows/security-approvals.yml";
 
+/// The workflow a review starts, which only asks for a recount.
+const SECURITY_TRIGGER: &str = ".github/workflows/security-approvals-trigger.yml";
+
 /// The workflow the ENG-28 cases drift.
 const REVIEW_WORKFLOW: &str = ".github/workflows/review.yml";
 
@@ -1402,6 +1405,26 @@ fn signed_commits_case() -> Case {
 /// the pull request out or no longer counting.
 fn security_approvals_cases() -> Vec<Case> {
     vec![
+        protection_case(
+            "the Security approvals workflow counts on a review, as the pull request defines it",
+            Injection::replace(
+                SECURITY_WORKFLOW,
+                "  workflow_run:\n",
+                "  pull_request_review:\n  workflow_run:\n",
+            ),
+            "the_checkout_s_security_approvals_workflow_reports_the_check_from_main",
+            "reach its own check",
+        ),
+        protection_case(
+            "the Security approvals trigger acts with a token",
+            Injection::replace(
+                SECURITY_TRIGGER,
+                "      - run: echo",
+                "      - env:\n          GH_TOKEN: ${{ github.token }}\n        run: echo",
+            ),
+            "the_checkout_s_security_approvals_trigger_does_nothing_but_finish",
+            "could act through it",
+        ),
         case(
             "the ruleset no longer requires the Security approvals check",
             "ENG-21",

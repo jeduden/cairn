@@ -414,7 +414,7 @@ fn the_nightly_compares_every_committed_ruleset() {
     );
 }
 
-const WORKFLOW: &str = "on:\n  pull_request_target:\n  pull_request_review:\npermissions:\n  checks: write\nrun: cargo run -p review-bundle -- approvals\n  gh api -f name=\"Security approvals\" -f head_sha=\"$HEAD_SHA\"\n";
+const WORKFLOW: &str = "on:\n  pull_request_target:\n  workflow_run:\n    workflows: [Security approvals trigger]\npermissions:\n  checks: write\nrun: cargo run -p review-bundle -- approvals\n  gh api -f name=\"Security approvals\" -f head_sha=\"$HEAD_SHA\"\n";
 
 #[test]
 fn the_security_workflow_reports_the_check_from_main() {
@@ -425,7 +425,11 @@ fn the_security_workflow_reports_the_check_from_main() {
 fn a_security_workflow_missing_a_part_is_named() {
     for (cut, why) in [
         ("pull_request_target:", "runs as main defines it"),
-        ("pull_request_review:", "recounts"),
+        ("workflow_run:", "recounts"),
+        (
+            "workflows: [Security approvals trigger]",
+            "follows the review trigger",
+        ),
         ("review-bundle -- approvals", "review-bundle tool"),
         ("name=\"Security approvals\"", "by name"),
         ("head_sha=\"$HEAD_SHA\"", "head"),
@@ -436,15 +440,53 @@ fn a_security_workflow_missing_a_part_is_named() {
 }
 
 #[test]
-fn a_security_workflow_that_checks_out_or_writes_the_pull_request_is_named() {
+fn a_security_workflow_the_pull_request_can_reach_is_named() {
     for extra in [
-        "ref: ${{ github.event.pull_request.head.sha }}",
+        "  pull_request_review:\n",
+        "  ref: ${{ github.event.pull_request.head.sha }}\n",
+        "  ref: refs/pull/1/merge\n",
+        "x: ${{ github.head_ref }}\n",
         "pull-requests: write",
         "contents: write",
     ] {
         has(
             &security_check_reported(&format!("{WORKFLOW}{extra}")),
             "reach its own check",
+        );
+    }
+}
+
+const TRIGGER: &str =
+    "name: Security approvals trigger\non:\n  pull_request_review:\npermissions: {}\n";
+
+#[test]
+fn the_security_trigger_does_nothing_but_finish() {
+    assert!(security_trigger_is_inert(TRIGGER).is_empty());
+}
+
+#[test]
+fn a_security_trigger_that_acts_or_lacks_a_part_is_named() {
+    for cut in [
+        "name: Security approvals trigger",
+        "pull_request_review:",
+        "permissions: {}",
+    ] {
+        has(
+            &security_trigger_is_inert(&TRIGGER.replace(cut, "")),
+            "lacks",
+        );
+    }
+    for extra in [
+        "uses: actions/checkout",
+        "secrets",
+        "GH_TOKEN",
+        "github.token",
+        "gh api",
+        "cargo run",
+    ] {
+        has(
+            &security_trigger_is_inert(&format!("{TRIGGER}{extra}")),
+            "could act through it",
         );
     }
 }

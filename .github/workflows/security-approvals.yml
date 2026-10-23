@@ -7,22 +7,28 @@ name: Security approvals
 # reports a check run named `Security approvals`, which main's ruleset
 # requires; a change that reaches no such crate passes at once.
 #
-# `pull_request_target` and `pull_request_review` run this file as main
-# defines it, never as the pull request under review does, and CODEOWNERS
-# is read from main, so no branch can loosen its own check. Nothing from
-# the pull request is checked out or run: its files and reviews are
-# read through the API as data. The token can read pull requests and
-# write check runs; it cannot approve or write code.
+# `pull_request_target` and `workflow_run` run this file as main defines
+# it, never as the pull request under review does, and CODEOWNERS is read
+# from main, so no branch can loosen its own check. `pull_request_review`
+# would run the pull request's own copy, so a review only triggers the
+# no-op `security-approvals-trigger.yml`; its completion starts a
+# `workflow_run` here, which reads the files and reviews afresh through
+# the API whatever started it. Nothing from the pull request is checked
+# out or run. The token can read pull requests and write check runs; it
+# cannot approve or write code. A pull request from a fork has no pull
+# request on the trigger's run, so a review there recounts on its next
+# push, not at once.
 on: # zizmor: ignore[dangerous-triggers] main's definition runs by design; the pull request's tree is never checked out
   pull_request_target:
     types: [opened, reopened, synchronize, ready_for_review]
-  pull_request_review:
-    types: [submitted, dismissed]
+  workflow_run:
+    workflows: [Security approvals trigger]
+    types: [completed]
 
 permissions: {}
 
 concurrency:
-  group: security-approvals-${{ github.event.pull_request.number }}
+  group: security-approvals-${{ github.event.pull_request.number || github.event.workflow_run.pull_requests[0].number || github.run_id }}
   cancel-in-progress: true
 
 jobs:
@@ -43,16 +49,19 @@ jobs:
         with:
           tools: rust
           cache: false
-      # The head is read once; the check run is reported on it, and the
-      # reviews count only when they were given on it.
+      # The pull request and its head are read from the API, never from
+      # the event that started this run, so the review trigger's run
+      # cannot choose them: it only names the pull request.
       - name: Count the approvals the changed files need
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-          NUMBER: ${{ github.event.pull_request.number }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          AUTHOR: ${{ github.event.pull_request.user.login }}
+          NUMBER: ${{ github.event.pull_request.number || github.event.workflow_run.pull_requests[0].number }}
         run: |
+          [ -n "$NUMBER" ] || { echo "::notice::no pull request to count"; exit 0; }
+          gh api "repos/$REPO/pulls/$NUMBER" > pull.json
+          HEAD_SHA="$(jq -r .head.sha pull.json)"
+          AUTHOR="$(jq -r .user.login pull.json)"
           gh api --paginate --slurp "repos/$REPO/pulls/$NUMBER/files" | jq -c 'add // []' > files.json
           gh api --paginate --slurp "repos/$REPO/pulls/$NUMBER/reviews" | jq -c 'add // []' > reviews.json
           if cargo run --locked --quiet -p review-bundle -- approvals \

@@ -48,14 +48,22 @@ number a ruleset or CODEOWNERS holds, so a required check enforces it:
   a stale head or a team owner does not count. Eleven unit tests, five
   command tests.
 - `security-approvals.yml` runs as main defines it
-  (`pull_request_target`, `pull_request_review`), reads files and
-  reviews through the API without checking the pull request out, and
-  reports a check run named `Security approvals` on the head. Its token
-  can write checks, not approve or write code.
+  (`pull_request_target`, and `workflow_run` after the no-op
+  `security-approvals-trigger.yml` that a review starts: a
+  `pull_request_review` run would use the pull request's own copy), reads
+  the pull request, its files and reviews through the API without
+  checking anything out, and reports a check run named `Security
+  approvals` on the head. Its token can write checks, not approve or
+  write code. A review on a fork's pull request recounts on its next
+  push.
+- Residual risk: the ruleset matches the check by name, so any workflow
+  on a pull request with `checks: write` could post it; the CODEOWNERS
+  review of `.github/workflows/` is what holds that, not the check.
 - `.github/rulesets/main.json` requires the check; a gate test holds
-  the workflow, and four drift cases (the ruleset dropping the check,
-  the workflow running as the pull request defines it, checking it out
-  or no longer counting) were each shown to fail with their message.
+  the workflow, and six drift cases (the ruleset dropping the check,
+  the workflow running as the pull request defines it, counting on a
+  review, checking it out or no longer counting, and the trigger
+  acting with a token) were each shown to fail with their message.
   The full drift suite needs mdsmith and ran only in CI.
 
 For the stakeholder:

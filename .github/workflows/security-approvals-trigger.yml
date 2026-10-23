@@ -1,0 +1,19 @@
+name: Security approvals trigger
+
+# ENG-21: a review runs this file as the pull request defines it, so it
+# does nothing but finish. Its completion starts security-approvals.yml
+# through `workflow_run`, which runs as main defines it and recounts the
+# pull request's approvals from the API.
+on:
+  pull_request_review:
+    types: [submitted, dismissed]
+
+permissions: {}
+
+jobs:
+  recount:
+    name: Ask for a recount
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: echo "a review was given; security-approvals.yml recounts the approvals"

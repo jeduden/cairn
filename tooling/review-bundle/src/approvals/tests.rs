@@ -147,3 +147,22 @@ fn parse_files_reads_the_forge_s_shape() {
     assert_eq!(parse_files(json), Ok(files(&["a/b", "c", "d"])));
     assert!(parse_files("[1]").is_err());
 }
+
+#[test]
+fn login_drops_the_at_and_the_case() {
+    assert_eq!(login("@Sec"), "sec");
+    assert_eq!(login("bob"), "bob");
+}
+
+#[test]
+fn approvers_keep_the_latest_approval_of_the_head_but_the_author_s() {
+    let reviews = [
+        review("bob", "APPROVED", "h1"),
+        review("cat", "APPROVED", "h0"),
+        review("dan", "APPROVED", "h1"),
+        review("dan", "DISMISSED", "h1"),
+        review("Ann", "APPROVED", "h1"),
+    ];
+
+    assert_eq!(approvers(&reviews, "ann", "h1"), ["bob"]);
+}

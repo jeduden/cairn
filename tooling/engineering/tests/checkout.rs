@@ -174,6 +174,18 @@ fn the_checkout_s_security_approvals_workflow_reports_the_check_from_main() {
     assert!(problems.is_empty(), "{}", problems.join("\n"));
 }
 
+/// The workflow a review starts does nothing but finish, so the pull
+/// request that defines it cannot post the check (ENG-21).
+#[test]
+fn the_checkout_s_security_approvals_trigger_does_nothing_but_finish() {
+    let workflow = Checkout::new(&testkit::repo_root())
+        .read(engineering::branch_protection::SECURITY_TRIGGER)
+        .unwrap();
+    let problems = engineering::branch_protection::security_trigger_is_inert(&workflow);
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
 /// The committed ruleset needs an approval from another reviewer
 /// (ENG-21).
 #[test]

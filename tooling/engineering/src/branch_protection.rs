@@ -35,6 +35,9 @@ pub const SECURITY_CHECK: &str = "Security approvals";
 /// The workflow that reports [`SECURITY_CHECK`].
 pub const SECURITY_WORKFLOW: &str = ".github/workflows/security-approvals.yml";
 
+/// The workflow a review starts, which only asks for a recount.
+pub const SECURITY_TRIGGER: &str = ".github/workflows/security-approvals-trigger.yml";
+
 /// Where the repository commits its rulesets, one JSON file each.
 pub const RULESETS: &str = ".github/rulesets";
 
@@ -289,16 +292,22 @@ pub fn security_crates_need_two_approvals(ruleset: &Value) -> Vec<String> {
 }
 
 /// Problems with the workflow that reports [`SECURITY_CHECK`]: it must
-/// run as main defines it (a target trigger, no pull request checkout),
-/// count with the review-bundle tool and report the check by name on the
-/// pull request's head, or the required check never arrives or can be
+/// run as main defines it, which `pull_request_target` and
+/// `workflow_run` do and `pull_request_review` does not (that runs the
+/// pull request's own copy), never check out any ref, count with the
+/// review-bundle tool and report the check by name on the pull
+/// request's head, or the required check never arrives or can be
 /// rewritten by the pull request it judges.
 #[must_use]
 pub fn security_check_reported(workflow: &str) -> Vec<String> {
     let mut problems = Vec::new();
     for (want, why) in [
         ("pull_request_target:", "runs as main defines it"),
-        ("pull_request_review:", "recounts when a review is given"),
+        ("workflow_run:", "recounts when a review is given"),
+        (
+            "workflows: [Security approvals trigger]",
+            "follows the review trigger",
+        ),
         (
             "review-bundle -- approvals",
             "counts with the review-bundle tool",
@@ -316,13 +325,53 @@ pub fn security_check_reported(workflow: &str) -> Vec<String> {
             ));
         }
     }
-    for forbidden in [
-        "ref: ${{ github.event.pull_request.head",
+    let unsafe_ref = |l: &str| l.trim_start().starts_with("ref:");
+    let mut forbidden: Vec<&str> = [
+        "pull_request_review:",
+        "head_ref",
+        "refs/pull",
         "pull-requests: write",
         "contents: write",
+    ]
+    .into_iter()
+    .filter(|f| workflow.contains(f))
+    .collect();
+    if workflow.lines().any(unsafe_ref) {
+        forbidden.push("ref:");
+    }
+    for f in forbidden {
+        problems.push(format!("{SECURITY_WORKFLOW} holds {f:?}, which lets the pull request under review reach its own check"));
+    }
+
+    problems
+}
+
+/// Problems with the workflow a review starts: the pull request defines
+/// it, so it must do nothing but finish, and the recount runs from main.
+#[must_use]
+pub fn security_trigger_is_inert(workflow: &str) -> Vec<String> {
+    let mut problems = Vec::new();
+    for want in [
+        "name: Security approvals trigger",
+        "pull_request_review:",
+        "permissions: {}",
     ] {
-        if workflow.contains(forbidden) {
-            problems.push(format!("{SECURITY_WORKFLOW} holds {forbidden:?}, which lets the pull request under review reach its own check"));
+        if !workflow.contains(want) {
+            problems.push(format!("{SECURITY_TRIGGER} lacks {want:?}"));
+        }
+    }
+    for f in [
+        "checkout",
+        "secrets",
+        "GH_TOKEN",
+        "github.token",
+        "gh api",
+        "cargo",
+    ] {
+        if workflow.contains(f) {
+            problems.push(format!(
+                "{SECURITY_TRIGGER} holds {f:?}, so the pull request that defines it could act through it"
+            ));
         }
     }
 
