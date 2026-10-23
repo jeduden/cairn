@@ -502,8 +502,8 @@ fn node_and_held(
     let home = ctx.home().unwrap();
     home.create().unwrap();
     let mut store = store::Store::open(&home.store()).unwrap();
-    let node = administration::node::Node::open(&home, &mut store, &mut key::random::OsEntropy)
-        .unwrap();
+    let node =
+        administration::node::Node::open(&home, &mut store, &mut key::random::OsEntropy).unwrap();
     (ctx, store, node)
 }
 

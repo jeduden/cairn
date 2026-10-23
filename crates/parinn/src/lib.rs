@@ -1169,6 +1169,7 @@ fn live_capture(
     let started = now_instant();
 
     Some(capture::Capture {
+        ceiling: ctx.home.as_deref().map(PathBuf::from),
         home: home.clone(),
         roots,
         redactor,

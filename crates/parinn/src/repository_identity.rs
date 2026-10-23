@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
 use ::repository::CommitId;
-use std::collections::BTreeSet;
+use std::collections::BTreeMap;
 use std::path::Path;
 
 use administration::act::Act;
@@ -79,10 +79,11 @@ fn deadline(within: Duration) -> impl Fn() -> bool {
 }
 
 /// Binds the identity of every repository the `SessionStart` hook
-/// observations not yet in the record showed, once each (LANE-02).
+/// observations no look has marked showed, once each (LANE-02).
 ///
-/// The bind is recorded here, as an observation reaches the record, not
-/// in the hook handler: reading git cannot stay within the handler's
+/// The bind is recorded here, when `parinn ingest` or an MCP server
+/// starts, and by a server's live ingest as it takes a session binding,
+/// not in the hook handler: reading git cannot stay within the handler's
 /// hook budget (NFR-02), and the observation is the first hook event.
 /// A change in a bound identity is audited and counted, a clone that
 /// cannot be read counted, and a bind the record refuses counted under
@@ -91,69 +92,103 @@ fn deadline(within: Duration) -> impl Fn() -> bool {
 pub(crate) fn bind_observed(ctx: &Context, home: &Home, store: &mut Store) {
     if let (Ok(node), Ok(held)) = (Node::find(home, store), store.hook_observations()) {
         // One budget for every directory this call looks at (ENG-03, I9).
-        bind_held(ctx, store, &node, held, &deadline(START_WITHIN));
+        let say = |occurrence: &Occurrence| {
+            // A failed audit is said in the log: nothing else can say it.
+            let _ = ctx.audit(occurrence).map_err(|e| {
+                tracing::warn!(error = e.to_string().as_str(), "audit a repository look");
+            });
+        };
+        let ceiling = ctx.home.as_deref().map(Path::new);
+        bind_held(&say, ceiling, store, &node, held, &deadline(START_WITHIN));
     }
 }
 
-/// [`bind_observed`]'s work over the observations `held`.
-fn bind_held(
-    ctx: &Context,
+/// The deadline all the looks of one start share.
+pub(crate) fn start_deadline() -> impl Fn() -> bool {
+    deadline(START_WITHIN)
+}
+
+/// The key a look at observation `id` is marked under.
+fn looked(id: i64) -> String {
+    format!("looked:{id}")
+}
+
+/// [`bind_observed`]'s work over the observations `held`: each
+/// `SessionStart` observation no look has marked, whether or not it has
+/// reached the record, is looked at once. Its directory's outcome is
+/// reported through `say`, and the observation marked, so a look that ran
+/// out of time or found a clone unreadable is not made, or counted,
+/// again for it; a new hook event for the directory looks again. A bind
+/// the record refused leaves the mark off, to be tried again.
+pub(crate) fn bind_held(
+    say: &dyn Fn(&Occurrence),
+    ceiling: Option<&Path>,
     store: &mut Store,
     node: &Node,
     held: Vec<store::Held>,
     deadline: &dyn ::repository::Deadline,
 ) {
-    let directories: BTreeSet<String> = held
-        .into_iter()
-        .filter(|h| !h.appended)
-        .map(|h| h.observation)
-        .filter(|o| o.hook == "SessionStart" && !o.cwd.is_empty())
-        .map(|o| o.cwd)
-        .collect();
-    for directory in directories {
+    let mut by_directory: BTreeMap<String, Vec<i64>> = BTreeMap::new();
+    for h in held {
+        let o = h.observation;
+        if o.hook == "SessionStart"
+            && !o.cwd.is_empty()
+            && store
+                .directory_identity(&looked(h.id))
+                .ok()
+                .flatten()
+                .is_none()
+        {
+            by_directory.entry(o.cwd).or_default().push(h.id);
+        }
+    }
+    for (directory, ids) in by_directory {
         let outcome = repository::bind(
             store,
             node,
             &mut OsEntropy,
             Path::new(&directory),
-            ctx.home.as_deref().map(Path::new),
+            ceiling,
             deadline,
         );
         let occurrence = match outcome {
-            Ok(Outcome::Changed) => Occurrence::Degraded {
+            Ok(Outcome::Changed) => Some(Occurrence::Degraded {
                 kind: Kind::Rejected,
                 counter: Counter::RepositoryIdentityChanged,
                 operation: "repository bind",
                 detail: "repository identity changed: no branch link is relinked until a widening bind",
-            },
-            Ok(Outcome::Unreadable) => Occurrence::Degraded {
+            }),
+            Ok(Outcome::Unreadable) => Some(Occurrence::Degraded {
                 kind: Kind::Failed,
                 counter: Counter::RepositoryReadFailed,
                 operation: "repository bind",
                 detail: "repository could not be read: its identity stays as it was",
-            },
-            Ok(Outcome::TimedOut) => Occurrence::Degraded {
+            }),
+            Ok(Outcome::TimedOut) => Some(Occurrence::Degraded {
                 kind: Kind::TimedOut,
                 counter: Counter::RepositoryReadTimedOut,
                 operation: "repository bind",
-                detail: "repository look ran out of time: its identity stays as it was and is looked at again",
-            },
+                detail: "repository look ran out of time: bind it by hand, or the next hook event looks again",
+            }),
             Err(e) => {
                 // The audit entry is fixed text; the cause goes to the log.
                 tracing::warn!(error = e.to_string().as_str(), "bind a repository identity");
-                Occurrence::Degraded {
+                say(&Occurrence::Degraded {
                     kind: Kind::Failed,
                     counter: Counter::RepositoryBindFailed,
                     operation: "repository bind",
                     detail: "repository identity could not be bound: the record or the random source failed",
-                }
+                });
+                continue;
             }
-            Ok(_) => continue,
+            Ok(_) => None,
         };
-        // A failed audit is said in the log: nothing else can say it.
-        let _ = ctx.audit(&occurrence).map_err(|e| {
-            tracing::warn!(error = e.to_string().as_str(), "audit a repository look");
-        });
+        if let Some(occurrence) = &occurrence {
+            say(occurrence);
+        }
+        for id in ids {
+            let _ = store.set_directory_identity(&looked(id), "1");
+        }
     }
 }
 
