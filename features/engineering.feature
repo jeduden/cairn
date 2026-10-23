@@ -221,7 +221,7 @@ Feature: Engineering quality (ENG)
     And the release build fails when a built executable's output differs from its target's regenerated file
     And the core gains no dependency and opens no socket
 
-  @ENG-21 @P0 @pending
+  @ENG-21 @P0
   Scenario: main only moves through reviewed, signed pull requests
     Given the repository's branch protection for main
     Then direct pushes are rejected

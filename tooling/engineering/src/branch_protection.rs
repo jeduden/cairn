@@ -26,11 +26,14 @@ pub const RULESET: &str = ".github/rulesets/main.json";
 /// CI job passed.
 pub const CI_CHECK: &str = "CI";
 
-/// The check that would hold the second approval security-sensitive
-/// crates need. A ruleset holds one approval count for the whole
-/// branch, so a per-path count has to come from a required check that
-/// reads the pull request's reviews; no such check exists yet.
+/// The check that holds the second approval security-sensitive crates
+/// need. A ruleset holds one approval count for the whole branch, so a
+/// per-path count comes from a required check that reads the pull
+/// request's reviews: [`SECURITY_WORKFLOW`] reports it.
 pub const SECURITY_CHECK: &str = "Security approvals";
+
+/// The workflow that reports [`SECURITY_CHECK`].
+pub const SECURITY_WORKFLOW: &str = ".github/workflows/security-approvals.yml";
 
 /// Where the repository commits its rulesets, one JSON file each.
 pub const RULESETS: &str = ".github/rulesets";
@@ -283,6 +286,47 @@ pub fn security_crates_need_two_approvals(ruleset: &Value) -> Vec<String> {
             "the ruleset requires no {SECURITY_CHECK:?} check, so nothing enforces two approvals on the security-sensitive crates"
         )]
     }
+}
+
+/// Problems with the workflow that reports [`SECURITY_CHECK`]: it must
+/// run as main defines it (a target trigger, no pull request checkout),
+/// count with the review-bundle tool and report the check by name on the
+/// pull request's head, or the required check never arrives or can be
+/// rewritten by the pull request it judges.
+#[must_use]
+pub fn security_check_reported(workflow: &str) -> Vec<String> {
+    let mut problems = Vec::new();
+    for (want, why) in [
+        ("pull_request_target:", "runs as main defines it"),
+        ("pull_request_review:", "recounts when a review is given"),
+        (
+            "review-bundle -- approvals",
+            "counts with the review-bundle tool",
+        ),
+        ("name=\"Security approvals\"", "reports the check by name"),
+        (
+            "head_sha=\"$HEAD_SHA\"",
+            "reports it on the pull request's head",
+        ),
+        ("checks: write", "may write the check run"),
+    ] {
+        if !workflow.contains(want) {
+            problems.push(format!(
+                "{SECURITY_WORKFLOW} lacks {want:?}, so it no longer {why}"
+            ));
+        }
+    }
+    for forbidden in [
+        "ref: ${{ github.event.pull_request.head",
+        "pull-requests: write",
+        "contents: write",
+    ] {
+        if workflow.contains(forbidden) {
+            problems.push(format!("{SECURITY_WORKFLOW} holds {forbidden:?}, which lets the pull request under review reach its own check"));
+        }
+    }
+
+    problems
 }
 
 /// Problems where `live`, the ruleset GitHub holds, is weaker than

@@ -162,6 +162,18 @@ fn the_checkout_s_ruleset_requires_signed_commits() {
     assert!(problems.is_empty(), "{}", problems.join("\n"));
 }
 
+/// The workflow that reports the required `Security approvals` check
+/// runs as main defines it and reports on the head (ENG-21).
+#[test]
+fn the_checkout_s_security_approvals_workflow_reports_the_check_from_main() {
+    let workflow = Checkout::new(&testkit::repo_root())
+        .read(engineering::branch_protection::SECURITY_WORKFLOW)
+        .unwrap();
+    let problems = engineering::branch_protection::security_check_reported(&workflow);
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
 /// The committed ruleset needs an approval from another reviewer
 /// (ENG-21).
 #[test]

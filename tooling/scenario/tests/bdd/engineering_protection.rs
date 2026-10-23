@@ -7,8 +7,8 @@
 //! forge holds the same ruleset is the nightly `protection` job's
 //! check; applying the ruleset is the stakeholder's act.
 //!
-//! The last step cannot pass yet, so the scenario stays `@pending`:
-//! see `security_crates_need_two_approvals`.
+//! The two-approval step reads the same records: the ruleset requires
+//! the `Security approvals` check and its workflow reports it.
 
 use cucumber::{given, then};
 use engineering::{Checkout, branch_protection, codeowners, outcome};
@@ -67,14 +67,11 @@ fn no_owner_on_any_other_path(_w: &mut World) -> Result<(), String> {
     outcome(codeowners::no_owner_on_any_other_path(&checkout()))
 }
 
-/// Not met yet. CODEOWNERS owns the security-sensitive crates by the
-/// security reviewer, but neither it nor the ruleset can ask two
-/// approvals for those paths alone: the ruleset's approval count is
-/// the same for the whole branch, and CODEOWNERS asks one owner per
-/// path. What would enforce it is a required check, named
-/// `Security approvals`, that reads the reviews of a pull request that
-/// touches those crates. Until it exists and the ruleset requires it,
-/// this step fails and the scenario stays `@pending`.
+/// Two approvals for some paths only is not a number a ruleset or
+/// CODEOWNERS holds, so the `Security approvals` check counts them: the
+/// ruleset requires it, the workflow reports it from main, and
+/// CODEOWNERS gives the security-sensitive crates to the security
+/// reviewer whose approval it asks for.
 #[then(
     regex = r"^changes to security-sensitive crates need two approvals, one from the designated security reviewer$"
 )]
@@ -83,5 +80,11 @@ fn security_crates_need_two_approvals(w: &mut World) -> Result<(), String> {
     problems.extend(branch_protection::security_crates_need_two_approvals(
         &protection(w).ruleset,
     ));
+    problems.extend(
+        match checkout().read(branch_protection::SECURITY_WORKFLOW) {
+            Ok(workflow) => branch_protection::security_check_reported(&workflow),
+            Err(e) => vec![e],
+        },
+    );
     outcome(problems)
 }

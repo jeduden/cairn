@@ -124,8 +124,8 @@ footer: |
 |     | ↳      | The benchmark harness, its unit-proven Mann-Whitney gate and the PR job landed; ENG-15 stays pending until NFR-01..05 have benchmarks of real code.                                                                                                                                  |
 | 5   | ✅     | [SLSA Build Level 3 provenance (ENG-20)](phase-5.md)                                                                                                                                                                                                                                 |
 |     | ↳      | Only the release-only release-build.yml attests build provenance, a verify job checks the published release against each signer's exact identity at main, and the ENG-20 scenario, reworded to the workflows it reads, is off pending.                                               |
-| 6   | 🔳     | [Main's protection and CODEOWNERS (ENG-21)](phase-6.md)                                                                                                                                                                                                                              |
-|     | ↳      | Main's ruleset is committed and checked against the live one nightly, CODEOWNERS is checked against the paths that enforce the SRS, and ENG-21 stays pending on the two-approval rule.                                                                                               |
+| 6   | ✅     | [Main's protection and CODEOWNERS (ENG-21)](phase-6.md)                                                                                                                                                                                                                              |
+|     | ↳      | Main's ruleset is committed and checked against the live one nightly, CODEOWNERS is checked against the paths that enforce the SRS, a required Security approvals check counts the two approvals security-sensitive crates need, and the ENG-21 scenario is off pending.             |
 | 7   | 🔳     | [The core confined in the end-to-end suite (ENG-12)](phase-7.md)                                                                                                                                                                                                                     |
 |     | ↳      | The core's end-to-end tests run it with all network denied, and a socket probe fails the suite naming the core and the caller; the CI wiring awaits its first run on the hosted runner.                                                                                              |
 | 8   | ✅     | [The core's reach evidence and unsafe code (ENG-16)](phase-8.md)                                                                                                                                                                                                                     |
@@ -141,10 +141,9 @@ footer: |
   drift cases are caught; the stakeholder accepted its exemptions on
   2026-10-13 ([ruling]) and keeps it pending until M1 adds injectable
   I/O traits; M1's phase 16 ([plan 2609292012][m1]) closes it
-- [ ] @ENG-21 passes, off `@pending`: its first six steps pass; the
-  last, two approvals on the security-sensitive crates, needs a
-  required check that reads a pull request's reviews, which waits on
-  the stakeholder's ruling
+- [x] @ENG-21 passes, off `@pending`: the `Security approvals` check
+  counts the two approvals security-sensitive crates need, the ruleset
+  requires it, and the stakeholder applies the ruleset
 - [ ] @ENG-15 passes once benchmarks cover NFR-01..05; its gate is
   unit-proven, and its job waits on a first green run on GitHub. M1
   adds those benchmarks and its phase 16 closes this ([plan

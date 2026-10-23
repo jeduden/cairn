@@ -413,3 +413,38 @@ fn the_nightly_compares_every_committed_ruleset() {
         ]
     );
 }
+
+const WORKFLOW: &str = "on:\n  pull_request_target:\n  pull_request_review:\npermissions:\n  checks: write\nrun: cargo run -p review-bundle -- approvals\n  gh api -f name=\"Security approvals\" -f head_sha=\"$HEAD_SHA\"\n";
+
+#[test]
+fn the_security_workflow_reports_the_check_from_main() {
+    assert!(security_check_reported(WORKFLOW).is_empty());
+}
+
+#[test]
+fn a_security_workflow_missing_a_part_is_named() {
+    for (cut, why) in [
+        ("pull_request_target:", "runs as main defines it"),
+        ("pull_request_review:", "recounts"),
+        ("review-bundle -- approvals", "review-bundle tool"),
+        ("name=\"Security approvals\"", "by name"),
+        ("head_sha=\"$HEAD_SHA\"", "head"),
+        ("checks: write", "write the check run"),
+    ] {
+        has(&security_check_reported(&WORKFLOW.replace(cut, "")), why);
+    }
+}
+
+#[test]
+fn a_security_workflow_that_checks_out_or_writes_the_pull_request_is_named() {
+    for extra in [
+        "ref: ${{ github.event.pull_request.head.sha }}",
+        "pull-requests: write",
+        "contents: write",
+    ] {
+        has(
+            &security_check_reported(&format!("{WORKFLOW}{extra}")),
+            "reach its own check",
+        );
+    }
+}

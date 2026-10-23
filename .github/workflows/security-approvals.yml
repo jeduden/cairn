@@ -1,0 +1,70 @@
+name: Security approvals
+
+# ENG-21: a change to a security-sensitive crate needs two approvals,
+# one from the designated security reviewer. A ruleset holds one
+# approval count for the whole branch and CODEOWNERS one owner per
+# path, so this workflow counts for the paths that need more. It
+# reports a check run named `Security approvals`, which main's ruleset
+# requires; a change that reaches no such crate passes at once.
+#
+# `pull_request_target` and `pull_request_review` run this file as main
+# defines it, never as the pull request under review does, and CODEOWNERS
+# is read from main, so no branch can loosen its own check. Nothing from
+# the pull request is checked out or run: its files and reviews are
+# read through the API as data. The token can read pull requests and
+# write check runs; it cannot approve or write code.
+on: # zizmor: ignore[dangerous-triggers] main's definition runs by design; the pull request's tree is never checked out
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review]
+  pull_request_review:
+    types: [submitted, dismissed]
+
+permissions: {}
+
+concurrency:
+  group: security-approvals-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  count:
+    name: Count the approvals
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: read
+      checks: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install pinned Rust with mise
+        uses: ./.github/actions/setup-mise
+        with:
+          tools: rust
+          cache: false
+      # The head is read once; the check run is reported on it, and the
+      # reviews count only when they were given on it.
+      - name: Count the approvals the changed files need
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          gh api --paginate --slurp "repos/$REPO/pulls/$NUMBER/files" | jq -c 'add // []' > files.json
+          gh api --paginate --slurp "repos/$REPO/pulls/$NUMBER/reviews" | jq -c 'add // []' > reviews.json
+          if cargo run --locked --quiet -p review-bundle -- approvals \
+            --codeowners .github/CODEOWNERS --files files.json --reviews reviews.json \
+            --author "$AUTHOR" --head "$HEAD_SHA" > verdict.txt 2> reason.txt; then
+            conclusion=success
+            summary="$(cat verdict.txt)"
+          else
+            conclusion=failure
+            summary="$(cat reason.txt)"
+          fi
+          gh api "repos/$REPO/check-runs" -f name="Security approvals" \
+            -f head_sha="$HEAD_SHA" -f status=completed -f conclusion="$conclusion" \
+            -f "output[title]=Security approvals" -f "output[summary]=$summary"
+          [ "$conclusion" = success ]

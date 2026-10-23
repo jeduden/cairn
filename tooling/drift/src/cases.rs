@@ -41,6 +41,9 @@ const RULESET: &str = ".github/rulesets/main.json";
 /// The code owners the ENG-21 cases drift.
 const CODEOWNERS: &str = ".github/CODEOWNERS";
 
+/// The workflow that reports the `Security approvals` check.
+const SECURITY_WORKFLOW: &str = ".github/workflows/security-approvals.yml";
+
 /// The workflow the ENG-28 cases drift.
 const REVIEW_WORKFLOW: &str = ".github/workflows/review.yml";
 
@@ -1394,10 +1397,56 @@ fn signed_commits_case() -> Case {
     )
 }
 
+/// The drifts of the `Security approvals` check: the ruleset dropping
+/// it, and its workflow running as the pull request defines it, checking
+/// the pull request out or no longer counting.
+fn security_approvals_cases() -> Vec<Case> {
+    vec![
+        case(
+            "the ruleset no longer requires the Security approvals check",
+            "ENG-21",
+            Injection::replace(RULESET, ", { \"context\": \"Security approvals\" }", ""),
+            scenario("ENG-21"),
+            "requires no \"Security approvals\" check",
+        ),
+        protection_case(
+            "the Security approvals workflow runs as the pull request defines it",
+            Injection::replace(
+                SECURITY_WORKFLOW,
+                "  pull_request_target:\n",
+                "  pull_request:\n",
+            ),
+            "the_checkout_s_security_approvals_workflow_reports_the_check_from_main",
+            "no longer runs as main defines it",
+        ),
+        protection_case(
+            "the Security approvals workflow checks out the pull request",
+            Injection::replace(
+                SECURITY_WORKFLOW,
+                "          persist-credentials: false\n      - name: Install",
+                "          persist-credentials: false\n          ref: ${{ github.event.pull_request.head.sha }}\n      - name: Install",
+            ),
+            "the_checkout_s_security_approvals_workflow_reports_the_check_from_main",
+            "reach its own check",
+        ),
+        protection_case(
+            "the Security approvals workflow no longer counts with the tool",
+            Injection::replace(
+                SECURITY_WORKFLOW,
+                "-p review-bundle -- approvals",
+                "-p review-bundle -- nothing",
+            ),
+            "the_checkout_s_security_approvals_workflow_reports_the_check_from_main",
+            "no longer counts with the review-bundle tool",
+        ),
+    ]
+}
+
 /// The drifts ENG-21 exists to catch: main's committed ruleset or
 /// CODEOWNERS weaker than the requirement says.
 fn protection_cases() -> Vec<Case> {
-    vec![
+    let mut cases = security_approvals_cases();
+    cases.extend(vec![
         signed_commits_case(),
         protection_case(
             "an actor allowed to bypass the ruleset",
@@ -1508,7 +1557,8 @@ fn protection_cases() -> Vec<Case> {
             "the_checkout_s_rulesets_each_name_themselves_their_target_and_refs",
             "repeats the ruleset name releases-semver",
         ),
-    ]
+    ]);
+    cases
 }
 
 /// The drifts the release-build gate exists to catch: the benchmark

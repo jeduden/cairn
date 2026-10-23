@@ -29,7 +29,7 @@
       "type": "required_status_checks",
       "parameters": {
         "strict_required_status_checks_policy": false,
-        "required_status_checks": [{ "context": "CI" }]
+        "required_status_checks": [{ "context": "CI" }, { "context": "Security approvals" }]
       }
     }
   ]

@@ -25,7 +25,7 @@ pub const CHECKOUT_STEP: &str = "the repository checkout";
 /// injectable I/O traits, ENG-20's three workflow gates, the gate that
 /// holds every crate to the complexity limits, and the gate that holds
 /// CI to the TOML checks.
-pub const GATE_TESTS: [&str; 36] = [
+pub const GATE_TESTS: [&str; 37] = [
     "specification_parses",
     "decision_records_parse",
     "specification_and_features_agree",
@@ -51,6 +51,7 @@ pub const GATE_TESTS: [&str; 36] = [
     "the_checkout_s_ruleset_rejects_direct_pushes",
     "the_checkout_s_ruleset_requires_signed_commits",
     "the_checkout_s_ruleset_needs_an_approval_from_another_reviewer",
+    "the_checkout_s_security_approvals_workflow_reports_the_check_from_main",
     "the_checkout_s_codeowners_name_the_stakeholder_on_the_enforcing_paths",
     "the_checkout_s_codeowners_name_no_owner_on_any_other_path",
     "the_checkout_s_security_crates_belong_to_the_security_reviewer",

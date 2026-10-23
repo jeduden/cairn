@@ -4,7 +4,7 @@ title: "Main's protection and CODEOWNERS (ENG-21)"
 status: "🔳"
 result: true
 summary: >-
-  Main's ruleset is committed and checked against the live one nightly, CODEOWNERS is checked against the paths that enforce the SRS, and ENG-21 stays pending on the two-approval rule.
+  Main's ruleset is committed and checked against the live one nightly, CODEOWNERS is checked against the paths that enforce the SRS, a required Security approvals check counts the two approvals security-sensitive crates need, and the ENG-21 scenario is off pending.
 ---
 ## Handoff
 
@@ -37,19 +37,38 @@ What landed:
   `~ALL` but the release tags, and a gate test refuses a ruleset with
   no include. The stakeholder applies it on GitHub again.
 
-Scenario: `@ENG-21` stays `@pending`. Its first five `Then` steps pass
-when run without the tag. The last, two approvals on the
-security-sensitive crates with the security reviewer as one, cannot be
-met by a ruleset and CODEOWNERS: the approval count is one number for
-the branch, and CODEOWNERS asks one owner per path. A required check,
-`Security approvals`, that reads the reviews of a pull request touching
-those crates would enforce it; the binding fails on it today and names
-it.
+Scenario: `@ENG-21` is off `@pending`. Two approvals on the
+security-sensitive crates, with the security reviewer as one, is not a
+number a ruleset or CODEOWNERS holds, so a required check enforces it:
+
+- `review-bundle approvals` reads the pull request's changed files and
+  reviews and main's CODEOWNERS. A change reaching a crate directory
+  CODEOWNERS gives whole needs two distinct approvals of the current
+  head, not the author's, one from that crate's owner; a later review,
+  a stale head or a team owner does not count. Eleven unit tests, five
+  command tests.
+- `security-approvals.yml` runs as main defines it
+  (`pull_request_target`, `pull_request_review`), reads files and
+  reviews through the API without checking the pull request out, and
+  reports a check run named `Security approvals` on the head. Its token
+  can write checks, not approve or write code.
+- `.github/rulesets/main.json` requires the check; a gate test holds
+  the workflow, and four drift cases (the ruleset dropping the check,
+  the workflow running as the pull request defines it, checking it out
+  or no longer counting) were each shown to fail with their message.
+  The full drift suite needs mdsmith and ran only in CI.
 
 For the stakeholder:
 
-- Apply `.github/rulesets/main.json` on GitHub; until then the nightly
-  `protection` job is red. Applied on 2026-10-14; the job passed.
+- Approve this change (it touches CODEOWNERS-gated paths) and apply
+  `.github/rulesets/main.json` on GitHub again, which adds the
+  `Security approvals` required check; until then the nightly
+  `protection` job is red. Apply it after the workflow is on main, or
+  every pull request waits on a check nothing reports.
+- Name the security reviewer; until then the stakeholder owns the
+  security-sensitive crates, and since GitHub never counts an author's
+  own approval, a pull request the stakeholder authors there cannot
+  reach two approvals.
 - Decide how a pull request the stakeholder authors on an owned path
   merges: GitHub never counts an author's own approval, and the ruleset
   has no bypass actor.
