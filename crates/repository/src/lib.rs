@@ -14,12 +14,15 @@ mod fixture;
 mod fsio;
 mod identity;
 mod inflate;
+mod locate;
 mod loose;
 mod object;
 mod objects;
 mod pack;
+mod refs;
 mod repo;
 
 pub use deadline::Deadline;
 pub use error::Error;
 pub use identity::{CommitId, RepositoryIdentity};
+pub use locate::git_dir;
