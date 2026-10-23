@@ -3,7 +3,7 @@ use std::path::Path;
 
 use testkit::TempDir;
 
-use super::{exists, path_of, read_up_to};
+use super::{read_up_to, rel_of};
 use crate::fixture::{Prng, zlib_stored};
 use crate::object::{Kind, Object};
 use crate::{CommitId, Error};
@@ -16,7 +16,7 @@ fn id(n: u8) -> CommitId {
 
 /// Stores `content` as the loose file of `id`.
 fn put(objects: &Path, id: &CommitId, content: &[u8]) {
-    let path = path_of(objects, id);
+    let path = objects.join(rel_of(id));
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(path, zlib_stored(content)).unwrap();
 }
@@ -32,8 +32,7 @@ fn corrupt<T>(result: Result<T, Error>) -> bool {
 
 #[test]
 fn the_file_of_an_id_is_under_its_first_two_digits() {
-    let path = path_of(Path::new("/o"), &id(0xab));
-    assert_eq!(path, Path::new("/o/ab").join("ab".repeat(19)));
+    assert_eq!(rel_of(&id(0xab)), format!("ab/{}", "ab".repeat(19)));
 }
 
 #[test]
@@ -55,7 +54,6 @@ fn each_kind_of_object_is_read_back() {
             data: b"body\nlines".to_vec(),
         };
         assert_eq!(read_up_to(dir.path(), &id, MAX).unwrap(), Some(expected));
-        assert!(exists(dir.path(), &id).unwrap());
     }
 }
 
@@ -71,9 +69,8 @@ fn an_object_with_no_body_is_read() {
 fn an_object_that_is_not_stored_loose_is_none() {
     let dir = TempDir::new().unwrap();
     assert_eq!(read_up_to(dir.path(), &id(1), MAX).unwrap(), None);
-    assert!(!exists(dir.path(), &id(1)).unwrap());
     put_object(dir.path(), &id(2), "blob", b"x");
-    assert!(!exists(dir.path(), &id(1)).unwrap());
+    assert_eq!(read_up_to(dir.path(), &id(1), MAX).unwrap(), None);
 }
 
 #[test]
@@ -106,7 +103,7 @@ fn a_header_that_never_ends_is_corrupt() {
 #[test]
 fn a_file_that_is_not_zlib_is_corrupt() {
     let dir = TempDir::new().unwrap();
-    let path = path_of(dir.path(), &id(1));
+    let path = dir.path().join(rel_of(&id(1)));
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(&path, b"this is not zlib").unwrap();
     assert!(corrupt(read_up_to(dir.path(), &id(1), MAX)));
@@ -122,11 +119,11 @@ fn an_object_past_the_maximum_is_too_large() {
 }
 
 #[test]
-fn a_directory_in_the_place_of_the_file_is_an_io_error() {
+fn a_directory_in_the_place_of_the_file_is_refused() {
     let dir = TempDir::new().unwrap();
-    fs::create_dir_all(path_of(dir.path(), &id(1))).unwrap();
+    fs::create_dir_all(dir.path().join(rel_of(&id(1)))).unwrap();
     let result = read_up_to(dir.path(), &id(1), MAX);
-    assert!(matches!(result, Err(Error::Io { .. })));
+    assert!(matches!(result, Err(Error::Unsupported(_))));
 }
 
 #[test]
@@ -134,7 +131,7 @@ fn corrupted_loose_files_never_panic() {
     let dir = TempDir::new().unwrap();
     let valid = zlib_stored(b"commit 4\0abcd");
     let mut prng = Prng::new(31);
-    let path = path_of(dir.path(), &id(1));
+    let path = dir.path().join(rel_of(&id(1)));
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     for _ in 0..500 {
         fs::write(&path, prng.corrupt(&valid)).unwrap();
@@ -148,10 +145,6 @@ fn a_fan_out_directory_that_is_a_file_is_an_io_error() {
     fs::write(dir.path().join("ab"), "not a directory").unwrap();
     assert!(matches!(
         read_up_to(dir.path(), &id(0xab), MAX),
-        Err(Error::Io { .. })
-    ));
-    assert!(matches!(
-        exists(dir.path(), &id(0xab)),
         Err(Error::Io { .. })
     ));
 }

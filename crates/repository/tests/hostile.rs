@@ -12,6 +12,13 @@
     reason = "a test makes its FIFOs with the mkfifo binary; the crate under test starts no program"
 )]
 
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    reason = "a test's helpers unwrap: a failure is the assertion"
+)]
+
 use std::fs;
 use std::os::unix::fs::symlink;
 use std::path::{Path, PathBuf};
@@ -241,7 +248,11 @@ fn a_symlinked_pack_directory_is_refused() {
     write(dir.path(), "HEAD", &format!("{ID}\n"));
     fs::create_dir_all(dir.path().join("elsewhere")).unwrap();
     fs::create_dir_all(dir.path().join("objects")).unwrap();
-    symlink(dir.path().join("elsewhere"), dir.path().join("objects/pack")).unwrap();
+    symlink(
+        dir.path().join("elsewhere"),
+        dir.path().join("objects/pack"),
+    )
+    .unwrap();
     refused(root(dir.path()));
 }
 

@@ -6,7 +6,7 @@ use std::fs::{self, File};
 use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 
-use crate::fsio::read_limited;
+use crate::fsio::{open_below, read_limited, refuse_symlink};
 use crate::object::{MAX_OBJECT, Object};
 use crate::pack::{Entry, check_header, find_offset, read_entry};
 use crate::{CommitId, Error, delta, loose};
@@ -54,21 +54,11 @@ fn pack_names(dir: &Path) -> Result<BTreeSet<String>, Error> {
     Ok(names)
 }
 
-/// Opens `path` for reading; a file that is not there is `None`.
-fn open_file(path: &Path) -> Result<Option<File>, Error> {
-    match File::open(path) {
-        Ok(file) => Ok(Some(file)),
-        Err(e) if e.kind() == ErrorKind::NotFound => Ok(None),
-        Err(e) => Err(Error::io("a pack file")(e)),
-    }
-}
-
 /// The pack `stem` of `dir`, unless its index or its pack is gone.
 fn open_pack(dir: &Path, stem: &str) -> Result<Option<Pack>, Error> {
-    let Some(pack) = open_file(&dir.join(format!("{stem}.pack")))? else {
-        return Ok(None);
-    };
-    let Some(index) = open_file(&dir.join(format!("{stem}.idx")))? else {
+    let pack = open_below(dir, &format!("{stem}.pack"))?;
+    let index = open_below(dir, &format!("{stem}.idx"))?;
+    let (Some(pack), Some(index)) = (pack, index) else {
         return Ok(None);
     };
     check_header(&mut &pack)?;
@@ -86,6 +76,8 @@ impl Objects {
     /// [`Error::Io`] when the directory cannot be listed.
     pub(crate) fn open(dir: &Path) -> Result<Self, Error> {
         let pack_dir = dir.join("pack");
+        refuse_symlink(dir)?;
+        refuse_symlink(&pack_dir)?;
         let names = pack_names(&pack_dir)?;
         if names.len() > MAX_PACKS {
             return Err(Error::TooLarge("number of packs"));
@@ -119,19 +111,6 @@ impl Objects {
         }
     }
 
-    /// Whether the clone holds the object `id`.
-    ///
-    /// # Errors
-    ///
-    /// [`Error::Unsupported`] when the object is absent and the clone
-    /// names alternate object stores, which could hold it.
-    pub(crate) fn contains(&self, id: &CommitId) -> Result<bool, Error> {
-        if loose::exists(&self.dir, id)? || self.find(id)?.is_some() {
-            return Ok(true);
-        }
-        self.absent().map(|()| false)
-    }
-
     /// The pack that lists `id`, and where.
     fn find(&self, id: &CommitId) -> Result<Option<(&Pack, u64)>, Error> {
         for pack in &self.packs {
@@ -145,7 +124,7 @@ impl Objects {
     /// Confirms that nothing outside the clone could hold an absent
     /// object: the clone names no alternate object store.
     fn absent(&self) -> Result<(), Error> {
-        let alternates = read_limited(&self.dir.join("info/alternates"), MAX_ALTERNATES)?;
+        let alternates = read_limited(&self.dir, "info/alternates", MAX_ALTERNATES)?;
         let names_one = alternates.is_some_and(|bytes| {
             String::from_utf8_lossy(&bytes)
                 .lines()

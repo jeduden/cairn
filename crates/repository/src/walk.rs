@@ -45,7 +45,7 @@ pub(crate) fn parents(commit: &[u8]) -> Result<Vec<CommitId>, Error> {
 /// [`Error::Corrupt`] for a line that is not a commit id;
 /// [`Error::TooLarge`] for a file past `limit` bytes.
 pub(crate) fn read_shallow(repo: &Repo, limit: u64) -> Result<BTreeSet<CommitId>, Error> {
-    let bytes = read_limited(&repo.common_dir.join("shallow"), limit)?.unwrap_or_default();
+    let bytes = read_limited(&repo.common_dir, "shallow", limit)?.unwrap_or_default();
     String::from_utf8_lossy(&bytes)
         .lines()
         .map(str::trim)

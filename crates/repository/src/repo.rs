@@ -35,11 +35,11 @@ impl Repo {
     /// be read.
     pub(crate) fn open(git_dir: &Path) -> Result<Self, Error> {
         fs::metadata(git_dir).map_err(Error::io("a git directory"))?;
-        let common_dir = match read_limited(&git_dir.join("commondir"), MAX_COMMONDIR)? {
+        let common_dir = match read_limited(git_dir, "commondir", MAX_COMMONDIR)? {
             Some(bytes) => git_dir.join(String::from_utf8_lossy(&bytes).trim()),
             None => git_dir.to_path_buf(),
         };
-        if let Some(config) = read_limited(&common_dir.join("config"), MAX_CONFIG)? {
+        if let Some(config) = read_limited(&common_dir, "config", MAX_CONFIG)? {
             check_config(&String::from_utf8_lossy(&config))?;
         }
         Ok(Self {

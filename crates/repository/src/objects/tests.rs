@@ -53,7 +53,6 @@ fn a_loose_object_is_read() {
         objects.read(&id(1)).unwrap(),
         object(Kind::Commit, b"tree x\n")
     );
-    assert!(objects.contains(&id(1)).unwrap());
 }
 
 #[test]
@@ -70,7 +69,6 @@ fn a_packed_object_is_read() {
         object(Kind::Commit, b"first")
     );
     assert_eq!(objects.read(&id(2)).unwrap(), object(Kind::Blob, b"second"));
-    assert!(objects.contains(&id(2)).unwrap());
 }
 
 #[test]
@@ -82,7 +80,6 @@ fn an_object_the_clone_lacks_is_none() {
     put_pack(dir.path(), "a", &bytes, &index);
     let objects = Objects::open(dir.path()).unwrap();
     assert_eq!(objects.read(&id(9)).unwrap(), None);
-    assert!(!objects.contains(&id(9)).unwrap());
 }
 
 #[test]
@@ -229,12 +226,7 @@ fn alternates_make_an_absent_object_unknowable() {
     fs::write(dir.path().join("info/alternates"), "/elsewhere/objects\n").unwrap();
     let objects = Objects::open(dir.path()).unwrap();
     assert_eq!(objects.read(&id(1)).unwrap(), object(Kind::Blob, b"here"));
-    assert!(objects.contains(&id(1)).unwrap());
     assert!(matches!(objects.read(&id(2)), Err(Error::Unsupported(_))));
-    assert!(matches!(
-        objects.contains(&id(2)),
-        Err(Error::Unsupported(_))
-    ));
 }
 
 #[test]
@@ -244,7 +236,6 @@ fn an_alternates_file_that_names_nothing_changes_nothing() {
     fs::write(dir.path().join("info/alternates"), "# none\n\n  \n").unwrap();
     let objects = Objects::open(dir.path()).unwrap();
     assert_eq!(objects.read(&id(2)).unwrap(), None);
-    assert!(!objects.contains(&id(2)).unwrap());
 }
 
 #[test]
@@ -259,12 +250,22 @@ fn files_that_are_not_packs_are_ignored() {
     fs::write(packs.join("pack-a.rev"), "junk").unwrap();
     fs::write(packs.join("tmp_pack_x"), "junk").unwrap();
     fs::write(packs.join("pack-orphan.idx"), "no pack beside it").unwrap();
-    fs::create_dir(packs.join("pack-dir.idx")).unwrap();
     let objects = Objects::open(dir.path()).unwrap();
     assert_eq!(
         objects.read(&id(1)).unwrap(),
         object(Kind::Commit, b"first")
     );
+}
+
+#[test]
+fn a_pack_index_that_is_a_directory_is_refused() {
+    let dir = TempDir::new().unwrap();
+    fs::create_dir_all(dir.path().join("pack/pack-dir.idx")).unwrap();
+    fs::write(dir.path().join("pack/pack-dir.pack"), "").unwrap();
+    assert!(matches!(
+        Objects::open(dir.path()),
+        Err(Error::Unsupported(_))
+    ));
 }
 
 #[test]
@@ -310,7 +311,6 @@ fn corrupted_packs_and_indexes_never_panic() {
         if let Ok(objects) = Objects::open(dir.path()) {
             for n in 1..=4 {
                 let _ = objects.read(&id(n));
-                let _ = objects.contains(&id(n));
             }
         }
     }
@@ -318,19 +318,22 @@ fn corrupted_packs_and_indexes_never_panic() {
 
 #[cfg(unix)]
 #[test]
-fn a_pack_that_cannot_be_opened_is_an_io_error() {
+fn a_pack_that_is_a_link_is_refused() {
     let dir = TempDir::new().unwrap();
     let packs = dir.path().join("pack");
     fs::create_dir_all(&packs).unwrap();
     fs::write(packs.join("pack-a.idx"), "").unwrap();
     let pack = packs.join("pack-a.pack");
     std::os::unix::fs::symlink(&pack, &pack).unwrap();
-    assert!(matches!(Objects::open(dir.path()), Err(Error::Io { .. })));
+    assert!(matches!(
+        Objects::open(dir.path()),
+        Err(Error::Unsupported(_))
+    ));
 }
 
 #[cfg(unix)]
 #[test]
-fn an_index_that_vanished_leaves_its_pack_out() {
+fn an_index_that_is_a_dangling_link_is_refused() {
     let dir = TempDir::new().unwrap();
     let mut pack = PackBuilder::new();
     pack.whole(raw(1), 1, b"first");
@@ -339,6 +342,22 @@ fn an_index_that_vanished_leaves_its_pack_out() {
     fs::create_dir_all(&packs).unwrap();
     fs::write(packs.join("pack-a.pack"), bytes).unwrap();
     std::os::unix::fs::symlink(packs.join("gone"), packs.join("pack-a.idx")).unwrap();
-    let objects = Objects::open(dir.path()).unwrap();
-    assert_eq!(objects.read(&id(1)).unwrap(), None);
+    assert!(matches!(
+        Objects::open(dir.path()),
+        Err(Error::Unsupported(_))
+    ));
+}
+
+#[test]
+fn a_symbolic_link_object_or_pack_directory_is_refused() {
+    let dir = TempDir::new().unwrap();
+    let elsewhere = dir.path().join("elsewhere");
+    fs::create_dir_all(elsewhere.join("pack")).unwrap();
+    let link = dir.path().join("objects");
+    std::os::unix::fs::symlink(&elsewhere, &link).unwrap();
+    assert!(matches!(Objects::open(&link), Err(Error::Unsupported(_))));
+    let real = dir.path().join("real");
+    fs::create_dir_all(&real).unwrap();
+    std::os::unix::fs::symlink(&elsewhere, real.join("pack")).unwrap();
+    assert!(matches!(Objects::open(&real), Err(Error::Unsupported(_))));
 }

@@ -58,7 +58,9 @@ pub fn root_commit(git_dir: &Path, deadline: &dyn Deadline) -> Result<Option<Com
 /// See [`Error`].
 pub fn has_commit(git_dir: &Path, id: &CommitId) -> Result<bool, Error> {
     let repo = Repo::open(git_dir)?;
-    Objects::open(&repo.objects_dir())?.contains(id)
+    Objects::open(&repo.objects_dir())?
+        .read(id)
+        .map(|object| object.is_some())
 }
 
 /// The identity of the repository whose git directory is `git_dir`.
