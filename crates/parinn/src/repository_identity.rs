@@ -188,11 +188,9 @@ pub(crate) fn bind_held(
         }
         for id in ids {
             // Unmarked, the observation is looked at again; say why.
-            let _ = store
-                .set_directory_identity(&looked(id), "1")
-                .map_err(|e| {
-                    tracing::warn!(error = e.to_string().as_str(), "mark a repository look");
-                });
+            let _ = store.set_directory_identity(&looked(id), "1").map_err(|e| {
+                tracing::warn!(error = e.to_string().as_str(), "mark a repository look");
+            });
         }
     }
 }
