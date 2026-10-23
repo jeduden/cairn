@@ -69,7 +69,7 @@ fn a_dot_git_file_names_the_git_directory_relative_to_itself() {
 #[test]
 fn a_dot_git_file_may_name_an_absolute_path() {
     let dir = TempDir::new().unwrap();
-    let real = dir.path().join("modules/sub");
+    let real = dir.path().join("super/.git/modules/sub");
     fs::create_dir_all(&real).unwrap();
     let work = dir.path().join("sub");
     fs::create_dir(&work).unwrap();
@@ -258,4 +258,40 @@ fn a_dot_git_that_is_neither_a_file_nor_a_directory_is_passed_over() {
         git_dir(&below, None).unwrap(),
         Some(dir.path().join(".git"))
     );
+}
+
+#[test]
+fn a_gitdir_that_is_neither_a_worktrees_nor_a_submodules_is_refused() {
+    let dir = TempDir::new().unwrap();
+    let elsewhere = dir.path().join("private/.git");
+    fs::create_dir_all(&elsewhere).unwrap();
+    let plain = dir.path().join("plain");
+    fs::create_dir_all(&plain).unwrap();
+    let work = dir.path().join("work");
+    fs::create_dir(&work).unwrap();
+
+    for target in [
+        elsewhere.display().to_string(),
+        "../private/.git".to_owned(),
+        "../plain".to_owned(),
+    ] {
+        fs::write(work.join(".git"), format!("gitdir: {target}\n")).unwrap();
+        assert!(
+            matches!(git_dir(&work, None), Err(Error::Unsupported(_))),
+            "{target}"
+        );
+    }
+}
+
+#[test]
+fn only_a_worktrees_or_a_modules_directory_below_a_dot_git_is_followed() {
+    let dir = TempDir::new().unwrap();
+    let work = dir.path().join("work");
+    fs::create_dir(&work).unwrap();
+    for below in ["a/.git/worktrees/w", "a/.git/modules/m/n"] {
+        let real = dir.path().join(below);
+        fs::create_dir_all(&real).unwrap();
+        fs::write(work.join(".git"), format!("gitdir: {}\n", real.display())).unwrap();
+        assert_eq!(git_dir(&work, None).unwrap(), Some(real));
+    }
 }

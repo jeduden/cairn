@@ -452,7 +452,7 @@ fn a_linked_worktree_names_the_repository_it_belongs_to() {
 }
 
 #[test]
-fn a_separate_git_directory_is_found_through_the_dot_git_file() {
+fn a_separate_git_directory_is_refused_as_a_gitdir_that_leaves_the_clone() {
     let Some(world) = World::new() else { return };
     let work = world.path("separate-work");
     let store = world.path("separate-store");
@@ -469,15 +469,13 @@ fn a_separate_git_directory_is_found_through_the_dot_git_file() {
         ],
     );
     world.history(&work, 3);
-    let found = git_dir(&work, None).unwrap().unwrap();
-    assert_eq!(
-        fs::canonicalize(&found).unwrap(),
-        fs::canonicalize(&store).unwrap()
-    );
-    assert_eq!(
-        root_commit(&found, &|| false).unwrap(),
-        world.expected_root(&work, "HEAD")
-    );
+
+    // Only a linked worktree's and a submodule's git directory are
+    // followed; a `.git` file may not send the reader anywhere else.
+    assert!(matches!(
+        git_dir(&work, None),
+        Err(repository::Error::Unsupported(_))
+    ));
 }
 
 #[test]
