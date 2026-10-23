@@ -13,7 +13,7 @@ use std::path::Path;
 pub const SOURCE_DIR: &str = "tooling/calibrate/src";
 
 /// The hash of the workload's source, recorded when it was tuned.
-pub const RECORDED_HASH: u64 = 0x71da_7a71_331d_ebd1;
+pub const RECORDED_HASH: u64 = 0xb0a1_a524_60b6_90c2;
 
 /// The workload's constants as recorded: the seed, the rounds of
 /// mixing and the rounds of file calls.
