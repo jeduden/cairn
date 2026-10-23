@@ -1,12 +1,12 @@
 use std::fs;
 
 use super::*;
-use record::id::RoomId;
 use crate::home::Home;
 use crate::node::Node;
 use crate::node_identity::IdentitySource;
 use key::random::OsEntropy;
 use key::signing::SeatKey;
+use record::id::RoomId;
 use testkit::TempDir;
 
 fn home(dir: &TempDir) -> Home {
@@ -57,9 +57,14 @@ fn a_seat_whose_certificate_record_the_device_seat_lacks_reads_peer() {
     let mut store = Store::open(&home.store()).unwrap();
     let node = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
     let key = SeatKey::mint(&mut OsEntropy).unwrap();
-    let cert =
-        SeatCertificate::issue(node.device(), &key, node.personal_room(), SeatKind::Run, false)
-            .unwrap();
+    let cert = SeatCertificate::issue(
+        node.device(),
+        &key,
+        node.personal_room(),
+        SeatKind::Run,
+        false,
+    )
+    .unwrap();
     let seat = StoredSeat {
         writer: cert.writer_id(),
         seat: cert.seat_id(),
@@ -136,7 +141,13 @@ fn after_a_node_identity_change_no_writer_reads_witnessed_or_ingested() {
 #[test]
 fn the_origins_names_are_fixed() {
     assert_eq!(
-        [Origin::Witnessed, Origin::Ingested, Origin::Bundle, Origin::Peer].map(Origin::as_str),
+        [
+            Origin::Witnessed,
+            Origin::Ingested,
+            Origin::Bundle,
+            Origin::Peer
+        ]
+        .map(Origin::as_str),
         ["witnessed", "ingested", "bundle", "peer"]
     );
 }
