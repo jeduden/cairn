@@ -1,7 +1,8 @@
 #!/bin/sh
 # Sets up a Claude Code web environment: installs the mise binary pinned
 # in CI's setup action, verified against its SHA-256, then installs every
-# tool in mise.toml from mise.lock with `mise install --locked`.
+# tool in mise.toml from mise.lock with `mise install --locked`. It only
+# downloads and verifies; a tool that would build from source is refused.
 #
 # The version and checksums live only in
 # .github/actions/setup-mise/action.yml; this script reads them from
@@ -28,6 +29,21 @@ version=$(sed -n 's/.*echo "version=\([0-9.]*\)".*/\1/p' "$action")
 sha256=$(sed -n "s|^ *$ci) sha256=\([0-9a-f]\{64\}\) ;;\$|\1|p" "$action")
 if [ -z "$version" ] || [ -z "$sha256" ]; then
   echo "setup-web: no mise pin for $ci in $action" >&2
+  exit 1
+fi
+
+# Setup only downloads and verifies; it never builds. Every tool must
+# come from a backend that installs a released binary, checked against
+# mise.lock (and its attestation where the lockfile records one). The
+# Rust toolchain comes from rust-toolchain.toml through rustup.
+building=$(awk '
+  /^\[/ { tools = ($0 == "[tools]"); next }
+  tools && /=/ {
+    key = $0; sub(/[ \t]*=.*/, "", key); gsub(/"/, "", key)
+    if (key !~ /^(github|aqua):/) print key
+  }' "$root/mise.toml")
+if [ -n "$building" ]; then
+  echo "setup-web: refusing tools that are not released binaries:" $building >&2
   exit 1
 fi
 

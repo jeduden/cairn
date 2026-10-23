@@ -34,9 +34,9 @@ cargo.binstall = false
 [tools]
 "github:jeduden/frit" = { version = "0.17.0", bin = "frit" }
 "github:jeduden/mdsmith" = { version = "0.55.1", bin = "mdsmith" }
+"github:rustsec/rustsec" = { version = "0.22.2", version_prefix = "cargo-audit/v", bin = "cargo-audit" }
 "github:taiki-e/cargo-llvm-cov" = "0.9.1"
 "github:EmbarkStudios/cargo-deny" = "0.20.2"
-"cargo:cargo-audit" = { version = "0.22.2", locked = true }
 "aqua:tamasfe/taplo" = "0.10.0"
 "aqua:zizmorcore/zizmor" = "1.29.0"
 "aqua:anchore/syft" = "1.52.0"
@@ -98,16 +98,19 @@ components = ["clippy", "rustfmt", "llvm-tools-preview"]
 Edit these source files, then run `mdsmith fix docs/tooling.md`
 to refresh the imports. CI's `mdsmith check .` rejects stale copies.
 After changing pins, run `mise lock` to refresh the platforms already
-recorded in the lockfile. Taplo publishes no checksums, so verify and
-record its asset SHA-256 values in the lockfile when bumping it.
+recorded in the lockfile. Taplo and cargo-audit publish no checksums, so
+verify and record their asset SHA-256 values in the lockfile when bumping
+them.
 
 A Claude Code web environment sets
 [scripts/setup-web.sh](../scripts/setup-web.sh) as its setup script. It
-downloads the mise binary pinned in the setup action, refuses it unless its
-SHA-256 matches, then runs `mise install --locked`. mise also verifies the
-attestation of each GitHub release the lockfile records, which needs GitHub
-API access to those repositories; without it the install stops rather than
-skip the check.
+only downloads and verifies, never builds: it refuses a tool whose backend
+is not `github:` or `aqua:`, downloads the mise binary pinned in the setup
+action, refuses it unless its SHA-256 matches, then runs
+`mise install --locked`. mise checks each download against the lockfile and
+verifies the attestation of each GitHub release the lockfile records, which
+needs GitHub API access to those repositories; without it the install stops
+rather than skip the check.
 
 The shared setup action installs each job's selected tools and caches
 mise's installs and the exact Rustup toolchain. Release jobs disable

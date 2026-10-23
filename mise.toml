@@ -7,9 +7,9 @@ cargo.binstall = false
 [tools]
 "github:jeduden/frit" = { version = "0.17.0", bin = "frit" }
 "github:jeduden/mdsmith" = { version = "0.55.1", bin = "mdsmith" }
+"github:rustsec/rustsec" = { version = "0.22.2", version_prefix = "cargo-audit/v", bin = "cargo-audit" }
 "github:taiki-e/cargo-llvm-cov" = "0.9.1"
 "github:EmbarkStudios/cargo-deny" = "0.20.2"
-"cargo:cargo-audit" = { version = "0.22.2", locked = true }
 "aqua:tamasfe/taplo" = "0.10.0"
 "aqua:zizmorcore/zizmor" = "1.29.0"
 "aqua:anchore/syft" = "1.52.0"
