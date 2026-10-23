@@ -1375,8 +1375,8 @@ fn release_verify_cases() -> Vec<Case> {
     ]
 }
 
-/// A case for ENG-21: its scenario stays pending, so each drift is
-/// caught by the gate test that reads the same records.
+/// A case for ENG-21: each drift is caught by the gate test that reads
+/// the same records as the scenario's steps.
 fn protection_case(
     name: &'static str,
     injection: Injection,
