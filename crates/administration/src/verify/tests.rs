@@ -1136,3 +1136,58 @@ fn a_payload_that_is_gone_is_named_by_its_event() {
         "{err}"
     );
 }
+
+#[test]
+fn no_kept_origins_is_consistent_and_rebuilt_ones_are() {
+    let mut f = fixture();
+    assert!(verify(&f.store, &f.node.device().public()).is_ok());
+
+    let derived = crate::origin::derive(&f.store).unwrap();
+    f.store
+        .replace_origins(
+            &derived
+                .iter()
+                .map(|(w, o)| (*w, o.as_str().to_owned()))
+                .collect(),
+        )
+        .unwrap();
+
+    assert!(verify(&f.store, &f.node.device().public()).is_ok());
+}
+
+#[test]
+fn a_kept_origin_that_differs_from_the_derived_one_is_named_by_its_writer() {
+    let mut f = fixture();
+    let mut kept: BTreeMap<_, _> = crate::origin::derive(&f.store)
+        .unwrap()
+        .iter()
+        .map(|(w, o)| (*w, o.as_str().to_owned()))
+        .collect();
+    kept.insert(f.ingest.writer, "witnessed".to_owned());
+    f.store.replace_origins(&kept).unwrap();
+
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
+
+    assert_eq!(err.class(), "derived_artifact_consistency");
+    assert_eq!(err.address(), None);
+    assert_eq!(
+        err.to_string(),
+        format!(
+            "derived artifact consistency: the origin kept for writer {} differs from the record's: run parinn rebuild",
+            f.ingest.writer
+        )
+    );
+}
+
+#[test]
+fn a_kept_origin_for_a_writer_the_record_does_not_hold_is_named_too() {
+    let mut f = fixture();
+    let stray = WriterId::derive(&[9; 32]);
+    let kept: BTreeMap<_, _> = [(stray, "peer".to_owned())].into();
+    f.store.replace_origins(&kept).unwrap();
+
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
+
+    assert_eq!(err.class(), "derived_artifact_consistency");
+    assert!(err.to_string().contains(&stray.to_string()));
+}
