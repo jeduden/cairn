@@ -19,7 +19,7 @@ fn mit_file() -> (String, String) {
         "LICENSE",
         &format!(
             "MIT License\n\nCopyright (c) 2024 Someone\n\n{}",
-            CANON[5].1
+            canonical("MIT").unwrap()
         ),
     )
 }
@@ -61,6 +61,18 @@ fn fits_lets_a_template_fill_in_what_it_leaves_free() {
         bsd3
     ));
     assert!(!fits("Permission granted.", canonical("MIT").unwrap()));
+}
+
+#[test]
+fn fits_refuses_a_clause_inside_a_gap_the_template_fills() {
+    let bsd3 = canonical("BSD-3-Clause").unwrap();
+    let clause = "anyone, who may use this software for non commercial purposes only and must not sell it or any work derived from it, ";
+
+    assert!(!fits(&bsd3.replace(FREE, clause), bsd3));
+    assert!(fits(
+        &bsd3.replace(FREE, "the University of Somewhere"),
+        bsd3
+    ));
 }
 
 #[test]

@@ -95,9 +95,12 @@ fn copyright_line(line: &str) -> bool {
 /// License", "The MIT License (MIT)", "Apache License Version 2.0".
 const TITLE_WORDS: usize = 8;
 
+/// How many words a [`FREE`] gap may take: a name, not a clause.
+const GAP_WORDS: usize = 12;
+
 /// Whether `text` fits `canon`: it is the canonical text, ignoring case,
-/// whitespace and copyright lines, with each [`FREE`] standing for any
-/// run of words and a title before it. Nothing may follow it, so a term
+/// whitespace and copyright lines, with each [`FREE`] standing for a
+/// short run of words and a title before it. Nothing may follow it, so a term
 /// added after the text does not fit, except Apache-2.0's optional
 /// appendix.
 #[must_use]
@@ -116,6 +119,9 @@ pub fn fits(text: &str, canon_raw: &str) -> bool {
         let Some(at) = rest.find(part) else {
             return false;
         };
+        if rest[..at].split_whitespace().count() > GAP_WORDS {
+            return false;
+        }
         rest = &rest[at + part.len()..];
     }
 

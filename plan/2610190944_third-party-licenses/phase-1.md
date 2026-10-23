@@ -46,7 +46,7 @@ removed, and confirm the second run exits non-zero naming that crate.
 
 Done, red then green: the license-text check in
 `tooling/engineering/src/license_texts.rs`. It keeps the canonical text
-of every license `deny.toml` allows or grants by exception. Twenty-five
+of every license `deny.toml` allows or grants by exception. Twenty-seven
 unit tests sit beside it.
 
 - A fitting license file passes.
