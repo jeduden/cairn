@@ -70,8 +70,8 @@ Inherited:
   `repository::{bind, show, plan, apply, Outcome}`, `Act::RepositoryBind`,
   `verify`'s `VerifyError::Derived`.
 - `store`: `origins` and `replace_origins`, `local_secret`,
-  `directory_identity`; `EventKind::RepositoryBind`; counters
-  `repository_identity_changed` and `repository_read_failed`.
+  `directory_identity`; `EventKind::RepositoryBind`; four
+  `repository_*` counters.
 - `parinn rebuild`, `parinn repository show|bind`; `mcp::Server::new`
   takes the device key; `event_search`'s `trust` filter applies after
   the ranking.

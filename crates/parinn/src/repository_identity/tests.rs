@@ -441,3 +441,23 @@ fn a_bind_the_record_refuses_is_counted_apart_from_a_clone_that_cannot_be_read()
     assert_eq!(counter(&p, "repository_read_failed"), 0);
     assert!(binds(&p).is_empty());
 }
+
+#[test]
+fn a_look_that_runs_out_of_the_shared_time_is_counted_as_that_and_not_as_a_broken_clone() {
+    let mut p = Process::new();
+    let app = clone(&p, "app", Some("a"));
+    start_in(&mut p, "s1", &app);
+    let ctx = crate::settings::tests::ctx_of(&p);
+    let home = ctx.home().unwrap();
+    home.create().unwrap();
+    let mut store = store::Store::open(&home.store()).unwrap();
+    let node =
+        administration::node::Node::open(&home, &mut store, &mut key::random::OsEntropy).unwrap();
+    let held = store.hook_observations().unwrap();
+
+    super::bind_held(&ctx, &mut store, &node, held, &|| true);
+
+    assert_eq!(counter(&p, "repository_read_timed_out"), 1);
+    assert_eq!(counter(&p, "repository_read_failed"), 0);
+    assert!(binds(&p).is_empty());
+}

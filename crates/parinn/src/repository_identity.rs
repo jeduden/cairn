@@ -90,12 +90,19 @@ fn deadline(within: Duration) -> impl Fn() -> bool {
 /// leaves the record as it was (I9).
 pub(crate) fn bind_observed(ctx: &Context, home: &Home, store: &mut Store) {
     if let (Ok(node), Ok(held)) = (Node::find(home, store), store.hook_observations()) {
-        bind_held(ctx, store, &node, held);
+        // One budget for every directory this call looks at (ENG-03, I9).
+        bind_held(ctx, store, &node, held, &deadline(START_WITHIN));
     }
 }
 
 /// [`bind_observed`]'s work over the observations `held`.
-fn bind_held(ctx: &Context, store: &mut Store, node: &Node, held: Vec<store::Held>) {
+fn bind_held(
+    ctx: &Context,
+    store: &mut Store,
+    node: &Node,
+    held: Vec<store::Held>,
+    deadline: &dyn ::repository::Deadline,
+) {
     let directories: BTreeSet<String> = held
         .into_iter()
         .filter(|h| !h.appended)
@@ -103,8 +110,6 @@ fn bind_held(ctx: &Context, store: &mut Store, node: &Node, held: Vec<store::Hel
         .filter(|o| o.hook == "SessionStart" && !o.cwd.is_empty())
         .map(|o| o.cwd)
         .collect();
-    // One budget for every directory this call looks at (ENG-03, I9).
-    let deadline = deadline(START_WITHIN);
     for directory in directories {
         let outcome = repository::bind(
             store,
@@ -112,7 +117,7 @@ fn bind_held(ctx: &Context, store: &mut Store, node: &Node, held: Vec<store::Hel
             &mut OsEntropy,
             Path::new(&directory),
             ctx.home.as_deref().map(Path::new),
-            &deadline,
+            deadline,
         );
         let occurrence = match outcome {
             Ok(Outcome::Changed) => Occurrence::Degraded {
@@ -127,12 +132,22 @@ fn bind_held(ctx: &Context, store: &mut Store, node: &Node, held: Vec<store::Hel
                 operation: "repository bind",
                 detail: "repository could not be read: its identity stays as it was",
             },
-            Err(_) => Occurrence::Degraded {
-                kind: Kind::Failed,
-                counter: Counter::RepositoryBindFailed,
+            Ok(Outcome::TimedOut) => Occurrence::Degraded {
+                kind: Kind::TimedOut,
+                counter: Counter::RepositoryReadTimedOut,
                 operation: "repository bind",
-                detail: "repository identity could not be bound: the record or the random source failed",
+                detail: "repository look ran out of time: its identity stays as it was and is looked at again",
             },
+            Err(e) => {
+                // The audit entry is fixed text; the cause goes to the log.
+                tracing::warn!(error = e.to_string().as_str(), "bind a repository identity");
+                Occurrence::Degraded {
+                    kind: Kind::Failed,
+                    counter: Counter::RepositoryBindFailed,
+                    operation: "repository bind",
+                    detail: "repository identity could not be bound: the record or the random source failed",
+                }
+            }
             Ok(_) => continue,
         };
         let _ = ctx.audit(&occurrence);

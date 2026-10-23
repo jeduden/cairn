@@ -184,8 +184,10 @@ pub fn bind(
         Err(_) => return unreadable(store, entropy, directory),
     };
     let bound = bound_commits(store, node)?;
-    let Ok(current) = resolve(&git_dir, &bound, deadline) else {
-        return unreadable(store, entropy, directory);
+    let current = match resolve(&git_dir, &bound, deadline) {
+        Ok(current) => current,
+        Err(repository::Error::Deadline) => return Ok(Outcome::TimedOut),
+        Err(_) => return unreadable(store, entropy, directory),
     };
     let secret = store.local_secret("repository", draw(entropy)?)?;
     let (directory, now) = (
