@@ -24,6 +24,7 @@
 use std::cell::Cell;
 use std::collections::BTreeMap;
 use std::fs::{self, File};
+use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{Duration, SystemTime};
@@ -592,6 +593,8 @@ fn corrupted_copies_of_a_repository_never_panic() {
                 1 => bytes[at] = next() as u8,
                 _ => bytes.truncate(at),
             }
+            // Git files its objects and packs read-only.
+            fs::set_permissions(&target, fs::Permissions::from_mode(0o600)).unwrap();
             fs::write(&target, bytes).unwrap();
         }
         let _ = root_commit(&copy, &|| false);
