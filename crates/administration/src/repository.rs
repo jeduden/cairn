@@ -77,16 +77,22 @@ const LABEL: &[u8] = b"parinn repository v1\0";
 
 /// The name this node keeps for `directory`: hashed under `secret`, so
 /// it reveals neither the path nor anything of the repository.
-fn directory_key(secret: &[u8; 32], directory: &Path) -> String {
-    let resolved = std::fs::canonicalize(directory).unwrap_or_else(|_| directory.to_path_buf());
+///
+/// # Errors
+///
+/// Fails when the directory cannot be resolved: a path as spelled would
+/// keep one directory under two names.
+fn directory_key(secret: &[u8; 32], directory: &Path) -> Result<String, AdminError> {
+    let resolved = std::fs::canonicalize(directory)
+        .map_err(|_| AdminError::Repository("the directory cannot be resolved"))?;
 
-    Digest::of(&[
+    Ok(Digest::of(&[
         LABEL,
         b"directory\0",
         secret,
         resolved.to_string_lossy().as_bytes(),
     ])
-    .to_hex()
+    .to_hex())
 }
 
 /// The name this node keeps for what a directory resolves to: a bound
@@ -122,25 +128,19 @@ fn bound_commits(store: &Store, node: &Node) -> Result<Vec<CommitId>, AdminError
 }
 
 /// What the clone at `git_dir` is now called: a commit this node bound
-/// that the clone holds, else its lowest root commit, else nothing yet.
+/// that the clone's default branch reaches as a root, else its lowest
+/// root, else nothing yet. A bound commit the branch does not reach, a
+/// dangling object or a side fetch leaves, names the clone no more than
+/// any other commit does.
 fn resolve(
     git_dir: &Path,
     bound: &[CommitId],
     deadline: &dyn Deadline,
 ) -> Result<Current, repository::Error> {
-    for id in bound {
-        if deadline.expired() {
-            return Err(repository::Error::Deadline);
-        }
-        if repository::has_commit(git_dir, id)? {
-            return Ok(Current::Bound(id.clone()));
-        }
-    }
+    let roots = repository::roots(git_dir, deadline)?;
+    let chosen = bound.iter().find(|id| roots.contains(id)).or(roots.first());
 
-    Ok(match repository::root_commit(git_dir, deadline)? {
-        Some(id) => Current::Bound(id),
-        None => Current::Provisional,
-    })
+    Ok(chosen.map_or(Current::Provisional, |id| Current::Bound(id.clone())))
 }
 
 /// Reports `directory`'s clone unreadable the first time it is, and
@@ -151,7 +151,7 @@ fn unreadable(
     directory: &Path,
 ) -> Result<Outcome, AdminError> {
     let secret = store.local_secret("repository", draw(entropy)?)?;
-    let marker = format!("reported:{}", directory_key(&secret, directory));
+    let marker = format!("reported:{}", directory_key(&secret, directory)?);
     if store.directory_identity(&marker)?.as_deref() == Some(UNREADABLE) {
         return Ok(Outcome::StillUnreadable);
     }
@@ -194,7 +194,7 @@ pub fn bind(
     };
     let secret = store.local_secret("repository", draw(entropy)?)?;
     let (directory, now) = (
-        directory_key(&secret, directory),
+        directory_key(&secret, directory)?,
         identity_key(&secret, &current),
     );
     let provisional_key = identity_key(&secret, &Current::Provisional);
@@ -273,7 +273,7 @@ pub fn show(
         return Ok(Shown::Unreadable);
     };
     let secret = store.local_secret("repository", draw(entropy)?)?;
-    let kept = store.directory_identity(&directory_key(&secret, directory))?;
+    let kept = store.directory_identity(&directory_key(&secret, directory)?)?;
     let commit = match &current {
         Current::Bound(id) => Some(id.clone()),
         Current::Provisional => None,
@@ -353,7 +353,7 @@ pub fn plan(
             Current::Provisional => None,
         },
         provisional,
-        directory: directory_key(&secret, directory),
+        directory: directory_key(&secret, directory)?,
         identity: identity_key(&secret, &current),
     })
 }

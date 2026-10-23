@@ -353,6 +353,16 @@ fn a_later_change(w: &mut World) -> Result<(), String> {
     if !last_run(w)?.status.success() || shown(w, &dir)?["status"] != "bound" {
         return Err("the widening bind did not rebind the directory".to_owned());
     }
+    // The same act binds by hand a directory no hook event has shown.
+    let by_hand = w.home.join("work").join("by-hand");
+    make(w, &by_hand, true)?;
+    if shown(w, &by_hand)?["status"] != "unbound" {
+        return Err("a directory no hook showed is bound".to_owned());
+    }
+    run_core_at_terminal(w, &["repository", "bind", &by_hand.display().to_string()])?;
+    if !last_run(w)?.status.success() || shown(w, &by_hand)?["status"] != "bound" {
+        return Err("the widening bind did not bind a directory by hand".to_owned());
+    }
     let acts = events(w, "principal_act")?;
     if !acts
         .iter()
