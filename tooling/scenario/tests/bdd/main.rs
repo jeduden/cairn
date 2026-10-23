@@ -30,6 +30,7 @@ mod engineering_protection;
 mod engineering_reach;
 mod engineering_release;
 mod engineering_review;
+mod lane;
 mod live;
 mod memory_boundary;
 mod non_functional;
