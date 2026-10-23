@@ -125,3 +125,37 @@ fn the_levels_names_are_fixed() {
     assert_eq!(TrustLevel::Trusted.as_str(), "trusted");
     assert_eq!(TrustLevel::Untrusted.as_str(), "untrusted");
 }
+
+fn address(n: u8) -> Address {
+    Address::new(
+        record::id::WriterId::derive(&[n; 32]),
+        record::id::Seq::new(1).unwrap(),
+    )
+}
+
+#[test]
+fn an_artifact_records_its_sources_and_is_untrusted_if_any_source_is() {
+    let both = [
+        (address(1), TrustLevel::Trusted),
+        (address(2), TrustLevel::Untrusted),
+    ];
+
+    let taint = Taint::of(&both, false);
+
+    assert_eq!(taint.derives_from, [address(1), address(2)]);
+    assert_eq!(taint.trust, TrustLevel::Untrusted);
+}
+
+#[test]
+fn an_artifact_of_trusted_sources_alone_is_trusted() {
+    let taint = Taint::of(&[(address(1), TrustLevel::Trusted)], false);
+
+    assert_eq!(taint.trust, TrustLevel::Trusted);
+}
+
+#[test]
+fn the_free_text_of_a_cut_or_neutral_act_taints_an_artifact_of_trusted_sources() {
+    let taint = Taint::of(&[(address(1), TrustLevel::Trusted)], true);
+
+    assert_eq!(taint.trust, TrustLevel::Untrusted);
+}

@@ -16,6 +16,7 @@
 //! clock or randomness.
 
 use record::event::{EventKind, Provenance};
+use record::id::Address;
 
 use crate::origin::Origin;
 
@@ -51,6 +52,36 @@ const STRUCTURAL: [EventKind; 4] = [
     EventKind::CertificateRecord,
     EventKind::NodeIdentityChange,
 ];
+
+/// What an artifact built from events inherits from them (PRV-06): the
+/// events it `derives_from`, and the trust level it takes from theirs.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Taint {
+    pub derives_from: Vec<Address>,
+    pub trust: TrustLevel,
+}
+
+impl Taint {
+    /// The taint of an artifact made from `sources`, each an event's
+    /// address and trust level. It is untrusted if any source is, or if
+    /// it holds the free text of a cut or neutral principal act
+    /// (OWN-11), whatever that act's event is trusted at. Its
+    /// sanitized structural fields stay usable and are not part of it.
+    #[must_use]
+    pub fn of(sources: &[(Address, TrustLevel)], holds_act_free_text: bool) -> Self {
+        let untrusted =
+            holds_act_free_text || sources.iter().any(|(_, t)| *t == TrustLevel::Untrusted);
+
+        Self {
+            derives_from: sources.iter().map(|(a, _)| *a).collect(),
+            trust: if untrusted {
+                TrustLevel::Untrusted
+            } else {
+                TrustLevel::Trusted
+            },
+        }
+    }
+}
 
 /// What the trust policy reads of an event.
 #[derive(Debug, Clone, Copy)]
