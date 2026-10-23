@@ -17,8 +17,12 @@ impl<F: Fn() -> bool> Deadline for F {
 }
 
 /// Fails with [`Error::Deadline`] once `deadline` has passed.
-pub(crate) fn check(_deadline: &dyn Deadline) -> Result<(), Error> {
-    Ok(())
+pub(crate) fn check(deadline: &dyn Deadline) -> Result<(), Error> {
+    if deadline.expired() {
+        Err(Error::Deadline)
+    } else {
+        Ok(())
+    }
 }
 
 #[cfg(test)]

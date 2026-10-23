@@ -28,7 +28,10 @@ fn every_message_is_lowercase_without_trailing_punctuation() {
         let text = e.to_string();
         assert!(!text.is_empty());
         assert_eq!(text, text.to_lowercase(), "{text}");
-        assert!(!text.ends_with(|c: char| c.is_ascii_punctuation()), "{text}");
+        assert!(
+            !text.ends_with(|c: char| c.is_ascii_punctuation()),
+            "{text}"
+        );
     }
 }
 

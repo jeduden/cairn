@@ -40,12 +40,27 @@ impl Error {
 }
 
 impl fmt::Display for Error {
-    fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        Ok(())
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Io { context, .. } => write!(f, "cannot read {context}"),
+            Self::Corrupt(what) => write!(f, "corrupt repository: {what}"),
+            Self::Missing(id) => write!(f, "object {} is not in the clone", id.as_str()),
+            Self::UnsupportedObjectFormat => f.write_str("unsupported object format"),
+            Self::Unsupported(what) => write!(f, "unsupported repository layout: {what}"),
+            Self::Deadline => f.write_str("deadline passed"),
+            Self::TooLarge(what) => write!(f, "too large: {what}"),
+        }
     }
 }
 
-impl std::error::Error for Error {}
+impl std::error::Error for Error {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Io { source, .. } => Some(source),
+            _ => None,
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests;
