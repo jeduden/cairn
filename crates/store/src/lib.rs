@@ -574,7 +574,21 @@ impl Store {
     /// Fails when SQLite does, when the store has no search index, or
     /// with [`StoreError::Cancelled`] when the deadline passes.
     pub fn search(&self, search: &Search<'_>) -> Result<Vec<Hit>, StoreError> {
-        search_index::run(&self.conn, search)
+        search_index::run(&self.conn, search, None)
+    }
+
+    /// [`search`](Self::search) over the matches `keep` keeps, chosen
+    /// before the ranking cuts them (RCL-02).
+    ///
+    /// # Errors
+    ///
+    /// As [`search`](Self::search).
+    pub fn search_where(
+        &self,
+        search: &Search<'_>,
+        keep: &dyn Fn(Address) -> bool,
+    ) -> Result<Vec<Hit>, StoreError> {
+        search_index::run(&self.conn, search, Some(keep))
     }
 
     /// The search index's canonical digest (§8.3): the same for any two
@@ -982,6 +996,18 @@ impl Store {
         identity: &str,
     ) -> Result<(), StoreError> {
         repository::set_identity(&self.conn, directory, identity)?;
+
+        Ok(())
+    }
+
+    /// Forgets what `directory` resolved to; nothing, when it never did
+    /// (LANE-02).
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does.
+    pub fn forget_directory_identity(&mut self, directory: &str) -> Result<(), StoreError> {
+        repository::forget_identity(&self.conn, directory)?;
 
         Ok(())
     }

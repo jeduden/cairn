@@ -90,13 +90,7 @@ impl Params {
             kinds: &self.kinds,
             since: self.since.as_deref(),
             until: self.until.as_deref(),
-            // A trust filter keeps hits of one level after the ranking,
-            // so the search ranks as many as it may return.
-            k: if self.trust.is_some() {
-                search::rank::MAX_HITS
-            } else {
-                self.k
-            },
+            k: self.k,
             deadline,
         }
     }

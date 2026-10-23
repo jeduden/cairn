@@ -312,10 +312,18 @@ impl Server {
         let params = event_search::parse(arguments).map_err(str::to_owned)?;
         let compiled = search::compile(&params.request()).map_err(|e| e.to_string())?;
         let room = params.room.unwrap_or(self.personal_room);
-        let found = match self
-            .store
-            .search(&params.search(&compiled, room, self.deadline))
-        {
+        let keys = KeySet::load(&self.store, &self.device_key).map_err(|_| NO_INDEX.to_owned())?;
+        let seats = RefCell::new(BTreeMap::new());
+        // The trust filter keeps matches before the ranking cuts them; an
+        // event whose trust cannot be derived stays, and fails its item.
+        let keep = |address: Address| {
+            params.trust.is_none_or(|wanted| {
+                self.trust_at(address, &keys, &mut seats.borrow_mut())
+                    .map_or(true, |level| wanted.as_str() == level.as_str())
+            })
+        };
+        let search = params.search(&compiled, room, self.deadline);
+        let found = match self.store.search_where(&search, &keep) {
             Ok(found) => found,
             Err(StoreError::Cancelled) => {
                 self.cancelled.set(self.cancelled.get() + 1);
@@ -323,17 +331,9 @@ impl Server {
             }
             Err(_) => return Err(NO_INDEX.to_owned()),
         };
-        let keys = KeySet::load(&self.store, &self.device_key).map_err(|_| NO_INDEX.to_owned())?;
-        let mut seats = BTreeMap::new();
         let mut items = Vec::new();
         for hit in &found {
-            let item = self.hit_item(hit, room, &keys, &mut seats)?;
-            if params
-                .trust
-                .is_none_or(|t| t.as_str() == item.trust.as_str())
-            {
-                items.push(item);
-            }
+            items.push(self.hit_item(hit, room, &keys, &mut seats.borrow_mut())?);
         }
         items.truncate(params.k);
 
@@ -342,6 +342,27 @@ impl Server {
             truncated: false,
             next_cursor: None,
         })
+    }
+
+    /// The trust level of the event at `address`.
+    fn trust_at(
+        &self,
+        address: Address,
+        keys: &KeySet,
+        seats: &mut BTreeMap<WriterId, (String, Origin, bool)>,
+    ) -> Result<TrustLevel, String> {
+        let unreadable = |_| NO_INDEX.to_owned();
+        let (kind, provenance) = self
+            .store
+            .kind_and_provenance(address)
+            .map_err(unreadable)?
+            .ok_or_else(|| format!("no event at {address}"))?;
+        let (_, origin, device) = match seats.entry(address.writer) {
+            Entry::Occupied(known) => known.into_mut(),
+            Entry::Vacant(new) => new.insert(self.author_and_origin(keys, address.writer)?),
+        };
+
+        Ok(trust_of(&provenance, kind, *origin, *device))
     }
 
     /// The item for one hit: the event's closed fields, its score and

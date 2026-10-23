@@ -75,6 +75,16 @@ pub(crate) fn set_identity(
     Ok(())
 }
 
+/// Forgets what `directory` resolved to.
+pub(crate) fn forget_identity(conn: &Connection, directory: &str) -> rusqlite::Result<()> {
+    conn.execute_batch(SCHEMA)?;
+    conn.execute(
+        "DELETE FROM repository_directories WHERE directory = ?1",
+        [directory],
+    )
+    .map(|_| ())
+}
+
 /// `bytes` as lowercase hex.
 fn hex(bytes: &[u8; 32]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()

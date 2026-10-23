@@ -275,3 +275,32 @@ fn the_trust_filter_keeps_the_events_of_that_level_and_each_hit_shows_its_level(
     assert_eq!(level(&untrusted), ["untrusted"]);
     assert_eq!(level(&any).len(), 2);
 }
+
+#[test]
+fn the_trust_filter_finds_a_trusted_event_ranked_below_fifty_untrusted_matches() {
+    let f = fixture();
+    let mut store = Store::open(&f.home.store()).unwrap();
+    let node = Node::find(&f.home, &store).unwrap();
+    let event = |provenance, text: &str| store::NewEvent {
+        kind: record::event::EventKind::PrincipalAct,
+        provenance,
+        content: json!({ "text": text }),
+        commitment_key: record::commitment::CommitmentKey::from_bytes([7; 32]),
+        transcript_timestamp: None,
+    };
+    let filler = "word ".repeat(60);
+    let mut events = vec![event(
+        record::event::Provenance::Operator,
+        &format!("{filler} instructions"),
+    )];
+    events.extend((0..60).map(|_| event(record::event::Provenance::Web, "instructions")));
+    store.append(node.device_writer(), &events).unwrap();
+    drop(store);
+    let mut server = f.server();
+
+    let trusted = ask(&mut server, "instructions", json!({"trust": "trusted"}));
+
+    let items = envelope_of(&trusted)["items"].as_array().unwrap().clone();
+    assert_eq!(items.len(), 1, "{items:?}");
+    assert_eq!(items[0]["trust"], "trusted");
+}

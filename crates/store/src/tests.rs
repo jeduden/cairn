@@ -1498,4 +1498,6 @@ fn a_store_keeps_a_local_secret_and_the_identity_a_directory_resolved_to() {
     assert_eq!(store.directory_identity("d").unwrap(), None);
     store.set_directory_identity("d", "h").unwrap();
     assert_eq!(store.directory_identity("d").unwrap().as_deref(), Some("h"));
+    store.forget_directory_identity("d").unwrap();
+    assert_eq!(store.directory_identity("d").unwrap(), None);
 }

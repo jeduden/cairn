@@ -627,3 +627,31 @@ fn an_unreadable_look_does_not_make_the_next_change_report_a_change_twice() {
 
     assert_eq!(f.bind(&app), Outcome::StillChanged);
 }
+
+#[test]
+fn an_unreadable_clone_and_a_change_report_again_after_the_directory_reads_or_returns() {
+    let mut f = fixture();
+    let app = f.path("app");
+    rooted(&app, "a");
+    f.bind(&app);
+    // Unreadable, readable, unreadable again: both are reported.
+    let broken = "[extensions]\n\tobjectformat = sha256\n";
+    std::fs::write(app.join(".git/config"), broken).unwrap();
+    assert_eq!(f.bind(&app), Outcome::Unreadable);
+    std::fs::write(app.join(".git/config"), "").unwrap();
+    assert_eq!(f.bind(&app), Outcome::Unchanged);
+    std::fs::write(app.join(".git/config"), broken).unwrap();
+    assert_eq!(f.bind(&app), Outcome::Unreadable);
+    std::fs::write(app.join(".git/config"), "").unwrap();
+    // Changed to b, back to a, changed to b again: reported each time.
+    reinit(&app);
+    rooted(&app, "b");
+    assert_eq!(f.bind(&app), Outcome::Changed);
+    reinit(&app);
+    rooted(&app, "a");
+    assert_eq!(f.bind(&app), Outcome::Unchanged);
+    reinit(&app);
+    rooted(&app, "b");
+
+    assert_eq!(f.bind(&app), Outcome::Changed);
+}

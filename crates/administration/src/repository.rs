@@ -201,8 +201,14 @@ pub fn bind(
         identity_key(&secret, &current),
     );
     let provisional_key = identity_key(&secret, &Current::Provisional);
+    // A clone that reads has no unreadable report to keep.
+    store.forget_directory_identity(&format!("unreadable:{directory}"))?;
     match store.directory_identity(&directory)? {
-        Some(kept) if kept == now => return Ok(Outcome::Unchanged),
+        Some(kept) if kept == now => {
+            // Back to the identity bound: the next change reports again.
+            store.forget_directory_identity(&format!("reported:{directory}"))?;
+            return Ok(Outcome::Unchanged);
+        }
         // A provisional identity binds later, on its own, once its clone
         // names a commit: no change, and the record is not rewritten.
         Some(kept) if kept == provisional_key => {}

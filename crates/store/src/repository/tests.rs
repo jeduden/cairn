@@ -47,6 +47,17 @@ fn a_directory_keeps_the_identity_it_last_resolved_to() {
 }
 
 #[test]
+fn a_directory_can_be_forgotten_and_forgetting_one_never_kept_is_nothing() {
+    let conn = conn();
+    set_identity(&conn, "d", "one").unwrap();
+
+    forget_identity(&conn, "d").unwrap();
+    forget_identity(&conn, "e").unwrap();
+
+    assert_eq!(identity(&conn, "d").unwrap(), None);
+}
+
+#[test]
 fn a_store_that_never_kept_a_directory_has_no_table_and_none_resolved() {
     let conn = Connection::open_in_memory().unwrap();
 
