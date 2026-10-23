@@ -3271,3 +3271,62 @@ fn identity_json() -> serde_json::Value {
 fn fork_detection_json() -> serde_json::Value {
     serde_json::json!({"local": "parinn verify", "peer": "with the peer network"})
 }
+
+/// How many events the store holds.
+fn event_count(p: &Process) -> i64 {
+    let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
+    conn.query_row("SELECT count(*) FROM events", [], |r| r.get(0))
+        .unwrap()
+}
+
+#[test]
+fn rebuild_derives_the_origins_again_and_appends_no_event() {
+    let p = Process::new();
+    transcript_in(&p, "-w-a", "s1.jsonl", CLEAN_LINE.as_bytes());
+    assert_eq!(p.invoke(&["ingest", "--all"], &DEV).0, EXIT_OK);
+    let before = event_count(&p);
+
+    let (code, out, err) = p.invoke(&["rebuild", "--json"], &DEV);
+
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(v["origins"], 2);
+    assert_eq!(v["indexed"], before);
+    assert_eq!(event_count(&p), before);
+    assert_eq!(p.invoke(&["verify"], &DEV).0, EXIT_OK);
+    let (_, text, _) = p.invoke(&["rebuild"], &DEV);
+    assert!(text.starts_with("rebuilt: 2 origins"), "{text}");
+}
+
+#[test]
+fn a_kept_origin_changed_in_place_fails_verify_until_rebuild_derives_it_again() {
+    let p = Process::new();
+    transcript_in(&p, "-w-a", "s1.jsonl", CLEAN_LINE.as_bytes());
+    assert_eq!(p.invoke(&["ingest", "--all"], &DEV).0, EXIT_OK);
+    assert_eq!(p.invoke(&["rebuild"], &DEV).0, EXIT_OK);
+    let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
+    conn.execute("UPDATE origins SET origin = 'peer'", []).unwrap();
+    drop(conn);
+
+    let (code, _, err) = p.invoke(&["verify"], &DEV);
+    assert_eq!(code, EXIT_INTEGRITY);
+    assert!(err.contains("derived artifact consistency"), "{err}");
+    let (code, out, _) = p.invoke(&["verify", "--json"], &DEV);
+    assert_eq!(code, EXIT_INTEGRITY);
+    assert!(out.contains("derived_artifact_consistency"), "{out}");
+
+    assert_eq!(p.invoke(&["rebuild"], &DEV).0, EXIT_OK);
+    assert_eq!(p.invoke(&["verify"], &DEV).0, EXIT_OK);
+}
+
+#[test]
+fn rebuild_without_a_store_fails_and_an_unknown_flag_is_usage() {
+    let p = Process::new();
+
+    let (code, _, err) = p.invoke(&["rebuild"], &DEV);
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.contains("no store at "), "{err}");
+    let (code, _, err) = p.invoke(&["rebuild", "--now"], &DEV);
+    assert_eq!(code, EXIT_USAGE);
+    assert!(err.contains("unknown flag"), "{err}");
+}
