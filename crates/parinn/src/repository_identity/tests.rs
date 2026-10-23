@@ -202,3 +202,111 @@ fn the_repository_verbs_refuse_what_they_do_not_know() {
         assert_eq!(run(&p, args).0, EXIT_USAGE, "{args:?}");
     }
 }
+
+/// Runs the `SessionStart` hook in `cwd`.
+fn start_in(p: &mut Process, session: &str, cwd: &Path) {
+    let path = p.dir.path().join(format!("{session}.jsonl"));
+    p.lines = vec![
+        serde_json::json!({
+            "session_id": session,
+            "transcript_path": path,
+            "cwd": cwd,
+            "hook_event_name": "SessionStart",
+            "source": "startup",
+        })
+        .to_string(),
+    ];
+    assert_eq!(p.invoke(&["hook", "SessionStart"], &DEV).0, EXIT_OK);
+    p.lines = Vec::new();
+}
+
+/// The repository bind events the record holds.
+fn binds(p: &Process) -> Vec<serde_json::Value> {
+    let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
+    let mut statement = conn
+        .prepare("SELECT content FROM events WHERE kind = 'repository_bind' ORDER BY seq")
+        .unwrap();
+    statement
+        .query_map([], |r| r.get::<_, String>(0))
+        .unwrap()
+        .map(|c| serde_json::from_str(&c.unwrap()).unwrap())
+        .collect()
+}
+
+fn counter(p: &Process, name: &str) -> u64 {
+    let (_, out, _) = run(p, &["status", "--json"]);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    v["counters"][name]["total"].as_u64().unwrap_or(0)
+}
+
+#[test]
+fn the_first_hook_event_in_a_clone_binds_its_identity_when_ingest_next_runs_once() {
+    let mut p = Process::new();
+    let app = clone(&p, "app", Some(A));
+    start_in(&mut p, "s1", &app);
+
+    assert_eq!(run(&p, &["ingest", "--all"]).0, EXIT_OK);
+    start_in(&mut p, "s2", &app);
+    assert_eq!(run(&p, &["ingest", "--all"]).0, EXIT_OK);
+
+    assert_eq!(binds(&p), [serde_json::json!({"repository": A})]);
+    assert_eq!(shown(&p, &app)["status"], "bound");
+}
+
+#[test]
+fn an_mcp_server_binds_the_identity_of_the_clones_its_hooks_showed_too() {
+    let mut p = Process::new();
+    let app = clone(&p, "app", Some(A));
+    start_in(&mut p, "s1", &app);
+
+    assert_eq!(run(&p, &["mcp"]).0, EXIT_OK);
+
+    assert_eq!(binds(&p).len(), 1);
+}
+
+#[test]
+fn a_change_of_identity_is_audited_and_counted_once_and_relinks_nothing() {
+    let mut p = Process::new();
+    let app = clone(&p, "app", Some(A));
+    start_in(&mut p, "s1", &app);
+    run(&p, &["ingest", "--all"]);
+    fs::remove_dir_all(app.join(".git")).unwrap();
+    repository(&app, Some(B));
+    start_in(&mut p, "s2", &app);
+
+    run(&p, &["ingest", "--all"]);
+    run(&p, &["ingest", "--all"]);
+
+    assert_eq!(counter(&p, "repository_identity_changed"), 1);
+    assert_eq!(binds(&p).len(), 1);
+    let audit = crate::tests::audited(&p);
+    assert!(
+        audit
+            .iter()
+            .any(|e| e.detail.contains("repository identity changed")),
+        "{audit:?}"
+    );
+    assert!(
+        audit
+            .iter()
+            .all(|e| !e.detail.contains(A) && !e.detail.contains(B))
+    );
+}
+
+#[test]
+fn a_clone_that_cannot_be_read_is_counted_once() {
+    let mut p = Process::new();
+    let bad = clone(&p, "bad", Some(A));
+    fs::write(
+        bad.join(".git/config"),
+        "[extensions]\n\tobjectformat = sha256\n",
+    )
+    .unwrap();
+    start_in(&mut p, "s1", &bad);
+
+    run(&p, &["ingest", "--all"]);
+    run(&p, &["ingest", "--all"]);
+
+    assert_eq!(counter(&p, "repository_read_failed"), 1);
+    assert!(binds(&p).is_empty());
+}
