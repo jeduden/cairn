@@ -5,11 +5,15 @@ summary: >-
 ---
 # Tooling
 
-The repository is one Cargo workspace. Install mise at the version and
-checksum its pin file names,
-[mise.sha256](../.github/actions/setup-mise/mise.sha256). Then run
+The repository is one Cargo workspace. Set up its tools with
+`MISE_ENV=dev scripts/setup-tools.sh`. The script installs mise, checked
+against [scripts/mise.sha256](../scripts/mise.sha256). Then it runs
 `mise install --locked`. [mise.lock](../mise.lock) records the resolved
 releases and available checksums for the supported platforms.
+`MISE_ENV=dev` adds the developer tools of
+[mise.dev.toml](../mise.dev.toml), locked in
+[mise.dev.lock](../mise.dev.lock). CI leaves it unset and never installs
+them.
 
 The tool pins and check commands below are imported from
 [mise.toml](../mise.toml). List tasks with `mise tasks`, run one with
@@ -33,7 +37,6 @@ idiomatic_version_file_enable_tools = ["rust"]
 cargo.binstall = false
 
 [tools]
-"github:jeduden/frit" = { version = "0.17.0", bin = "frit" }
 "github:jeduden/mdsmith" = { version = "0.55.1", bin = "mdsmith" }
 "github:rustsec/rustsec" = { version = "0.22.2", version_prefix = "cargo-audit/v", bin = "cargo-audit" }
 "github:taiki-e/cargo-llvm-cov" = "0.9.1"
@@ -96,6 +99,20 @@ components = ["clippy", "rustfmt", "llvm-tools-preview"]
 
 <?/include?>
 
+<?include
+file: ../mise.dev.toml
+wrap: toml
+?>
+
+```toml
+# Developer tools: loaded on top of mise.toml when MISE_ENV=dev, so CI
+# never installs them. Locked in mise.dev.lock.
+[tools]
+"github:jeduden/frit" = { version = "0.17.0", bin = "frit" }
+```
+
+<?/include?>
+
 Edit these source files, then run `mdsmith fix docs/tooling.md`
 to refresh the imports. CI's `mdsmith check .` rejects stale copies.
 After changing pins, run `mise lock` to refresh the platforms already
@@ -103,18 +120,27 @@ recorded in the lockfile. Taplo and cargo-audit publish no checksums, so
 verify and record their asset SHA-256 values in the lockfile when bumping
 them.
 
-A Claude Code web environment runs
-[scripts/setup-web.sh](../scripts/setup-web.sh) as its setup script. The
-script downloads and verifies tools. It never builds them. It refuses a tool
-whose backend is not `github:` or `aqua:`. It checks the mise binary against
-the SHA-256 pinned in `mise.sha256`. Then it runs `mise install --locked`.
-mise checks each download against the lockfile. It also verifies each
-attestation the lockfile records. That needs GitHub API access to the
-release's repository. Without it, the install stops rather than skip the
-check.
+The script is the one install path. CI's setup action, a Claude Code web
+environment and a developer machine all run it. It downloads and verifies
+tools. It never builds them. It refuses a tool whose backend is not
+`github:` or `aqua:`. mise checks each download against the lockfile. It
+also verifies each attestation the lockfile records. That needs GitHub API
+access to the release's repository. Without it, the install stops rather
+than skip the check.
 
-The shared setup action installs each job's selected tools and caches
-mise's installs and the exact Rustup toolchain. Release jobs disable
+A Claude Code web environment uses this setup script:
+
+```sh
+# pins: mise 2026.9.1 (bump with scripts/mise.sha256)
+cd parleyinn && MISE_ENV=dev scripts/setup-tools.sh
+```
+
+The environment caches what setup installs. The cache rebuilds only when
+the setup script's text changes, or after about seven days. Bump the
+comment with each mise pin so new sessions pick it up.
+
+The shared setup action runs the script with each job's selected tools
+and caches mise's installs and the exact Rustup toolchain. Release jobs disable
 both caches, as do the review jobs that handle credentials. Linux
 end-to-end tests need the host's `unshare`, `script`,
 and `strace`; release builds use the toolchain and system dependency
