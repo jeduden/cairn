@@ -16,13 +16,25 @@ pub(crate) enum Kind {
 
 impl Kind {
     /// The kind a pack entry's type number (1 to 4) names.
-    pub(crate) fn from_pack(_code: u8) -> Option<Self> {
-        None
+    pub(crate) fn from_pack(code: u8) -> Option<Self> {
+        match code {
+            1 => Some(Self::Commit),
+            2 => Some(Self::Tree),
+            3 => Some(Self::Blob),
+            4 => Some(Self::Tag),
+            _ => None,
+        }
     }
 
     /// The kind a loose object's header names.
-    pub(crate) fn from_name(_name: &[u8]) -> Option<Self> {
-        None
+    pub(crate) fn from_name(name: &[u8]) -> Option<Self> {
+        match name {
+            b"commit" => Some(Self::Commit),
+            b"tree" => Some(Self::Tree),
+            b"blob" => Some(Self::Blob),
+            b"tag" => Some(Self::Tag),
+            _ => None,
+        }
     }
 }
 

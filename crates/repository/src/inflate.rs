@@ -42,6 +42,14 @@ const CODE_LENGTH_ORDER: [usize; 19] = [
 const TRUNCATED: Error = Error::Corrupt("zlib stream is cut short");
 const INVALID: Error = Error::Corrupt("zlib stream is invalid");
 
+/// The next byte of `reader`; it fails when the data is cut short.
+pub(crate) fn read_byte<R: BufRead>(reader: &mut R) -> Result<u8, Error> {
+    let chunk = reader.fill_buf().map_err(Error::io("a zlib stream"))?;
+    let byte = *chunk.first().ok_or(TRUNCATED)?;
+    reader.consume(1);
+    Ok(byte)
+}
+
 /// A canonical Huffman code, built from the lengths of its symbols.
 pub(crate) struct Huffman {
     /// How many symbols have each length.
@@ -99,10 +107,7 @@ impl<R: BufRead> Bits<R> {
 
     /// The next whole byte of the stream.
     fn byte(&mut self) -> Result<u8, Error> {
-        let chunk = self.reader.fill_buf().map_err(Error::io("a zlib stream"))?;
-        let byte = *chunk.first().ok_or(TRUNCATED)?;
-        self.reader.consume(1);
-        Ok(byte)
+        read_byte(&mut self.reader)
     }
 
     /// The next `count` bits (at most 16) as a number.

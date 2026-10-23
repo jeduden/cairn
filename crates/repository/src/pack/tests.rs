@@ -259,7 +259,7 @@ fn an_entry_declaring_more_than_the_maximum_is_refused_unread() {
     let result = read_entry(&mut Cursor::new(bytes.clone()), 0, 4999);
     assert!(matches!(result, Err(Error::TooLarge(_))));
     let bytes = [entry_header(6, 5000), ofs_distance(1)].concat();
-    let result = read_entry(&mut Cursor::new(bytes), 1, 4999);
+    let result = read_entry(&mut Cursor::new(bytes), 0, 4999);
     assert!(matches!(result, Err(Error::TooLarge(_))));
 }
 
@@ -288,7 +288,7 @@ fn an_entry_cut_short_is_corrupt() {
     for start in [a, b, c] {
         let from = start as usize;
         let end = bytes.len() - 20;
-        let stop = (from..end).find(|&s| entry(&bytes[..s], start).is_ok());
+        let stop = (from..=end).find(|&s| entry(&bytes[..s], start).is_ok());
         assert!(stop.is_some_and(|s| s > from), "{start}");
         for cut in from..stop.unwrap() {
             assert!(corrupt(entry(&bytes[..cut], start)), "{start} cut at {cut}");

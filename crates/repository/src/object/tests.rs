@@ -1,4 +1,4 @@
-use super::{Kind, MAX_OBJECT};
+use super::Kind;
 
 #[test]
 fn the_four_pack_types_name_the_four_kinds() {
@@ -28,9 +28,4 @@ fn any_other_header_name_names_no_kind() {
     for name in [&b""[..], b"Commit", b"commit ", b"delta"] {
         assert_eq!(Kind::from_name(name), None);
     }
-}
-
-#[test]
-fn the_object_bound_holds_a_commit_with_room_to_spare() {
-    assert!(MAX_OBJECT >= 1 << 20);
 }

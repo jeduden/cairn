@@ -43,7 +43,7 @@ pub(crate) struct Prng(u64);
 
 impl Prng {
     pub(crate) fn new(seed: u64) -> Self {
-        Self(seed | 1)
+        Self(seed.wrapping_mul(0x9e37_79b9_7f4a_7c15) | 1)
     }
 
     pub(crate) fn next_u64(&mut self) -> u64 {
