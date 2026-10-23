@@ -5,10 +5,11 @@ summary: >-
 ---
 # Tooling
 
-The repository is one Cargo workspace. Install mise, using the version
-pinned in [CI's setup action](../.github/actions/setup-mise/action.yml),
-then run `mise install --locked`. [mise.lock](../mise.lock) records the
-resolved releases and available checksums for the supported platforms.
+The repository is one Cargo workspace. Install mise at the version and
+checksum its pin file names,
+[mise.sha256](../.github/actions/setup-mise/mise.sha256). Then run
+`mise install --locked`. [mise.lock](../mise.lock) records the resolved
+releases and available checksums for the supported platforms.
 
 The tool pins and check commands below are imported from
 [mise.toml](../mise.toml). List tasks with `mise tasks`, run one with
@@ -106,7 +107,7 @@ A Claude Code web environment runs
 [scripts/setup-web.sh](../scripts/setup-web.sh) as its setup script. The
 script downloads and verifies tools. It never builds them. It refuses a tool
 whose backend is not `github:` or `aqua:`. It checks the mise binary against
-the SHA-256 pinned in the setup action. Then it runs `mise install --locked`.
+the SHA-256 pinned in `mise.sha256`. Then it runs `mise install --locked`.
 mise checks each download against the lockfile. It also verifies each
 attestation the lockfile records. That needs GitHub API access to the
 release's repository. Without it, the install stops rather than skip the

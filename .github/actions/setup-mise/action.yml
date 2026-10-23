@@ -11,20 +11,26 @@ inputs:
 runs:
   using: composite
   steps:
-    # SHA-256 values for the uncompressed binaries in mise's release.
-    # Bump the version and every platform checksum together.
+    # mise.sha256 beside this file is the single mise pin: one
+    # sha256sum line per platform's uncompressed release binary, named
+    # mise-vVERSION-PLATFORM. scripts/setup-web.sh reads it too. Bump the
+    # version and every platform checksum together.
     - name: Select the pinned mise binary
       id: mise
       shell: bash
       run: |
-        echo "version=2026.9.1" >> "$GITHUB_OUTPUT"
         case "$RUNNER_OS/$RUNNER_ARCH" in
-          Linux/X64) sha256=c98423c8470d6dc416d9f7036d0646d8ef5ae92ad9186907f8fcc84cbe7db4ea ;;
-          Linux/ARM64) sha256=0ef0a778eaa8599f3e90a8a0979c9fc3f79922cafb5fa6d39f366d974da33bba ;;
-          macOS/X64) sha256=0718a2aa14a96545a287f77a172d700247bb2d33016e5cf29fce1a05e45ac47a ;;
-          macOS/ARM64) sha256=3cfbe3295dba1a7e43bd02653517a8cc21135ba91f0635b45c98f1ebecc5513f ;;
+          Linux/X64) platform=linux-x64 ;;
+          Linux/ARM64) platform=linux-arm64 ;;
+          macOS/X64) platform=macos-x64 ;;
+          macOS/ARM64) platform=macos-arm64 ;;
           *) echo "::error::Unsupported mise platform: $RUNNER_OS/$RUNNER_ARCH"; exit 1 ;;
         esac
+        read -r sha256 file < <(grep -E "  mise-v[0-9.]+-$platform\$" "$GITHUB_ACTION_PATH/mise.sha256")
+        version=${file#mise-v}
+        version=${version%-"$platform"}
+        test -n "$sha256" && test -n "$version"
+        echo "version=$version" >> "$GITHUB_OUTPUT"
         echo "sha256=$sha256" >> "$GITHUB_OUTPUT"
     # mise stores Rustup's proxy in its data directory, but Rustup's
     # actual toolchain lives elsewhere. Cache only this project's exact
