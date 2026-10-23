@@ -21,6 +21,22 @@ const BAD_PARENT: Error = Error::Corrupt("commit has a parent that is not a comm
 const BAD_SHALLOW: Error = Error::Corrupt("shallow file lists something that is not a commit id");
 const NOT_A_COMMIT: Error = Error::Corrupt("object is not a commit");
 
+/// Confirms that `commit` parses as a commit: it opens with a `tree`
+/// header that names an id, as git writes it.
+///
+/// # Errors
+///
+/// [`Error::Corrupt`] for bytes that do not.
+pub(crate) fn check_commit(commit: &[u8]) -> Result<(), Error> {
+    let first = commit.split(|&b| b == b'\n').next().unwrap_or_default();
+    first
+        .strip_prefix(b"tree ")
+        .and_then(|text| std::str::from_utf8(text).ok())
+        .and_then(CommitId::parse)
+        .map(|_| ())
+        .ok_or(NOT_A_COMMIT)
+}
+
 /// The commits `parent` headers name in a commit object's bytes.
 ///
 /// # Errors
@@ -45,7 +61,7 @@ pub(crate) fn parents(commit: &[u8]) -> Result<Vec<CommitId>, Error> {
 /// [`Error::Corrupt`] for a line that is not a commit id;
 /// [`Error::TooLarge`] for a file past `limit` bytes.
 pub(crate) fn read_shallow(repo: &Repo, limit: u64) -> Result<BTreeSet<CommitId>, Error> {
-    let bytes = read_limited(&repo.common_dir.join("shallow"), limit)?.unwrap_or_default();
+    let bytes = read_limited(&repo.common_dir, "shallow", limit)?.unwrap_or_default();
     String::from_utf8_lossy(&bytes)
         .lines()
         .map(str::trim)
@@ -91,6 +107,7 @@ pub(crate) fn lowest_root(
         if shallow.contains(&id) {
             continue;
         }
+        check_commit(&object.data)?;
         let behind = parents(&object.data)?;
         if behind.is_empty() && lowest.as_ref().is_none_or(|low| id < *low) {
             lowest = Some(id);

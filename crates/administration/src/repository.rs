@@ -159,7 +159,10 @@ fn unreadable(
 const UNREADABLE: &str = "unreadable";
 
 /// Looks at `directory` as a hook event shows it: binds its repository's
-/// identity if this node never has.
+/// identity if this node never has. The search for the repository stops
+/// before `ceiling`, the OS user's home directory, so a dotfiles
+/// repository there is never bound for the directories below it
+/// (`None` only in tests).
 ///
 /// # Errors
 ///
@@ -169,9 +172,10 @@ pub fn bind(
     node: &Node,
     entropy: &mut dyn Entropy,
     directory: &Path,
+    ceiling: Option<&Path>,
     deadline: &dyn Deadline,
 ) -> Result<Outcome, AdminError> {
-    let git_dir = match repository::git_dir(directory) {
+    let git_dir = match repository::git_dir(directory, ceiling) {
         Ok(Some(git_dir)) => git_dir,
         Ok(None) => return Ok(Outcome::NoRepository),
         Err(_) => return unreadable(store, entropy, directory),
@@ -244,9 +248,10 @@ pub fn show(
     node: &Node,
     entropy: &mut dyn Entropy,
     directory: &Path,
+    ceiling: Option<&Path>,
     deadline: &dyn Deadline,
 ) -> Result<Shown, AdminError> {
-    let git_dir = match repository::git_dir(directory) {
+    let git_dir = match repository::git_dir(directory, ceiling) {
         Ok(Some(git_dir)) => git_dir,
         Ok(None) => return Ok(Shown::NoRepository),
         Err(_) => return Ok(Shown::Unreadable),
@@ -305,10 +310,11 @@ pub fn plan(
     node: &Node,
     entropy: &mut dyn Entropy,
     directory: &Path,
+    ceiling: Option<&Path>,
     commit: Option<CommitId>,
     deadline: &dyn Deadline,
 ) -> Result<Rebind, AdminError> {
-    let git_dir = repository::git_dir(directory)
+    let git_dir = repository::git_dir(directory, ceiling)
         .map_err(|_| AdminError::Repository("the repository's git data cannot be read"))?
         .ok_or(AdminError::Repository(
             "the directory lies in no repository",

@@ -1,9 +1,9 @@
 //! Loose objects: one zlib file each under `objects/xx/`.
 
-use std::fs::{self, File};
-use std::io::{BufReader, ErrorKind};
-use std::path::{Path, PathBuf};
+use std::io::BufReader;
+use std::path::Path;
 
+use crate::fsio::open_below;
 use crate::inflate::zlib_inflate;
 use crate::object::{Kind, Object};
 use crate::{CommitId, Error};
@@ -13,23 +13,11 @@ const HEADER: usize = 32;
 
 const BAD_HEADER: Error = Error::Corrupt("loose object header is invalid");
 
-/// Where the loose file of `id` is, whether or not there is one.
-pub(crate) fn path_of(objects: &Path, id: &CommitId) -> PathBuf {
+/// Where the loose file of `id` is below the object directory, whether
+/// or not there is one.
+pub(crate) fn rel_of(id: &CommitId) -> String {
     let (fan, rest) = id.as_str().split_at(2);
-    objects.join(fan).join(rest)
-}
-
-/// Whether `id` is stored loose.
-///
-/// # Errors
-///
-/// [`Error::Io`] when the file system cannot say.
-pub(crate) fn exists(objects: &Path, id: &CommitId) -> Result<bool, Error> {
-    match fs::metadata(path_of(objects, id)) {
-        Ok(metadata) => Ok(metadata.is_file()),
-        Err(e) if e.kind() == ErrorKind::NotFound => Ok(false),
-        Err(e) => Err(Error::io("a loose object")(e)),
-    }
+    format!("{fan}/{rest}")
 }
 
 /// The kind and body of an object's inflated bytes: `kind size NUL body`.
@@ -65,10 +53,8 @@ pub(crate) fn read_up_to(
     id: &CommitId,
     max_size: usize,
 ) -> Result<Option<Object>, Error> {
-    let file = match File::open(path_of(objects, id)) {
-        Ok(file) => file,
-        Err(e) if e.kind() == ErrorKind::NotFound => return Ok(None),
-        Err(e) => return Err(Error::io("a loose object")(e)),
+    let Some(file) = open_below(objects, &rel_of(id))? else {
+        return Ok(None);
     };
     let data = zlib_inflate(BufReader::new(file), max_size.saturating_add(HEADER))?;
     let object = split_header(data)?;

@@ -24,6 +24,13 @@ fn the_four_header_names_name_the_four_kinds() {
 }
 
 #[test]
+fn each_kind_names_itself_as_its_header_does() {
+    for kind in [Kind::Commit, Kind::Tree, Kind::Blob, Kind::Tag] {
+        assert_eq!(Kind::from_name(kind.name().as_bytes()), Some(kind));
+    }
+}
+
+#[test]
 fn any_other_header_name_names_no_kind() {
     for name in [&b""[..], b"Commit", b"commit ", b"delta"] {
         assert_eq!(Kind::from_name(name), None);

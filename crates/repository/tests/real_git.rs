@@ -438,7 +438,7 @@ fn a_linked_worktree_names_the_repository_it_belongs_to() {
     assert!(linked.join(".git").is_file());
     let sub = linked.join("deeper");
     fs::create_dir_all(&sub).unwrap();
-    let found_dir = git_dir(&sub).unwrap().unwrap();
+    let found_dir = git_dir(&sub, None).unwrap().unwrap();
     assert!(
         found_dir.ends_with("worktrees/linked-tree"),
         "{}",
@@ -468,7 +468,7 @@ fn a_separate_git_directory_is_found_through_the_dot_git_file() {
         ],
     );
     world.history(&work, 3);
-    let found = git_dir(&work).unwrap().unwrap();
+    let found = git_dir(&work, None).unwrap().unwrap();
     assert_eq!(
         fs::canonicalize(&found).unwrap(),
         fs::canonicalize(&store).unwrap()
@@ -543,7 +543,7 @@ fn reading_a_repository_changes_nothing_in_it() {
     world.git(&packed, &["pack-refs", "--all", "--prune"]);
     for repo in [&loose, &packed] {
         let before = snapshot(repo);
-        let git = git_dir(&repo.join("anywhere")).unwrap().unwrap();
+        let git = git_dir(&repo.join("anywhere"), None).unwrap().unwrap();
         root_commit(&git, &|| false).unwrap();
         identity(&git, &|| false).unwrap();
         for id in world.all_commits(repo) {

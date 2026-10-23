@@ -120,17 +120,66 @@ fn a_linked_worktree_shares_the_repositorys_objects_and_configuration() {
     fs::write(common.join("config"), "").unwrap();
     let repo = Repo::open(&linked).unwrap();
     assert_eq!(repo.head_dir, linked);
-    assert_eq!(repo.common_dir, linked.join("../.."));
-    assert_eq!(repo.objects_dir(), linked.join("../..").join("objects"));
+    let common = fs::canonicalize(&common).unwrap();
+    assert_eq!(repo.common_dir, common);
+    assert_eq!(repo.objects_dir(), common.join("objects"));
+}
+
+fn unsupported<T>(result: Result<T, Error>) -> bool {
+    matches!(result, Err(Error::Unsupported(_)))
 }
 
 #[test]
-fn an_absolute_common_directory_is_taken_as_it_is() {
+fn a_common_directory_that_is_not_above_the_git_directory_is_refused() {
     let dir = TempDir::new().unwrap();
-    let common = dir.path().join("common");
+    let other = dir.path().join("other");
     let linked = dir.path().join("linked");
-    fs::create_dir_all(&common).unwrap();
+    fs::create_dir_all(&other).unwrap();
+    fs::create_dir_all(linked.join("below")).unwrap();
+    for target in [
+        format!("{}\n", other.display()),
+        "../other\n".to_owned(),
+        "below\n".to_owned(),
+        "/etc\n".to_owned(),
+    ] {
+        fs::write(linked.join("commondir"), &target).unwrap();
+        assert!(unsupported(Repo::open(&linked)), "{target:?}");
+    }
+}
+
+#[test]
+fn a_common_directory_that_is_the_git_directory_or_above_it_is_read() {
+    let dir = TempDir::new().unwrap();
+    let real = fs::canonicalize(dir.path()).unwrap();
+    let linked = real.join("main/worktrees/w");
     fs::create_dir_all(&linked).unwrap();
-    fs::write(linked.join("commondir"), format!("{}\n", common.display())).unwrap();
-    assert_eq!(Repo::open(&linked).unwrap().common_dir, common);
+    for (target, expected) in [
+        (".", linked.clone()),
+        ("", linked.clone()),
+        ("..", real.join("main/worktrees")),
+        ("../..", real.join("main")),
+        ("../../..", real.clone()),
+    ] {
+        fs::write(linked.join("commondir"), format!("{target}\n")).unwrap();
+        assert_eq!(
+            Repo::open(&linked).unwrap().common_dir,
+            expected,
+            "{target}"
+        );
+    }
+}
+
+#[test]
+fn a_common_directory_that_is_not_there_is_an_io_error() {
+    let dir = TempDir::new().unwrap();
+    fs::write(dir.path().join("commondir"), "../gone\n").unwrap();
+    assert!(matches!(Repo::open(dir.path()), Err(Error::Io { .. })));
+}
+
+#[test]
+fn a_common_directory_that_is_a_file_is_refused() {
+    let dir = TempDir::new().unwrap();
+    fs::write(dir.path().join("commondir"), "file\n").unwrap();
+    fs::write(dir.path().join("file"), "x").unwrap();
+    assert!(unsupported(Repo::open(dir.path())));
 }

@@ -98,6 +98,7 @@ pub(crate) fn bind_observed(ctx: &Context, home: &Home, store: &mut Store) {
             &node,
             &mut OsEntropy,
             Path::new(&directory),
+            ctx.home.as_deref().map(Path::new),
             &deadline(),
         );
         let occurrence = match outcome {
@@ -166,6 +167,7 @@ fn showing(ctx: &Context, asked: &Asked, stdout: &mut dyn Write, stderr: &mut dy
         &taking.node,
         &mut OsEntropy,
         &asked.directory,
+        ctx.home.as_deref().map(Path::new),
         &deadline(),
     ) {
         Ok(shown) => shown,
@@ -204,6 +206,7 @@ fn binding(ctx: &Context, asked: &Asked, stdout: &mut dyn Write, stderr: &mut dy
         &taking.node,
         &mut OsEntropy,
         &asked.directory,
+        ctx.home.as_deref().map(Path::new),
         asked.commit.clone(),
         &deadline(),
     ) {

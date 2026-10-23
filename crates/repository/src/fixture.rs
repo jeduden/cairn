@@ -2,7 +2,13 @@
 //! with no `git` binary, and a seeded generator for the corruption
 //! loops.
 
+use std::fs;
+use std::path::Path;
+
+use crate::CommitId;
 use crate::inflate::adler32;
+use crate::loose;
+use crate::sha1::object_id;
 
 pub(crate) mod pack;
 
@@ -35,6 +41,34 @@ pub(crate) fn zlib_stored(data: &[u8]) -> Vec<u8> {
     }
     out.extend(adler32(data).to_be_bytes());
     out
+}
+
+/// Stores the object of `kind` with `body` as a loose object of the
+/// object directory `objects`, under the id its hash gives, and returns
+/// that id.
+pub(crate) fn put_object(objects: &Path, kind: &str, body: &[u8]) -> CommitId {
+    let id = object_id(kind, body);
+    let path = objects.join(loose::rel_of(&id));
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    let header = format!("{kind} {}\0", body.len());
+    fs::write(path, zlib_stored(&[header.as_bytes(), body].concat())).unwrap();
+    id
+}
+
+/// The body of a commit of the empty tree with `parents` and `message`.
+pub(crate) fn commit_body(parents: &[&CommitId], message: &str) -> String {
+    let mut body = format!("tree {}\n", "0".repeat(40));
+    for parent in parents {
+        body.push_str(&format!("parent {}\n", parent.as_str()));
+    }
+    body.push_str(&format!("\n{message}\n"));
+    body
+}
+
+/// Stores a commit with `parents` and `message` in `objects` under its
+/// real id, and returns the id.
+pub(crate) fn put_commit(objects: &Path, parents: &[&CommitId], message: &str) -> CommitId {
+    put_object(objects, "commit", commit_body(parents, message).as_bytes())
 }
 
 /// A small deterministic generator (xorshift64*), so a corruption loop

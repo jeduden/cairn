@@ -13,8 +13,8 @@ const MAX_GITDIR_FILE: u64 = 4096;
 const BAD_GITDIR: Error = Error::Corrupt("gitdir file names no directory");
 
 /// The directory a `.git` file in `dir` names with `gitdir: <path>`.
-fn gitdir_file(dir: &Path, dot_git: &Path) -> Result<PathBuf, Error> {
-    let bytes = read_limited(dot_git, MAX_GITDIR_FILE)?.unwrap_or_default();
+fn gitdir_file(dir: &Path) -> Result<PathBuf, Error> {
+    let bytes = read_limited(dir, ".git", MAX_GITDIR_FILE)?.unwrap_or_default();
     let text = String::from_utf8_lossy(&bytes);
     let target = text
         .lines()
@@ -42,7 +42,7 @@ fn from_dot_git(dir: &Path, dot_git: &Path, meta: &Metadata) -> Result<Option<Pa
     } else if meta.is_dir() {
         Ok(Some(dot_git.to_path_buf()))
     } else if meta.is_file() {
-        gitdir_file(dir, dot_git).map(Some)
+        gitdir_file(dir).map(Some)
     } else {
         Ok(None)
     }
@@ -61,14 +61,31 @@ fn from_dot_git(dir: &Path, dot_git: &Path, meta: &Metadata) -> Result<Option<Pa
 /// directories above `directory` are walked as the path spells them,
 /// without resolving links.
 ///
+/// The walk stops before `ceiling`, which callers set to the OS user's
+/// home directory: the directory `ceiling` names is never looked in,
+/// nor is anything above it, so a dotfiles repository at `~/.git` is
+/// never taken for the repository of every directory below it. A
+/// `ceiling` that is not above `directory` changes nothing. It is
+/// compared as the path spells it, like the walk. `None` is for tests.
+///
+/// A `gitdir:` file's target is followed only as git's linked
+/// worktrees and separate git directories need it: it must exist as a
+/// real directory and not be a symbolic link. The git directory it
+/// names is read by [`crate::root_commit`] and [`crate::has_commit`],
+/// which hold its `commondir`, if it has one, to an ancestor of it or
+/// itself, as a linked worktree's `../..` is, and refuse any other.
+///
 /// # Errors
 ///
 /// [`Error::Unsupported`] for a symbolic link; [`Error::Corrupt`] for a
 /// `.git` file that names no directory; [`Error::TooLarge`] for one
 /// that is not a few bytes long; [`Error::Io`] when the file system
 /// cannot say.
-pub fn git_dir(directory: &Path) -> Result<Option<PathBuf>, Error> {
+pub fn git_dir(directory: &Path, ceiling: Option<&Path>) -> Result<Option<PathBuf>, Error> {
     for dir in directory.ancestors() {
+        if ceiling == Some(dir) {
+            break;
+        }
         let dot_git = dir.join(".git");
         match fs::symlink_metadata(&dot_git) {
             Ok(meta) => {

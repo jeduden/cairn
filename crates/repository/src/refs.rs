@@ -1,12 +1,11 @@
 //! References: the tip of a repository's default branch, found in loose
 //! reference files and in `packed-refs`.
 
-use std::fs::File;
-use std::io::{BufRead, BufReader, ErrorKind, Read};
+use std::io::{BufRead, BufReader, Read};
 use std::path::Path;
 
 use crate::deadline::check;
-use crate::fsio::read_limited;
+use crate::fsio::{open_below, read_limited};
 use crate::repo::Repo;
 use crate::{CommitId, Deadline, Error};
 
@@ -54,15 +53,13 @@ fn packed_line(line: &str, name: &str) -> Result<Option<CommitId>, Error> {
 /// The commit `packed-refs` gives for `name`, read line by line up to
 /// `limit` bytes.
 fn packed(
-    path: &Path,
+    dir: &Path,
     name: &str,
     deadline: &dyn Deadline,
     limit: u64,
 ) -> Result<Option<CommitId>, Error> {
-    let file = match File::open(path) {
-        Ok(file) => file,
-        Err(e) if e.kind() == ErrorKind::NotFound => return Ok(None),
-        Err(e) => return Err(Error::io("packed references")(e)),
+    let Some(file) = open_below(dir, "packed-refs")? else {
+        return Ok(None);
     };
     let mut reader = BufReader::new(file.take(limit.saturating_add(1)));
     let (mut line, mut total) = (Vec::new(), 0_u64);
@@ -101,8 +98,8 @@ fn resolve_at(
     } else {
         &repo.common_dir
     };
-    let Some(bytes) = read_limited(&home.join(name), MAX_REFERENCE)? else {
-        return packed(&repo.common_dir.join("packed-refs"), name, deadline, limit);
+    let Some(bytes) = read_limited(home, name, MAX_REFERENCE)? else {
+        return packed(&repo.common_dir, name, deadline, limit);
     };
     let text = String::from_utf8_lossy(&bytes);
     let text = text.trim();

@@ -21,6 +21,7 @@ mod objects;
 mod pack;
 mod refs;
 mod repo;
+mod sha1;
 mod walk;
 
 pub use deadline::Deadline;
@@ -32,6 +33,14 @@ use std::path::Path;
 
 use objects::Objects;
 use repo::Repo;
+
+/// The id git gives the commit whose object body is `body`: the SHA-1
+/// of `commit <length>\0` and the body. A test builds a commit under
+/// its real id with it.
+#[must_use]
+pub fn commit_object_id(body: &[u8]) -> CommitId {
+    sha1::object_id("commit", body)
+}
 
 /// The root commit that names the repository whose git directory is
 /// `git_dir`: the parentless commit with the lowest id among those
@@ -50,15 +59,18 @@ pub fn root_commit(git_dir: &Path, deadline: &dyn Deadline) -> Result<Option<Com
     walk::lowest_root(&objects, &shallow, tip, deadline, walk::MAX_COMMITS)
 }
 
-/// Whether the clone whose git directory is `git_dir` holds the object
-/// `id`, loose or packed.
+/// Whether the clone whose git directory is `git_dir` holds the commit
+/// `id`, loose or packed. The object is read and hashed: one that does
+/// not hash to `id` is an error, and one that is not a commit is not a
+/// commit the clone holds.
 ///
 /// # Errors
 ///
 /// See [`Error`].
 pub fn has_commit(git_dir: &Path, id: &CommitId) -> Result<bool, Error> {
     let repo = Repo::open(git_dir)?;
-    Objects::open(&repo.objects_dir())?.contains(id)
+    let object = Objects::open(&repo.objects_dir())?.read(id)?;
+    Ok(object.is_some_and(|object| object.kind == object::Kind::Commit))
 }
 
 /// The identity of the repository whose git directory is `git_dir`.

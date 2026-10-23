@@ -49,6 +49,8 @@ pub(crate) struct Process {
     /// How long a search may run, as a development build's seam lets a
     /// test say; the default when none.
     pub(crate) query_deadline: Option<Duration>,
+    /// The working directory, the process directory when none.
+    pub(crate) working_dir: Option<std::path::PathBuf>,
 }
 
 /// The harness process the tests' hook handlers and MCP servers run
@@ -95,6 +97,7 @@ impl Process {
             live_limit: None,
             now: NOW,
             query_deadline: None,
+            working_dir: None,
         }
     }
 
@@ -136,7 +139,11 @@ impl Process {
             hook_panics: self.hook_panics,
             hook_hangs: self.hook_hangs,
             terminal: self.terminal,
-            working_dir: Some(self.dir.path().to_path_buf()),
+            working_dir: Some(
+                self.working_dir
+                    .clone()
+                    .unwrap_or_else(|| self.dir.path().to_path_buf()),
+            ),
             managed_policy: self.dir.path().join("managed").join("managed_policy.toml"),
             node_identity: self.node_identity.clone(),
             os_user: self.os_user,

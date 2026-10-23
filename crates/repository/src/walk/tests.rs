@@ -5,33 +5,34 @@ use std::path::Path;
 
 use testkit::TempDir;
 
-use super::{MAX_COMMITS, lowest_root, parents, read_shallow};
-use crate::fixture::zlib_stored;
+use super::{MAX_COMMITS, check_commit, lowest_root, parents, read_shallow};
+use crate::fixture::{commit_body, put_commit, put_object};
 use crate::objects::Objects;
 use crate::repo::Repo;
 use crate::{CommitId, Error};
 
+/// An id no object is stored under: named in a parent header or a
+/// shallow file, never read.
 fn id(n: u8) -> CommitId {
     CommitId::from_bytes(&[n; 20])
 }
 
-fn put(objects: &Path, id: &CommitId, content: &[u8]) {
-    let (fan, rest) = id.as_str().split_at(2);
-    fs::create_dir_all(objects.join(fan)).unwrap();
-    fs::write(objects.join(fan).join(rest), zlib_stored(content)).unwrap();
+/// Stores a commit named by `message`, with `parents`, under its real
+/// id.
+fn commit(objects: &Path, message: &str, parents: &[&CommitId]) -> CommitId {
+    put_commit(objects, parents, message)
 }
 
-/// Stores a commit of `id` with `parents`.
-fn commit(objects: &Path, id: &CommitId, parents: &[&CommitId]) {
-    let mut body = String::from("tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\n");
-    for parent in parents {
-        body.push_str(&format!("parent {}\n", parent.as_str()));
+/// A history of `count` commits, each the child of the one before, the
+/// first a root.
+fn linear(objects: &Path, count: usize) -> Vec<CommitId> {
+    let mut ids: Vec<CommitId> = Vec::new();
+    for n in 0..count {
+        let parents: Vec<&CommitId> = ids.last().into_iter().collect();
+        let next = commit(objects, &format!("step {n}"), &parents);
+        ids.push(next);
     }
-    body.push_str(
-        "author A <a@example.com> 1 +0000\ncommitter A <a@example.com> 1 +0000\n\nmessage\n",
-    );
-    let header = format!("commit {}\0", body.len());
-    put(objects, id, &[header.as_bytes(), body.as_bytes()].concat());
+    ids
 }
 
 fn root(dir: &TempDir, tip: &CommitId, shallow: &[&CommitId]) -> Result<Option<CommitId>, Error> {
@@ -95,72 +96,70 @@ fn a_commit_without_a_blank_line_still_gives_its_parents() {
 #[test]
 fn a_linear_history_ends_at_its_one_root() {
     let dir = TempDir::new().unwrap();
-    commit(dir.path(), &id(1), &[]);
-    commit(dir.path(), &id(2), &[&id(1)]);
-    commit(dir.path(), &id(3), &[&id(2)]);
-    assert_eq!(root(&dir, &id(3), &[]).unwrap(), Some(id(1)));
-    assert_eq!(root(&dir, &id(1), &[]).unwrap(), Some(id(1)));
+    let ids = linear(dir.path(), 3);
+    assert_eq!(root(&dir, &ids[2], &[]).unwrap(), Some(ids[0].clone()));
+    assert_eq!(root(&dir, &ids[0], &[]).unwrap(), Some(ids[0].clone()));
 }
 
 #[test]
 fn the_lowest_of_several_roots_wins_whatever_the_order() {
-    for (first, second) in [(1, 9), (9, 1)] {
+    for (first, second) in [(0, 1), (1, 0)] {
         let dir = TempDir::new().unwrap();
-        commit(dir.path(), &id(1), &[]);
-        commit(dir.path(), &id(9), &[]);
-        commit(dir.path(), &id(4), &[&id(first)]);
-        commit(dir.path(), &id(5), &[&id(second)]);
-        commit(dir.path(), &id(6), &[&id(4), &id(5)]);
-        assert_eq!(root(&dir, &id(6), &[]).unwrap(), Some(id(1)), "{first}");
-        commit(dir.path(), &id(7), &[&id(5), &id(4)]);
-        assert_eq!(root(&dir, &id(7), &[]).unwrap(), Some(id(1)), "{second}");
+        let roots = [
+            commit(dir.path(), "root one", &[]),
+            commit(dir.path(), "root two", &[]),
+        ];
+        let lowest = roots.iter().min().unwrap().clone();
+        let left = commit(dir.path(), "left", &[&roots[first]]);
+        let right = commit(dir.path(), "right", &[&roots[second]]);
+        let merge = commit(dir.path(), "merge", &[&left, &right]);
+        assert_eq!(root(&dir, &merge, &[]).unwrap(), Some(lowest.clone()));
+        let again = commit(dir.path(), "again", &[&right, &left]);
+        assert_eq!(root(&dir, &again, &[]).unwrap(), Some(lowest));
     }
 }
 
 #[test]
-fn a_shared_ancestor_is_visited_once_and_a_cycle_ends() {
+fn a_shared_ancestor_is_visited_once() {
     let dir = TempDir::new().unwrap();
-    commit(dir.path(), &id(1), &[]);
-    commit(dir.path(), &id(2), &[&id(1)]);
-    commit(dir.path(), &id(3), &[&id(1)]);
-    commit(dir.path(), &id(4), &[&id(2), &id(3)]);
-    assert_eq!(root(&dir, &id(4), &[]).unwrap(), Some(id(1)));
-    commit(dir.path(), &id(8), &[&id(9)]);
-    commit(dir.path(), &id(9), &[&id(8)]);
-    assert_eq!(root(&dir, &id(8), &[]).unwrap(), None);
+    let base = commit(dir.path(), "base", &[]);
+    let left = commit(dir.path(), "left", &[&base]);
+    let right = commit(dir.path(), "right", &[&base]);
+    let merge = commit(dir.path(), "merge", &[&left, &right]);
+    assert_eq!(root(&dir, &merge, &[]).unwrap(), Some(base));
 }
 
 #[test]
 fn a_shallow_boundary_is_not_a_root() {
     let dir = TempDir::new().unwrap();
-    commit(dir.path(), &id(2), &[&id(1)]);
-    commit(dir.path(), &id(3), &[&id(2)]);
-    assert_eq!(root(&dir, &id(3), &[&id(2)]).unwrap(), None);
-    assert_eq!(root(&dir, &id(2), &[&id(2)]).unwrap(), None);
+    let cut = commit(dir.path(), "cut", &[&id(1)]);
+    let tip = commit(dir.path(), "tip", &[&cut]);
+    assert_eq!(root(&dir, &tip, &[&cut]).unwrap(), None);
+    assert_eq!(root(&dir, &cut, &[&cut]).unwrap(), None);
 }
 
 #[test]
 fn a_boundary_that_holds_its_parentless_commit_is_still_not_a_root() {
     let dir = TempDir::new().unwrap();
-    commit(dir.path(), &id(2), &[]);
-    assert_eq!(root(&dir, &id(2), &[&id(2)]).unwrap(), None);
+    let only = commit(dir.path(), "only", &[]);
+    assert_eq!(root(&dir, &only, &[&only]).unwrap(), None);
 }
 
 #[test]
 fn a_root_behind_one_side_of_a_shallow_history_is_still_found() {
     let dir = TempDir::new().unwrap();
-    commit(dir.path(), &id(1), &[]);
-    commit(dir.path(), &id(2), &[&id(1)]);
-    commit(dir.path(), &id(5), &[&id(4)]);
-    commit(dir.path(), &id(6), &[&id(2), &id(5)]);
-    assert_eq!(root(&dir, &id(6), &[&id(5)]).unwrap(), Some(id(1)));
+    let base = commit(dir.path(), "base", &[]);
+    let left = commit(dir.path(), "left", &[&base]);
+    let cut = commit(dir.path(), "cut", &[&id(4)]);
+    let merge = commit(dir.path(), "merge", &[&left, &cut]);
+    assert_eq!(root(&dir, &merge, &[&cut]).unwrap(), Some(base));
 }
 
 #[test]
 fn a_parent_the_clone_lacks_is_missing() {
     let dir = TempDir::new().unwrap();
-    commit(dir.path(), &id(2), &[&id(1)]);
-    let result = root(&dir, &id(2), &[]);
+    let child = commit(dir.path(), "child", &[&id(1)]);
+    let result = root(&dir, &child, &[]);
     assert!(matches!(result, Err(Error::Missing(missing)) if missing == id(1)));
     let result = root(&dir, &id(7), &[]);
     assert!(matches!(result, Err(Error::Missing(missing)) if missing == id(7)));
@@ -169,31 +168,59 @@ fn a_parent_the_clone_lacks_is_missing() {
 #[test]
 fn a_tip_that_is_not_a_commit_is_corrupt() {
     let dir = TempDir::new().unwrap();
-    put(dir.path(), &id(1), b"blob 3\0abc");
-    assert!(corrupt(root(&dir, &id(1), &[])));
+    let blob = put_object(dir.path(), "blob", b"abc");
+    assert!(corrupt(root(&dir, &blob, &[])));
 }
 
 #[test]
 fn a_commit_with_a_bad_parent_header_is_corrupt() {
     let dir = TempDir::new().unwrap();
-    put(dir.path(), &id(1), b"commit 17\0parent nonsense\n\n");
-    assert!(corrupt(root(&dir, &id(1), &[])));
+    let body = format!("tree {}\nparent nonsense\n\n", "0".repeat(40));
+    let bad = put_object(dir.path(), "commit", body.as_bytes());
+    assert!(corrupt(root(&dir, &bad, &[])));
+}
+
+#[test]
+fn a_commit_object_that_does_not_parse_as_a_commit_is_corrupt() {
+    let dir = TempDir::new().unwrap();
+    for (n, body) in [
+        "".to_owned(),
+        "author A\n\nmessage\n".to_owned(),
+        "tree \n\n".to_owned(),
+        "tree nonsense\n\n".to_owned(),
+        format!("parent {}\ntree {}\n\n", id(1).as_str(), "0".repeat(40)),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let stored = put_object(dir.path(), "commit", body.as_bytes());
+        assert!(corrupt(root(&dir, &stored, &[])), "{n}: {body:?}");
+    }
+}
+
+#[test]
+fn a_commit_opens_with_a_tree_header_that_names_an_id() {
+    assert!(check_commit(commit_body(&[], "m").as_bytes()).is_ok());
+    assert!(check_commit(format!("tree {}", "a".repeat(40)).as_bytes()).is_ok());
+    for text in ["", "tree", "tree ", "tree abc\n", "TREE 0\n", "x\ntree 0\n"] {
+        assert!(corrupt(check_commit(text.as_bytes())), "{text:?}");
+    }
+    let bytes = [b"tree ".as_slice(), &[0xff; 40], b"\n"].concat();
+    assert!(corrupt(check_commit(&bytes)));
 }
 
 #[test]
 fn the_walk_stops_when_the_deadline_passes() {
     let dir = TempDir::new().unwrap();
-    commit(dir.path(), &id(1), &[]);
-    for n in 2..=20 {
-        commit(dir.path(), &id(n), &[&id(n - 1)]);
-    }
+    let ids = linear(dir.path(), 20);
     let objects = Objects::open(dir.path()).unwrap();
     let asked = Cell::new(0);
     let deadline = || {
         asked.set(asked.get() + 1);
         asked.get() > 5
     };
-    let result = lowest_root(&objects, &BTreeSet::new(), id(20), &deadline, MAX_COMMITS);
+    let tip = ids[19].clone();
+    let result = lowest_root(&objects, &BTreeSet::new(), tip, &deadline, MAX_COMMITS);
     assert!(matches!(result, Err(Error::Deadline)));
     assert_eq!(asked.get(), 6);
 }
@@ -201,16 +228,14 @@ fn the_walk_stops_when_the_deadline_passes() {
 #[test]
 fn a_walk_past_the_commit_bound_is_too_large() {
     let dir = TempDir::new().unwrap();
-    commit(dir.path(), &id(1), &[]);
-    for n in 2..=10 {
-        commit(dir.path(), &id(n), &[&id(n - 1)]);
-    }
+    let ids = linear(dir.path(), 10);
     let objects = Objects::open(dir.path()).unwrap();
     let shallow = BTreeSet::new();
-    let result = lowest_root(&objects, &shallow, id(10), &|| false, 5);
+    let tip = ids[9].clone();
+    let result = lowest_root(&objects, &shallow, tip.clone(), &|| false, 5);
     assert!(matches!(result, Err(Error::TooLarge(_))));
-    let result = lowest_root(&objects, &shallow, id(10), &|| false, 10);
-    assert_eq!(result.unwrap(), Some(id(1)));
+    let result = lowest_root(&objects, &shallow, tip, &|| false, 10);
+    assert_eq!(result.unwrap(), Some(ids[0].clone()));
 }
 
 fn repo(dir: &TempDir) -> Repo {

@@ -8,10 +8,6 @@ use key::random::OsEntropy;
 use record::event::{EventKind, Provenance};
 use testkit::TempDir;
 
-const A: &str = "1111111111111111111111111111111111111111";
-const B: &str = "2222222222222222222222222222222222222222";
-const C: &str = "3333333333333333333333333333333333333333";
-
 /// A zlib stream of `data` in stored blocks.
 fn zlib(data: &[u8]) -> Vec<u8> {
     let mut out = vec![0x78, 0x01];
@@ -36,26 +32,84 @@ fn zlib(data: &[u8]) -> Vec<u8> {
     out
 }
 
-/// A repository at `dir` whose commits are `commits`, each with its
-/// parents, the newest on `main`.
-fn repository(dir: &Path, commits: &[(&str, &[&str])], tip: Option<&str>) {
+/// The body of a commit of the empty tree with `parents` and `message`.
+fn body(parents: &[&CommitId], message: &str) -> String {
+    let mut body = format!("tree {}\n", "0".repeat(40));
+    for parent in parents {
+        body.push_str(&format!("parent {}\n", parent.as_str()));
+    }
+    body.push_str(&format!("\n{message}\n"));
+    body
+}
+
+/// The id the commit with `parents` and `message` has, stored or not.
+fn commit_id(parents: &[&CommitId], message: &str) -> CommitId {
+    ::repository::commit_object_id(body(parents, message).as_bytes())
+}
+
+/// The messages and ids of two root commits, the lower id first.
+fn two_roots() -> [(&'static str, CommitId); 2] {
+    let (x, y) = (("x", commit_id(&[], "x")), ("y", commit_id(&[], "y")));
+    if x.1 < y.1 { [x, y] } else { [y, x] }
+}
+
+/// An empty repository at `dir` whose `HEAD` names `main`.
+fn init(dir: &Path) {
     let git = dir.join(".git");
     fs::create_dir_all(git.join("refs/heads")).unwrap();
     fs::write(git.join("HEAD"), "ref: refs/heads/main\n").unwrap();
-    for (id, parents) in commits {
-        let mut body = format!("tree {}\n", "0".repeat(40));
-        for parent in *parents {
-            body.push_str(&format!("parent {parent}\n"));
-        }
-        body.push_str("\nmessage\n");
-        let object = format!("commit {}\0{body}", body.len());
-        let path = git.join("objects").join(&id[..2]).join(&id[2..]);
-        fs::create_dir_all(path.parent().unwrap()).unwrap();
-        fs::write(path, zlib(object.as_bytes())).unwrap();
-    }
-    if let Some(tip) = tip {
-        fs::write(git.join("refs/heads/main"), format!("{tip}\n")).unwrap();
-    }
+}
+
+/// Stores the commit with `parents` and `message` in the repository at
+/// `dir` under its real id, and returns the id.
+fn commit(dir: &Path, parents: &[&CommitId], message: &str) -> CommitId {
+    let body = body(parents, message);
+    let id = ::repository::commit_object_id(body.as_bytes());
+    let object = format!("commit {}\0{body}", body.len());
+    let (fan, rest) = id.as_str().split_at(2);
+    let path = dir.join(".git/objects").join(fan).join(rest);
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    fs::write(path, zlib(object.as_bytes())).unwrap();
+    id
+}
+
+/// Points `main` of the repository at `dir` at `tip`.
+fn point(dir: &Path, tip: &CommitId) {
+    fs::write(
+        dir.join(".git/refs/heads/main"),
+        format!("{}\n", tip.as_str()),
+    )
+    .unwrap();
+}
+
+/// A repository at `dir` with one root commit named `message`, checked
+/// out; its id.
+fn rooted(dir: &Path, message: &str) -> CommitId {
+    init(dir);
+    let root = commit(dir, &[], message);
+    point(dir, &root);
+    root
+}
+
+/// A repository at `dir` with no commit.
+fn empty(dir: &Path) {
+    init(dir);
+}
+
+/// A repository at `dir` that reads as unreadable: it stores its
+/// objects in SHA-256.
+fn unreadable_repository(dir: &Path) {
+    rooted(dir, "x");
+    fs::write(
+        dir.join(".git/config"),
+        "[extensions]\n\tobjectformat = sha256\n",
+    )
+    .unwrap();
+}
+
+/// Replaces the repository at `dir` with a fresh one.
+fn reinit(dir: &Path) {
+    fs::remove_dir_all(dir.join(".git")).unwrap();
 }
 
 struct Fixture {
@@ -84,11 +138,16 @@ impl Fixture {
     }
 
     fn bind(&mut self, directory: &Path) -> Outcome {
+        self.bind_below(directory, None)
+    }
+
+    fn bind_below(&mut self, directory: &Path, ceiling: Option<&Path>) -> Outcome {
         bind(
             &mut self.store,
             &self.node,
             &mut OsEntropy,
             directory,
+            ceiling,
             &|| false,
         )
         .unwrap()
@@ -122,20 +181,27 @@ fn a_directory_in_no_repository_binds_nothing() {
 fn the_first_look_binds_the_lowest_root_commit_once_by_a_structural_event() {
     let mut f = fixture();
     let app = f.path("app");
-    repository(&app, &[(B, &[]), (A, &[]), (C, &[A, B])], Some(C));
+    init(&app);
+    let [(low_message, low), (high_message, high)] = two_roots();
+    commit(&app, &[], high_message);
+    commit(&app, &[], low_message);
+    let merge = commit(&app, &[&high, &low], "merge");
+    point(&app, &merge);
 
     assert_eq!(f.bind(&app), Outcome::Bound { provisional: false });
     assert_eq!(f.bind(&app), Outcome::Unchanged);
 
-    assert_eq!(f.binds(), [serde_json::json!({"repository": A})]);
+    assert_eq!(f.binds(), [serde_json::json!({"repository": low.as_str()})]);
 }
 
 #[test]
 fn a_second_clone_of_a_bound_repository_binds_no_second_event() {
     let mut f = fixture();
     let (one, two) = (f.path("one"), f.path("two"));
-    repository(&one, &[(A, &[])], Some(A));
-    repository(&two, &[(A, &[]), (B, &[A])], Some(B));
+    let root = rooted(&one, "root");
+    rooted(&two, "root");
+    let child = commit(&two, &[&root], "child");
+    point(&two, &child);
 
     assert_eq!(f.bind(&one), Outcome::Bound { provisional: false });
     assert_eq!(f.bind(&two), Outcome::Bound { provisional: false });
@@ -147,24 +213,35 @@ fn a_second_clone_of_a_bound_repository_binds_no_second_event() {
 fn a_clone_holding_a_bound_commit_takes_that_identity() {
     let mut f = fixture();
     let (one, two) = (f.path("one"), f.path("two"));
-    repository(&one, &[(B, &[])], Some(B));
-    // A lower root joined this clone's history; the bound commit stays.
-    repository(&two, &[(A, &[]), (B, &[]), (C, &[A, B])], Some(C));
+    let [(low_message, low), (high_message, high)] = two_roots();
+    // The first clone holds only the higher root, which becomes bound.
+    init(&one);
+    commit(&one, &[], high_message);
+    point(&one, &high);
+    // A lower root joined the second clone's history; the bound commit stays.
+    init(&two);
+    commit(&two, &[], low_message);
+    commit(&two, &[], high_message);
+    let merge = commit(&two, &[&low, &high], "merge");
+    point(&two, &merge);
 
     f.bind(&one);
     assert_eq!(f.bind(&two), Outcome::Bound { provisional: false });
 
-    assert_eq!(f.binds(), [serde_json::json!({"repository": B})]);
+    assert_eq!(
+        f.binds(),
+        [serde_json::json!({"repository": high.as_str()})]
+    );
 }
 
 #[test]
 fn a_repository_with_no_commit_gets_a_provisional_identity_and_binds_later() {
     let mut f = fixture();
-    let empty = f.path("empty");
-    repository(&empty, &[], None);
+    let blank = f.path("empty");
+    empty(&blank);
 
-    assert_eq!(f.bind(&empty), Outcome::Bound { provisional: true });
-    assert_eq!(f.bind(&empty), Outcome::Unchanged);
+    assert_eq!(f.bind(&blank), Outcome::Bound { provisional: true });
+    assert_eq!(f.bind(&blank), Outcome::Unchanged);
     let binds = f.binds();
     assert_eq!(binds.len(), 1);
     assert_eq!(
@@ -173,8 +250,9 @@ fn a_repository_with_no_commit_gets_a_provisional_identity_and_binds_later() {
     );
 
     // A commit makes it a change; nothing is rebound or rewritten.
-    repository(&empty, &[(A, &[])], Some(A));
-    assert_eq!(f.bind(&empty), Outcome::Changed);
+    let root = commit(&blank, &[], "first");
+    point(&blank, &root);
+    assert_eq!(f.bind(&blank), Outcome::Changed);
     assert_eq!(f.binds().len(), 1);
 }
 
@@ -182,10 +260,10 @@ fn a_repository_with_no_commit_gets_a_provisional_identity_and_binds_later() {
 fn a_change_in_the_identity_a_directory_resolves_to_is_reported_once_and_relinks_nothing() {
     let mut f = fixture();
     let app = f.path("app");
-    repository(&app, &[(A, &[])], Some(A));
+    rooted(&app, "a");
     f.bind(&app);
-    fs::remove_dir_all(app.join(".git")).unwrap();
-    repository(&app, &[(B, &[])], Some(B));
+    reinit(&app);
+    rooted(&app, "b");
 
     assert_eq!(f.bind(&app), Outcome::Changed);
     assert_eq!(f.bind(&app), Outcome::StillChanged);
@@ -193,8 +271,8 @@ fn a_change_in_the_identity_a_directory_resolves_to_is_reported_once_and_relinks
     assert_eq!(f.binds().len(), 1);
 
     // A second change is reported again, once.
-    fs::remove_dir_all(app.join(".git")).unwrap();
-    repository(&app, &[(C, &[])], Some(C));
+    reinit(&app);
+    rooted(&app, "c");
     assert_eq!(f.bind(&app), Outcome::Changed);
     assert_eq!(f.bind(&app), Outcome::StillChanged);
 }
@@ -203,12 +281,7 @@ fn a_change_in_the_identity_a_directory_resolves_to_is_reported_once_and_relinks
 fn a_clone_whose_git_data_cannot_be_read_is_unreadable() {
     let mut f = fixture();
     let app = f.path("app");
-    repository(&app, &[(A, &[])], Some(A));
-    fs::write(
-        app.join(".git/config"),
-        "[extensions]\n\tobjectformat = sha256\n",
-    )
-    .unwrap();
+    unreadable_repository(&app);
 
     assert_eq!(f.bind(&app), Outcome::Unreadable);
     assert_eq!(f.bind(&app), Outcome::StillUnreadable);
@@ -216,10 +289,26 @@ fn a_clone_whose_git_data_cannot_be_read_is_unreadable() {
 }
 
 #[test]
+fn a_clone_with_a_commit_filed_under_the_wrong_id_is_unreadable() {
+    let mut f = fixture();
+    let app = f.path("app");
+    let root = rooted(&app, "a");
+    // A planted object: another commit's bytes under the root's id.
+    let other = commit(&app, &[], "planted");
+    let objects = app.join(".git/objects");
+    let (fan, rest) = root.as_str().split_at(2);
+    let (ofan, orest) = other.as_str().split_at(2);
+    fs::copy(objects.join(ofan).join(orest), objects.join(fan).join(rest)).unwrap();
+
+    assert_eq!(f.bind(&app), Outcome::Unreadable);
+    assert!(f.binds().is_empty());
+}
+
+#[test]
 fn no_name_this_node_keeps_reveals_the_directory_or_the_identity() {
     let mut f = fixture();
     let app = f.path("app");
-    repository(&app, &[(A, &[])], Some(A));
+    let root = rooted(&app, "a");
     f.bind(&app);
 
     let conn = rusqlite::Connection::open(f.dir.path().join(".parinn/store.db")).unwrap();
@@ -234,68 +323,74 @@ fn no_name_this_node_keeps_reveals_the_directory_or_the_identity() {
 
     assert_eq!(rows.len(), 1);
     for (directory, identity) in rows {
-        assert!(!identity.contains(A) && !directory.contains("app"));
+        assert!(!identity.contains(root.as_str()) && !directory.contains("app"));
         assert_eq!((directory.len(), identity.len()), (64, 64));
     }
 }
 
 impl Fixture {
     fn show(&mut self, directory: &Path) -> Shown {
+        self.show_below(directory, None)
+    }
+
+    fn show_below(&mut self, directory: &Path, ceiling: Option<&Path>) -> Shown {
         show(
             &mut self.store,
             &self.node,
             &mut OsEntropy,
             directory,
+            ceiling,
             &|| false,
         )
         .unwrap()
     }
 
-    fn plan(&mut self, directory: &Path, commit: Option<&str>) -> Result<Rebind, AdminError> {
+    fn plan(&mut self, directory: &Path, commit: Option<&CommitId>) -> Result<Rebind, AdminError> {
+        self.plan_below(directory, None, commit)
+    }
+
+    fn plan_below(
+        &mut self,
+        directory: &Path,
+        ceiling: Option<&Path>,
+        commit: Option<&CommitId>,
+    ) -> Result<Rebind, AdminError> {
         plan(
             &mut self.store,
             &self.node,
             &mut OsEntropy,
             directory,
-            commit.and_then(CommitId::parse),
+            ceiling,
+            commit.cloned(),
             &|| false,
         )
     }
-}
-
-fn id(text: &str) -> Option<CommitId> {
-    CommitId::parse(text)
 }
 
 #[test]
 fn show_says_what_a_directory_is_and_binds_nothing() {
     let mut f = fixture();
     let (plain, app) = (f.path("plain"), f.path("app"));
-    repository(&app, &[(A, &[])], Some(A));
+    let a = rooted(&app, "a");
 
     assert_eq!(f.show(&plain), Shown::NoRepository);
-    assert_eq!(f.show(&app), Shown::Unbound(id(A)));
+    assert_eq!(f.show(&app), Shown::Unbound(Some(a.clone())));
     assert!(f.binds().is_empty());
     f.bind(&app);
-    assert_eq!(f.show(&app), Shown::Bound(id(A)));
-    fs::remove_dir_all(app.join(".git")).unwrap();
-    repository(&app, &[(B, &[])], Some(B));
-    assert_eq!(f.show(&app), Shown::Changed(id(B)));
+    assert_eq!(f.show(&app), Shown::Bound(Some(a)));
+    reinit(&app);
+    let b = rooted(&app, "b");
+    assert_eq!(f.show(&app), Shown::Changed(Some(b)));
 }
 
 #[test]
 fn show_names_a_provisional_directory_without_a_commit_and_an_unreadable_one() {
     let mut f = fixture();
-    let (empty, bad) = (f.path("empty"), f.path("bad"));
-    repository(&empty, &[], None);
-    repository(&bad, &[(A, &[])], Some(A));
-    fs::write(
-        bad.join(".git/config"),
-        "[extensions]\n\tobjectformat = sha256\n",
-    )
-    .unwrap();
+    let (blank, bad) = (f.path("empty"), f.path("bad"));
+    empty(&blank);
+    unreadable_repository(&bad);
 
-    assert_eq!(f.show(&empty), Shown::Unbound(None));
+    assert_eq!(f.show(&blank), Shown::Unbound(None));
     assert_eq!(f.show(&bad), Shown::Unreadable);
 }
 
@@ -303,14 +398,14 @@ fn show_names_a_provisional_directory_without_a_commit_and_an_unreadable_one() {
 fn a_widening_bind_makes_the_directory_resolve_to_the_identity_it_names() {
     let mut f = fixture();
     let app = f.path("app");
-    repository(&app, &[(A, &[])], Some(A));
+    rooted(&app, "a");
     f.bind(&app);
-    fs::remove_dir_all(app.join(".git")).unwrap();
-    repository(&app, &[(B, &[])], Some(B));
+    reinit(&app);
+    let b = rooted(&app, "b");
     assert_eq!(f.bind(&app), Outcome::Changed);
 
     let rebind = f.plan(&app, None).unwrap();
-    assert_eq!(rebind.commit, id(B));
+    assert_eq!(rebind.commit, Some(b));
     // Nothing moves until the act is recorded and the plan applied.
     assert_eq!(f.bind(&app), Outcome::StillChanged);
     apply(&mut f.store, &rebind).unwrap();
@@ -322,20 +417,21 @@ fn a_widening_bind_makes_the_directory_resolve_to_the_identity_it_names() {
 fn a_widening_bind_may_name_a_commit_the_clone_lacks() {
     let mut f = fixture();
     let shallow = f.path("shallow");
-    repository(&shallow, &[(B, &[])], Some(B));
+    rooted(&shallow, "b");
+    let absent = commit_id(&[], "absent");
 
-    let rebind = f.plan(&shallow, Some(A)).unwrap();
+    let rebind = f.plan(&shallow, Some(&absent)).unwrap();
 
-    assert_eq!(rebind.commit, id(A));
+    assert_eq!(rebind.commit, Some(absent));
 }
 
 #[test]
 fn a_widening_bind_of_a_clone_with_no_commit_is_provisional() {
     let mut f = fixture();
-    let empty = f.path("empty");
-    repository(&empty, &[], None);
+    let blank = f.path("empty");
+    empty(&blank);
 
-    assert_eq!(f.plan(&empty, None).unwrap().commit, None);
+    assert_eq!(f.plan(&blank, None).unwrap().commit, None);
 }
 
 #[test]
@@ -344,5 +440,26 @@ fn a_widening_bind_of_a_directory_in_no_repository_is_refused() {
     let plain = f.path("plain");
 
     assert!(f.plan(&plain, None).is_err());
-    assert!(f.plan(&plain, Some(A)).is_err());
+    assert!(f.plan(&plain, Some(&commit_id(&[], "x"))).is_err());
+}
+
+#[test]
+fn a_repository_in_the_home_directory_is_bound_for_no_directory_below_it() {
+    let mut f = fixture();
+    let home = f.path("home");
+    rooted(&home, "dotfiles");
+    let notes = home.join("notes/today");
+    fs::create_dir_all(&notes).unwrap();
+
+    assert_eq!(f.bind_below(&notes, Some(&home)), Outcome::NoRepository);
+    assert_eq!(f.show_below(&notes, Some(&home)), Shown::NoRepository);
+    assert!(f.plan_below(&notes, Some(&home), None).is_err());
+    assert!(f.binds().is_empty());
+    // A project inside the home directory is still its own repository.
+    let project = home.join("project");
+    rooted(&project, "project");
+    assert_eq!(
+        f.bind_below(&project, Some(&home)),
+        Outcome::Bound { provisional: false }
+    );
 }

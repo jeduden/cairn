@@ -204,11 +204,11 @@ fn whitespace_around_a_reference_is_ignored() {
 }
 
 #[test]
-fn a_directory_in_the_place_of_a_reference_is_an_io_error() {
+fn a_directory_in_the_place_of_a_reference_is_refused() {
     let dir = TempDir::new().unwrap();
     write(dir.path(), "HEAD", "ref: refs/heads\n");
     fs::create_dir_all(dir.path().join("refs/heads")).unwrap();
-    assert!(matches!(tip(&dir), Err(Error::Io { .. })));
+    assert!(matches!(tip(&dir), Err(Error::Unsupported(_))));
 }
 
 #[test]
@@ -275,23 +275,23 @@ fn head_of_a_linked_worktree_is_read_beside_the_shared_references() {
 }
 
 #[test]
-fn packed_refs_that_cannot_be_read_are_an_io_error() {
+fn packed_refs_that_are_a_directory_are_refused() {
     let dir = TempDir::new().unwrap();
     fs::create_dir(dir.path().join("packed-refs")).unwrap();
     assert!(matches!(
         named(&dir, "refs/heads/main"),
-        Err(Error::Io { .. })
+        Err(Error::Unsupported(_))
     ));
 }
 
 #[cfg(unix)]
 #[test]
-fn packed_refs_that_cannot_be_opened_are_an_io_error() {
+fn packed_refs_that_are_a_link_are_refused() {
     let dir = TempDir::new().unwrap();
     let packed = dir.path().join("packed-refs");
     std::os::unix::fs::symlink(&packed, &packed).unwrap();
     assert!(matches!(
         named(&dir, "refs/heads/main"),
-        Err(Error::Io { .. })
+        Err(Error::Unsupported(_))
     ));
 }
