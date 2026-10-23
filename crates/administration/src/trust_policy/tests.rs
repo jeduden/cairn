@@ -5,11 +5,11 @@ fn input(provenance: &Provenance, kind: EventKind) -> Input<'_> {
         provenance,
         kind,
         origin: Origin::Witnessed,
+        device_seat: true,
         launcher_signed: false,
         interactive: false,
         prompt_matched: false,
         attended: false,
-        risk_open: RISK_OPEN,
     }
 }
 
@@ -90,34 +90,37 @@ fn harness_meta_is_trusted_only_when_the_launcher_signed_it() {
 
 #[test]
 fn a_user_event_is_trusted_only_when_every_condition_holds() {
-    let mut i = input(&Provenance::User, EventKind::TranscriptLine);
-    i.interactive = true;
-    i.prompt_matched = true;
-    i.attended = true;
-    i.risk_open = false;
-    assert_eq!(trust_level(&i), TrustLevel::Trusted);
+    assert!(user_trusted(true, true, true, false));
     for spoil in [
-        |i: &mut Input<'_>| i.interactive = false,
-        |i: &mut Input<'_>| i.prompt_matched = false,
-        |i: &mut Input<'_>| i.attended = false,
-        |i: &mut Input<'_>| i.risk_open = true,
-        |i: &mut Input<'_>| i.origin = Origin::Ingested,
+        (false, true, true, false),
+        (true, false, true, false),
+        (true, true, false, false),
+        (true, true, true, true),
     ] {
-        let mut j = i;
-        spoil(&mut j);
-        assert_eq!(trust_level(&j), TrustLevel::Untrusted);
+        assert!(!user_trusted(spoil.0, spoil.1, spoil.2, spoil.3), "{spoil:?}");
     }
 }
 
 #[test]
-fn under_m1_no_user_event_is_trusted() {
+fn under_m1_no_user_event_is_trusted_whatever_the_caller_says() {
     let mut i = input(&Provenance::User, EventKind::TranscriptLine);
     i.interactive = true;
     i.prompt_matched = true;
     i.attended = true;
 
-    i.risk_open = RISK_OPEN;
     assert_eq!(trust_level(&i), TrustLevel::Untrusted);
+}
+
+#[test]
+fn an_operator_or_structural_event_outside_a_device_seat_is_untrusted() {
+    for (provenance, kind) in [
+        (Provenance::Operator, EventKind::PrincipalAct),
+        (Provenance::Structural, EventKind::KeyEvent),
+    ] {
+        let mut i = input(&provenance, kind);
+        i.device_seat = false;
+        assert_eq!(trust_level(&i), TrustLevel::Untrusted);
+    }
 }
 
 #[test]
