@@ -26,6 +26,7 @@ empty: |
 | ---------- | ------ | ---------------------------------------------------------------------------------------------------------------- |
 | 2609292011 | sonnet | [The remaining engineering gates in CI](plan/2609292011_ci-engineering-gates/plan.md)                            |
 | 2609292012 | opus   | [M1: record and recall](plan/2609292012_m1-record-and-recall/plan.md)                                            |
+| 2609292156 | sonnet | [The repository's knowledge follows ParleyInn's layers](plan/2609292156_knowledge-follows-parinn-layers/plan.md) |
 <?/catalog?>
 
 ## All plans
@@ -66,7 +67,7 @@ empty: |
 | 2609292014 | 🔲     | opus   | [M3: landmarks and lifecycle](plan/2609292014_m3-landmarks-and-lifecycle.md)                                            |
 | 2609292015 | 🔲     | opus   | [M4: the hermetic compute kernel](plan/2609292015_m4-compute-kernel.md)                                                 |
 | 2609292016 | 🔲     | opus   | [M5: hardening and evaluation](plan/2609292016_m5-hardening-and-evaluation.md)                                          |
-| 2609292156 | ✅     | sonnet | [The repository's knowledge follows ParleyInn's layers](plan/2609292156_knowledge-follows-parinn-layers/plan.md)        |
+| 2609292156 | 🔳     | sonnet | [The repository's knowledge follows ParleyInn's layers](plan/2609292156_knowledge-follows-parinn-layers/plan.md)        |
 | 2609301942 | ✅     | sonnet | [Agent review through the reviewer app](plan/2609301942_agent-review-app/plan.md)                                       |
 | 2610012322 | ✅     | opus   | [Scope ParleyInn for agent fleets: shared, real-time, public sessions](plan/2610012322_parinn-for-agent-fleets/plan.md) |
 | 2610022338 | 🔲     | opus   | [ParleyInn's lane experience and peer network: no central service](plan/2610022338_parinn-network-side/plan.md)         |

@@ -1,7 +1,7 @@
 ---
 id: 2609292156
 title: "The repository's knowledge follows ParleyInn's layers"
-status: "✅"
+status: "🔳"
 summary: >-
   Hold the repository's own specs, scenarios, decisions and plans to
   ParleyInn's invariants, so many agents with limited context keep them
