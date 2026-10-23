@@ -76,7 +76,7 @@ fn deadline() -> impl Fn() -> bool {
 }
 
 /// Binds the identity of every repository the `SessionStart` hook
-/// observations showed, once each (LANE-02): a change in one is audited
+/// observations not yet in the record showed, once each (LANE-02): a change in one is audited
 /// and counted, and a clone that cannot be read counted, each once (I6).
 /// Nothing is relinked, and a failure leaves the record as it was (I9).
 pub(crate) fn bind_observed(ctx: &Context, home: &Home, store: &mut Store) {
@@ -88,10 +88,13 @@ pub(crate) fn bind_observed(ctx: &Context, home: &Home, store: &mut Store) {
     };
     let directories: BTreeSet<String> = held
         .into_iter()
+        .filter(|h| !h.appended)
         .map(|h| h.observation)
         .filter(|o| o.hook == "SessionStart" && !o.cwd.is_empty())
         .map(|o| o.cwd)
         .collect();
+    // One budget for every directory this call looks at (ENG-03, I9).
+    let deadline = deadline();
     for directory in directories {
         let outcome = repository::bind(
             store,
@@ -99,7 +102,7 @@ pub(crate) fn bind_observed(ctx: &Context, home: &Home, store: &mut Store) {
             &mut OsEntropy,
             Path::new(&directory),
             ctx.home.as_deref().map(Path::new),
-            &deadline(),
+            &deadline,
         );
         let occurrence = match outcome {
             Ok(Outcome::Changed) => Occurrence::Degraded {

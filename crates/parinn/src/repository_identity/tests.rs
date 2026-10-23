@@ -238,7 +238,14 @@ fn the_repository_verbs_refuse_what_they_do_not_know() {
 
 /// Runs the `SessionStart` hook in `cwd`.
 fn start_in(p: &mut Process, session: &str, cwd: &Path) {
-    let path = p.dir.path().join(format!("{session}.jsonl"));
+    let projects = p.dir.path().join(".claude/projects/-w-app");
+    fs::create_dir_all(&projects).unwrap();
+    let path = projects.join(format!("{session}.jsonl"));
+    fs::write(
+        &path,
+        "{\"type\":\"atis-latch\",\"atis\":\"\",\"sessionId\":\"s\"}\n",
+    )
+    .unwrap();
     p.lines = vec![
         serde_json::json!({
             "session_id": session,
@@ -349,11 +356,11 @@ fn a_clone_that_cannot_be_read_is_counted_once() {
 #[test]
 fn only_hook_observations_not_yet_in_the_record_are_looked_at() {
     let mut p = Process::new();
-    let app = clone(&p, "app", Some(A));
+    let app = clone(&p, "app", Some("a"));
     start_in(&mut p, "s1", &app);
     run(&p, &["ingest", "--all"]);
     fs::remove_dir_all(app.join(".git")).unwrap();
-    repository(&app, Some(B));
+    repository(&app, Some("b"));
 
     // No new hook event: the earlier observation is in the record, and
     // its clone is not walked again.
