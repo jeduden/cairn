@@ -1487,3 +1487,15 @@ fn the_kept_origins_are_empty_until_written_and_then_replaced_whole() {
     store.replace_origins(&second).unwrap();
     assert_eq!(store.origins().unwrap(), second);
 }
+
+#[test]
+fn a_store_keeps_a_local_secret_and_the_identity_a_directory_resolved_to() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+
+    assert_eq!(store.local_secret("repository", [4; 32]).unwrap(), [4; 32]);
+    assert_eq!(store.local_secret("repository", [5; 32]).unwrap(), [4; 32]);
+    assert_eq!(store.directory_identity("d").unwrap(), None);
+    store.set_directory_identity("d", "h").unwrap();
+    assert_eq!(store.directory_identity("d").unwrap().as_deref(), Some("h"));
+}

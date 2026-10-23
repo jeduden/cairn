@@ -51,5 +51,7 @@ fn a_store_that_never_kept_a_directory_has_no_table_and_none_resolved() {
     let conn = Connection::open_in_memory().unwrap();
 
     assert_eq!(identity(&conn, "d").unwrap(), None);
-    let _ = conn.query_row("SELECT 1", [], |r| r.get::<_, i64>(0)).optional();
+    let _ = conn
+        .query_row("SELECT 1", [], |r| r.get::<_, i64>(0))
+        .optional();
 }

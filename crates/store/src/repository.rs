@@ -21,20 +21,43 @@ fn key(name: &str) -> String {
     format!("local_secret:{name}")
 }
 
+/// Whether the store has made the directories' table.
+const HAS_TABLE: &str = "SELECT count(*) FROM sqlite_master WHERE name = 'repository_directories'";
+
 /// The local secret `name`, keeping `fresh` when none is kept yet.
 pub(crate) fn secret(
     conn: &Connection,
     name: &str,
     fresh: [u8; 32],
 ) -> Result<[u8; 32], StoreError> {
-    let _ = (conn, name);
-    Ok(fresh)
+    let key = key(name);
+    conn.execute(
+        "INSERT OR IGNORE INTO meta (key, value) VALUES (?1, ?2)",
+        (&key, hex(&fresh)),
+    )?;
+    let kept: String = conn.query_row("SELECT value FROM meta WHERE key = ?1", [&key], |r| {
+        r.get(0)
+    })?;
+
+    unhex(&kept).ok_or_else(|| StoreError::Corrupt {
+        address: None,
+        what: "local secret".to_owned(),
+    })
 }
 
 /// The identity the directory `directory` last resolved to.
 pub(crate) fn identity(conn: &Connection, directory: &str) -> Result<Option<String>, StoreError> {
-    let _ = (conn, directory);
-    Ok(None)
+    if !conn.query_row(HAS_TABLE, [], |r| r.get::<_, bool>(0))? {
+        return Ok(None);
+    }
+
+    Ok(conn
+        .query_row(
+            "SELECT identity FROM repository_directories WHERE directory = ?1",
+            [directory],
+            |r| r.get(0),
+        )
+        .optional()?)
 }
 
 /// Keeps `identity` as what `directory` resolves to.
@@ -43,8 +66,31 @@ pub(crate) fn set_identity(
     directory: &str,
     identity: &str,
 ) -> rusqlite::Result<()> {
-    let _ = (conn, directory, identity);
+    conn.execute_batch(SCHEMA)?;
+    conn.execute(
+        "INSERT OR REPLACE INTO repository_directories (directory, identity) VALUES (?1, ?2)",
+        [directory, identity],
+    )?;
+
     Ok(())
+}
+
+/// `bytes` as lowercase hex.
+fn hex(bytes: &[u8; 32]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+/// The 32 bytes `text` holds as hex.
+fn unhex(text: &str) -> Option<[u8; 32]> {
+    if text.len() != 64 || !text.is_ascii() {
+        return None;
+    }
+    let mut out = [0; 32];
+    for (i, byte) in out.iter_mut().enumerate() {
+        *byte = u8::from_str_radix(&text[2 * i..2 * i + 2], 16).ok()?;
+    }
+
+    Some(out)
 }
 
 #[cfg(test)]

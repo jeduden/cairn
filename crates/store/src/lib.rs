@@ -950,6 +950,42 @@ impl Store {
         Ok(())
     }
 
+    /// The local secret `name` this node keeps, `fresh` when none is
+    /// kept yet (LANE-02): a value only this node knows, used to hash
+    /// names that must reveal nothing off it.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does or the kept secret does not read.
+    pub fn local_secret(&mut self, name: &str, fresh: [u8; 32]) -> Result<[u8; 32], StoreError> {
+        repository::secret(&self.conn, name, fresh)
+    }
+
+    /// The identity, as its caller hashed it, the directory `directory`
+    /// last resolved to (LANE-02).
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does.
+    pub fn directory_identity(&self, directory: &str) -> Result<Option<String>, StoreError> {
+        repository::identity(&self.conn, directory)
+    }
+
+    /// Keeps `identity` as what `directory` resolves to (LANE-02).
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does.
+    pub fn set_directory_identity(
+        &mut self,
+        directory: &str,
+        identity: &str,
+    ) -> Result<(), StoreError> {
+        repository::set_identity(&self.conn, directory, identity)?;
+
+        Ok(())
+    }
+
     /// Closes `writer`'s open segment, if it has one (REC-19).
     ///
     /// # Errors
