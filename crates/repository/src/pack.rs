@@ -122,6 +122,30 @@ fn search<R: Read + Seek>(
     Ok(None)
 }
 
+/// What an entry is built on, read without inflating its data.
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) enum Base {
+    /// Nothing: the entry is a whole object.
+    Whole,
+    /// The entry at this offset of the same pack.
+    Offset(u64),
+    /// The object with this id, wherever it is.
+    Reference(CommitId),
+}
+
+/// What the entry at `offset` is built on, from its header alone.
+///
+/// # Errors
+///
+/// As [`read_entry`], without the errors of inflating the data.
+pub(crate) fn read_base<R: Read + Seek>(
+    _pack: &mut R,
+    _offset: u64,
+    _max_size: usize,
+) -> Result<Base, Error> {
+    Err(Error::Corrupt("unimplemented"))
+}
+
 /// The offset in the pack of the object `id`, if the index lists it.
 ///
 /// # Errors

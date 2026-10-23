@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use super::{Entry, check_header, find_offset, read_entry};
+use super::{Base, Entry, check_header, find_offset, read_base, read_entry};
 use crate::fixture::pack::{
     Failing, PackBuilder, delta, delta_insert, entry_header, ofs_distance, pack_index,
 };
@@ -323,4 +323,29 @@ fn random_and_corrupted_packs_never_panic() {
         }
         let _ = check_header(&mut Cursor::new(&bytes));
     }
+}
+
+#[test]
+fn the_base_of_an_entry_is_read_from_its_header() {
+    let mut pack = PackBuilder::new();
+    let a = pack.whole([1; 20], 1, b"hello world");
+    let b = pack.offset_delta([2; 20], a, b"d");
+    let c = pack.reference_delta([3; 20], [4; 20], b"d");
+    let (bytes, _) = pack.finish();
+    let base = |at| read_base(&mut Cursor::new(&bytes), at, MAX);
+    assert_eq!(base(a).unwrap(), Base::Whole);
+    assert_eq!(base(b).unwrap(), Base::Offset(a));
+    assert_eq!(base(c).unwrap(), Base::Reference(id([4; 20])));
+}
+
+#[test]
+fn a_header_that_names_no_entry_has_no_base() {
+    let bytes = [entry_header(0, 3), zlib_stored(b"abc")].concat();
+    assert!(corrupt(read_base(&mut Cursor::new(&bytes), 0, MAX)));
+    let bytes = entry_header(3, 5000);
+    let result = read_base(&mut Cursor::new(&bytes), 0, 10);
+    assert!(matches!(result, Err(Error::TooLarge(_))));
+    let bytes = [vec![0; 20], entry_header(6, 1), ofs_distance(1000)].concat();
+    assert!(corrupt(read_base(&mut Cursor::new(&bytes), 20, MAX)));
+    assert!(corrupt(read_base(&mut Cursor::new(&bytes), 500, MAX)));
 }
