@@ -758,3 +758,23 @@ fn finish_within_kills_a_child_still_running_at_the_deadline() {
 
     assert_eq!(err, "cargo did not finish within 100ms");
 }
+
+#[test]
+fn a_wrapped_sentence_with_a_number_is_not_a_copyright_line() {
+    assert!(!copyright_line(
+        "copyright holder, and you cure the violation prior to 30 days after"
+    ));
+    assert!(!copyright_line(
+        "copyright holders be liable for 12 reasons"
+    ));
+    for line in [
+        "Copyright (c) 2024 A",
+        "Copyright 1999 B",
+        "Copyright © C",
+        "  COPYRIGHT 2010-2012 D",
+        "Copyright {yyyy} {name}",
+    ] {
+        assert!(copyright_line(line), "{line}");
+    }
+    assert!(has_year("in 2024") && has_year("1999") && !has_year("30 days") && !has_year("3000"));
+}

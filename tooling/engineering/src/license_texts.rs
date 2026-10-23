@@ -99,12 +99,18 @@ pub fn normalize(text: &str) -> String {
 pub(crate) fn copyright_line(line: &str) -> bool {
     let line = line.trim().to_lowercase();
     let stated = line.starts_with("copyright")
-        && (line.contains("(c)")
-            || line.contains('©')
-            || line.contains("yyyy")
-            || line.chars().any(|c| c.is_ascii_digit()));
+        && (line.contains("(c)") || line.contains('©') || line.contains("yyyy") || has_year(&line));
 
     stated || line.starts_with('©')
+}
+
+/// Whether `line` holds a year: four digits starting with 1 or 2. A wrapped
+/// sentence such as "copyright holder, ... prior to 30 days after" holds
+/// none.
+fn has_year(line: &str) -> bool {
+    line.as_bytes()
+        .windows(4)
+        .any(|w| matches!(w[0], b'1' | b'2') && w.iter().all(u8::is_ascii_digit))
 }
 
 /// How many words a title may take before the canonical text: "MIT

@@ -159,6 +159,7 @@ fn it_holds_every_linked_crate(w: &mut World) -> Result<(), String> {
         for p in checks::holds_every_crate(text, &s.linked[target], license_texts::license_files) {
             problems.push(format!("{target}: {p}"));
         }
+        problems.extend(checks::holds_compiled_in_texts(target, text));
     }
 
     outcome(problems)

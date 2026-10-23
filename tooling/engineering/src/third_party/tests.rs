@@ -314,3 +314,15 @@ fn run_release_reports_the_records_it_checks_and_names_what_it_cannot_read() {
             .starts_with("cargo metadata for ")
     );
 }
+
+#[test]
+fn a_verbatim_text_keeps_its_own_copyright_lines() {
+    let entries = non_crate("x86_64-pc-windows-gnu");
+    let text = render(&entries);
+
+    assert!(text.contains("Copyright (c) 2002 Todd C. Miller"));
+    assert!(text.contains("Copyright (C) 2007 Free Software Foundation, Inc."));
+    assert!(text.contains("GCC RUNTIME LIBRARY EXCEPTION"));
+    assert!(entries.iter().filter(|e| e.verbatim).count() == 2);
+    assert_eq!(published("\n a  \r\nb   \n\n"), " a\nb");
+}

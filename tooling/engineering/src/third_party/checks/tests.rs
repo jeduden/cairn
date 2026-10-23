@@ -126,6 +126,25 @@ fn a_file_must_name_what_its_target_compiles_in() {
 }
 
 #[test]
+fn compiled_in_texts_must_be_whole_and_published_ones_line_for_line() {
+    let windows = render(&non_crate("x86_64-pc-windows-gnu"));
+
+    assert!(holds_compiled_in_texts("x86_64-pc-windows-gnu", &windows).is_empty());
+    let sentence = "copyright holder, and you cure the violation prior to 30 days after";
+    assert!(windows.contains(sentence));
+    assert_eq!(
+        holds_compiled_in_texts("x86_64-pc-windows-gnu", &windows.replace(sentence, "")),
+        ["x86_64-pc-windows-gnu: the text of GPL-3.0 is incomplete"]
+    );
+    let musl = render(&non_crate("x86_64-unknown-linux-musl"));
+    assert!(holds_compiled_in_texts("x86_64-unknown-linux-musl", &musl).is_empty());
+    assert_eq!(
+        holds_compiled_in_texts("x86_64-unknown-linux-musl", "").len(),
+        4
+    );
+}
+
+#[test]
 fn files_differ_exactly_when_the_linked_crates_do() {
     let linked: BTreeMap<String, Vec<Package>> = [
         ("a".to_owned(), vec![package("x", "1.0.0")]),

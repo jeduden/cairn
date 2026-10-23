@@ -32,18 +32,18 @@ pub fn committed_path(target: &str) -> String {
 /// The blessing SQLite carries in place of a copyright notice.
 const SQLITE: &str = "The author disclaims copyright to this source code.  In place of\na legal notice, here is a blessing:\n\n   * May you do good and not evil.\n   * May you find forgiveness for yourself and forgive others.\n   * May you share freely, never taking more than you give.";
 
-/// The license of the mingw-w64 runtime, as its project publishes it. The
-/// stakeholder verifies this text against the release the Windows build
-/// links before a release (ENG-31).
+/// The notices the mingw-w64 runtime requires a binary that links it to
+/// carry, as its project publishes them in `COPYING.MinGW-w64-runtime.txt`
+/// (the master branch of its mirror). Each notice states its own
+/// copyright line, so the text is kept as published.
 const MINGW_W64: &str = include_str!("third_party/runtime/mingw-w64.txt");
 
 /// The GNU General Public License, version 3, which the GCC runtime
 /// libraries carry with the exception below.
 const GPL_3: &str = include_str!("third_party/runtime/GPL-3.0.txt");
 
-/// A summary of the GCC Runtime Library Exception, version 3.1, which
-/// points to its published text. The stakeholder replaces it with the
-/// exception's full text before a release (ENG-31).
+/// The GCC Runtime Library Exception, version 3.1, as the GCC project
+/// publishes it in `COPYING.RUNTIME`.
 const GCC_EXCEPTION: &str = include_str!("third_party/runtime/gcc-exception.txt");
 
 /// One piece of third-party code in a file: its name, the license it
@@ -55,6 +55,9 @@ pub struct Entry {
     pub copyrights: Vec<String>,
     /// The texts, as (label, text).
     pub texts: Vec<(String, String)>,
+    /// Whether the texts are kept as published, their copyright lines
+    /// included, because they state notices the license requires.
+    pub verbatim: bool,
 }
 
 /// The code `target` compiles in without being a crate: SQLite, the Rust
@@ -73,12 +76,14 @@ pub fn non_crate(target: &str) -> Vec<Entry> {
             license: "public domain".to_owned(),
             copyrights: Vec::new(),
             texts: vec![("SQLite".to_owned(), SQLITE.to_owned())],
+            verbatim: false,
         },
         Entry {
             name: "Rust standard library".to_owned(),
             license: "MIT OR Apache-2.0".to_owned(),
             copyrights: vec!["Copyright (c) The Rust Project Developers".to_owned()],
             texts: vec![canon("MIT"), canon("Apache-2.0")],
+            verbatim: false,
         },
     ];
     if target.ends_with("-windows-gnu") {
@@ -90,6 +95,7 @@ pub fn non_crate(target: &str) -> Vec<Entry> {
             license: "MIT".to_owned(),
             copyrights: vec!["Copyright © 2005-2020 Rich Felker, et al.".to_owned()],
             texts: vec![canon("MIT")],
+            verbatim: false,
         });
     }
 
@@ -107,6 +113,7 @@ fn mingw_runtime() -> [Entry; 2] {
                 "Copyright (c) 2009, 2010, 2011, 2012, 2013 by the mingw-w64 project".to_owned(),
             ],
             texts: vec![("mingw-w64 runtime".to_owned(), MINGW_W64.to_owned())],
+            verbatim: true,
         },
         Entry {
             name: "libgcc and libgcc_eh".to_owned(),
@@ -119,6 +126,7 @@ fn mingw_runtime() -> [Entry; 2] {
                     GCC_EXCEPTION.to_owned(),
                 ),
             ],
+            verbatim: true,
         },
     ]
 }
@@ -143,6 +151,7 @@ pub fn crate_entry(package: &Package, files: &[(String, String)]) -> Entry {
             .iter()
             .map(|(name, text)| (label(name, text), text.clone()))
             .collect(),
+        verbatim: false,
     }
 }
 
@@ -172,6 +181,17 @@ fn body(text: &str) -> String {
     kept.join("\n").trim_matches('\n').to_owned()
 }
 
+/// A text as published: `\n` line ends, no trailing space, no blank line at
+/// either end, its copyright lines kept.
+fn published(text: &str) -> String {
+    text.lines()
+        .map(str::trim_end)
+        .collect::<Vec<_>>()
+        .join("\n")
+        .trim_matches('\n')
+        .to_owned()
+}
+
 /// The file for the code in `entries`: one section per distinct license text, naming
 /// the code that uses it with the copyright lines it states, then the
 /// text once. Sections sort by label and the code in them by name.
@@ -183,10 +203,14 @@ pub fn render(entries: &[Entry]) -> String {
     let mut sections: BTreeMap<(String, String), (String, BTreeSet<&str>)> = BTreeMap::new();
     for entry in &sorted {
         for (label, text) in &entry.texts {
-            let key = (label.clone(), license_texts::normalize(text));
+            let (key, shown) = if entry.verbatim {
+                (published(text), published(text))
+            } else {
+                (license_texts::normalize(text), body(text))
+            };
             let section = sections
-                .entry(key)
-                .or_insert_with(|| (body(text), BTreeSet::new()));
+                .entry((label.clone(), key))
+                .or_insert_with(|| (shown, BTreeSet::new()));
             section.1.insert(&entry.name);
         }
     }

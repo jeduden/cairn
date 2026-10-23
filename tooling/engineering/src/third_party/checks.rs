@@ -100,6 +100,34 @@ fn required_names(target: &str) -> Vec<&'static str> {
     names
 }
 
+/// Problems with a file that does not hold, whole, the text of the code
+/// its target compiles in without being a crate: for a text kept as
+/// published, every line of it; for any other, its words, whatever the
+/// copyright lines.
+#[must_use]
+pub fn holds_compiled_in_texts(target: &str, rendered: &str) -> Vec<String> {
+    let lines: std::collections::BTreeSet<&str> = rendered.lines().map(str::trim_end).collect();
+    let words = license_texts::normalize(rendered);
+    let mut problems = Vec::new();
+    for entry in super::non_crate(target) {
+        for (label, text) in &entry.texts {
+            let whole = if entry.verbatim {
+                text.lines()
+                    .map(str::trim_end)
+                    .filter(|l| !l.is_empty())
+                    .all(|l| lines.contains(l))
+            } else {
+                words.contains(&license_texts::normalize(text))
+            };
+            if !whole {
+                problems.push(format!("{target}: the text of {label} is incomplete"));
+            }
+        }
+    }
+
+    problems
+}
+
 /// Problems with a file that does not name the code its target compiles
 /// in without being a crate.
 #[must_use]

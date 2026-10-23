@@ -40,8 +40,9 @@ a release target with no committed file.
 Open for the stakeholder, before a release:
 
 - The fixed list of non-crate code is short. No lawyer has reviewed it.
-- The Windows file names the mingw-w64 runtime and libgcc. The
-  mingw-w64 text is written from memory of its published license, and
-  the GCC Runtime Library Exception is a summary that points to its
-  published text. Both need replacing with the exact texts of the
-  release the Windows build links.
+- The Windows file carries the notices of mingw-w64's runtime, the GNU
+  General Public License 3.0 and the GCC Runtime Library Exception 3.1,
+  each as published, with its own copyright lines. They come from the
+  projects' master branches. Check them against the releases the
+  Windows build links: mingw-w64 from Ubuntu's pinned package, and
+  libgcc from its pinned compiler.
