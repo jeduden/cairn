@@ -76,11 +76,10 @@ pub(crate) fn open_below(base: &Path, rel: &str) -> Result<Option<File>, Error> 
         Err(e) if e.kind() == ErrorKind::NotFound => return Ok(None),
         Err(e) => return Err(Error::io("a repository file")(e)),
     }
-    match File::open(&path) {
-        Ok(file) => Ok(Some(file)),
-        Err(e) if e.kind() == ErrorKind::NotFound => Ok(None),
-        Err(e) => Err(Error::io("a repository file")(e)),
-    }
+    // A file gone since the check is an error like any other open's.
+    File::open(&path)
+        .map(Some)
+        .map_err(Error::io("a repository file"))
 }
 
 /// The bytes of the regular file `rel` below `base`, or `None` when
