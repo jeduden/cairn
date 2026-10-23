@@ -116,9 +116,9 @@ wrap: toml
 Edit these source files, then run `mdsmith fix docs/tooling.md`
 to refresh the imports. CI's `mdsmith check .` rejects stale copies.
 After changing pins, run `mise lock` to refresh the platforms already
-recorded in the lockfile. Taplo and cargo-audit publish no checksums, so
-verify and record their asset SHA-256 values in the lockfile when bumping
-them.
+recorded in the lockfile. Taplo and cargo-audit publish no checksums and
+no attestations. Verify and record their asset SHA-256 values in the
+lockfile when bumping them. mise then checks them by that checksum alone.
 
 The script is the one install path. CI's setup action, a Claude Code web
 environment and a developer machine all run it. It downloads and verifies
@@ -132,8 +132,13 @@ A Claude Code web environment uses this setup script:
 
 ```sh
 # pins: mise 2026.9.1 (bump with scripts/mise.sha256)
-cd parleyinn && MISE_ENV=dev scripts/setup-tools.sh
+cd parleyinn && MISE_ENV=dev scripts/setup-tools.sh --profile
 ```
+
+Outside CI the script prints the lines that put the tools on `PATH`.
+`--profile` also appends them to `~/.bashrc`, which a web environment
+needs. `scripts/setup-tools.sh --check` checks the mise pin and the tools'
+backends without installing anything.
 
 The environment caches what setup installs. The cache rebuilds only when
 the setup script's text changes, or after about seven days. Bump the

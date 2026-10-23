@@ -2,8 +2,8 @@
 //! exists to catch.
 
 use crate::{
-    Case, Check, Injection, cargo_lib_test, cargo_test, clippy, mdsmith, scenario, taplo_fmt,
-    taplo_lint,
+    Case, Check, Injection, cargo_lib_test, cargo_test, clippy, mdsmith, scenario, setup_tools,
+    taplo_fmt, taplo_lint,
 };
 
 /// The dependency decision the ENG-18 and ENG-26 cases drift.
@@ -71,6 +71,7 @@ pub fn cases() -> Vec<Case> {
         static_analysis_cases(),
         complexity_cases(),
         toml_cases(),
+        setup_cases(),
         release_cases(),
         protection_cases(),
         architecture_cases(),
@@ -1008,6 +1009,22 @@ fn static_analysis_cases() -> Vec<Case> {
 /// or no longer gating on its job, which the gate test catches, and a
 /// misspelt manifest key and a TOML file out of its layout, which taplo
 /// itself catches.
+/// The tool setup installs only released binaries: a tool whose backend
+/// would build from source is refused before anything downloads.
+fn setup_cases() -> Vec<Case> {
+    vec![case(
+        "a tool that builds from source",
+        "scripts/setup-tools.sh --check",
+        Injection::replace(
+            "mise.toml",
+            "[tools]\n",
+            "[tools]\n\"cargo:cargo-audit\" = \"0.22.2\"\n",
+        ),
+        setup_tools(),
+        "refusing tools that are not released binaries",
+    )]
+}
+
 fn toml_cases() -> Vec<Case> {
     const CI: &str = ".github/workflows/ci.yml";
     const GATE: &str = "the_ci_workflow_gates_on_the_toml_checks";
