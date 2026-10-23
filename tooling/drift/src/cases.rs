@@ -54,6 +54,7 @@ pub fn cases() -> Vec<Case> {
         dependency_cases(),
         decision_cases(),
         repository_cases(),
+        license_text_cases(),
         review_cases(),
         review_gate_cases(),
         gate_cases(),
@@ -211,6 +212,43 @@ fn decision_cases() -> Vec<Case> {
                 "ADR-99",
             )
         },
+    ]
+}
+
+/// The drifts ENG-30 exists to catch: a license the tool keeps no text
+/// for, a canonical text that no longer fits, and CI that no longer runs
+/// the check.
+fn license_text_cases() -> Vec<Case> {
+    vec![
+        case(
+            "a license deny.toml grants with no canonical text",
+            "ENG-30",
+            Injection::replace(
+                "deny.toml",
+                r#"{ crate = "libfuzzer-sys", allow = ["NCSA"] },"#,
+                r#"{ crate = "libfuzzer-sys", allow = ["NCSA", "WTFPL"] },"#,
+            ),
+            scenario("ENG-30"),
+            "deny.toml grants WTFPL, which the license tool keeps no text for",
+        ),
+        case(
+            "a canonical text that no longer fits the license files",
+            "ENG-30",
+            Injection::replace(
+                "tooling/engineering/src/license_texts/canon/MIT.txt",
+                "Permission is hereby granted",
+                "Permission is not granted",
+            ),
+            scenario("ENG-30"),
+            "declares MIT, but no license file fits MIT",
+        ),
+        case(
+            "CI no longer runs the license check",
+            "ENG-30",
+            Injection::replace(CI_WORKFLOW, "--bin license-check", "--bin protection-check"),
+            scenario("ENG-30"),
+            "the CI workflow does not run license-check with --locked",
+        ),
     ]
 }
 

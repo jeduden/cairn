@@ -191,10 +191,10 @@ Feature: Engineering quality (ENG)
     And only the release-only build workflow publishes each binary's SLSA Build Level 3 provenance as a GitHub artifact attestation, verified against that workflow's signing identity at main
     And an SPDX SBOM is attached, published as a GitHub artifact attestation and verified once published
 
-  @ENG-30 @P0 @pending
+  @ENG-30 @P0
   Scenario: a dependency with no license text stops the build in the pull request that adds it
     Given the repository checkout
-    When every crate in "Cargo.lock" is read through "cargo metadata" and the sources cargo has fetched
+    When every crate linked into a shipped executable for a release target is read through "cargo metadata" and the sources cargo has fetched
     Then each crate has a license file in its source
     And the repository keeps no license text for any crate by name and version
     And each license file's text fits the canonical text of a license in the crate's declared expression, from the allow-list in "deny.toml" or granted by one of its exceptions, ignoring case, whitespace and copyright lines, with holder, year and name left free and the Apache-2.0 appendix optional

@@ -1,7 +1,7 @@
 ---
 n: 1
 title: "Every crate has a license text, checked on each pull request"
-status: "🔳"
+status: "✅"
 result: false
 ---
 # Phase 1: every crate has a license text, checked on each pull request
@@ -42,46 +42,29 @@ Gate. Run the built tool against the real tree in an isolated
 `PARINN_HOME`, then against a scratch copy with one crate's license file
 removed, and confirm the second run exits non-zero naming that crate.
 
-## Progress
+## Result
 
-Done, red then green: the license-text check in
-`tooling/engineering/src/license_texts.rs`. It keeps the canonical text
-of every license `deny.toml` allows or grants by exception. Twenty-seven
-unit tests sit beside it.
+Closes ENG-30. The `@ENG-30` scenario is off `@pending` and passes,
+bound in
+[the ENG-30 steps](../../tooling/scenario/tests/bdd/engineering_licenses.rs).
+`@ENG-31` stays pending for phases 2 and 3.
 
-- A fitting license file passes.
-- A crate with none fails, naming the crate and version.
-- A text that does not fit the declared license fails.
-- The check reads only `cargo metadata` output and fetched sources.
+On the stakeholder's ruling of this session, the check covers the
+crates a release links, not the whole dependency tree. A crate is linked
+when a normal-dependency path from a binary under `crates/` reaches it
+with `cargo metadata --filter-platform <target-triple>` for any release
+target the build workflow names. That leaves out the cucumber, peg and
+synthez test stack, the fuzz workspace, `r-efi` and the ICU4X crates,
+which ship no license text or add trailing attribution but link into no
+shipped executable. ENG-30's wording changed to match.
 
-Held back, awaiting the stakeholder:
-
-- The two checks of the repository's own records, the substitute texts
-  it keeps and `deny.toml`'s grants against the canonical texts, wait
-  for the scenario. ENG-27 asks for their drift case, which must fail a
-  bound scenario, so they land together.
-- The CLI entry, the CI step, the bound `@ENG-30` scenario and its drift
-  case are not landed.
-- Run over the real tree, the check fails on seven crates. Each ships
-  no license text in its published source.
-- In the root workspace: `cucumber-codegen` 0.23.0, `peg-macros` 0.6.3,
-  `peg-runtime` 0.6.3, `synthez-codegen` 0.4.0, `synthez-core` 0.4.0
-  and `r-efi` 6.0.0.
-- In the fuzz workspace: `libfuzzer-sys` 0.4.13, whose NCSA part has no
-  text.
-- ENG-30 says such a crate is removed or replaced.
-- The first five come with the cucumber test stack. `r-efi` is a
-  Windows and UEFI crate of `getrandom`.
-- Wiring the check now would turn CI red. An exception list would
-  contradict ENG-30.
-- The stakeholder rules. Replace the stack, amend ENG-30 to allow a
-  recorded exception, or restrict the check to the crates linked on
-  release targets.
-- A second finding comes from holding a file to ENG-30's wording: the
-  canonical text, a title, and nothing after it. The 18 ICU4X crates
-  (`icu_*`, `litemap`, `potential_utf`, `tinystr`, `writeable`, `yoke*`,
-  `zerofrom*`, `zerotrie`, `zerovec*`) end their Unicode-3.0 file with
-  an SPDX line and an attribution to ICU4C and IBM. The check refuses
-  that trailing text. The stakeholder rules whether such an
-  attribution fits, and if so how ENG-30 words it.
-- `@ENG-30` stays `@pending`.
+- The check is in `tooling/engineering/src/license_texts.rs`, with the
+  canonical text of every license `deny.toml` allows or grants. It
+  refuses a term added after the text, a clause dropped, and a template
+  gap longer than a name.
+- `license-check` runs it, and CI's supply-chain job runs that with
+  `--locked`.
+- Three drift cases catch a license `deny.toml` grants with no
+  canonical text, a canonical text that no longer fits, and CI that
+  stops running the check.
+- Run over the real tree, the check passes.

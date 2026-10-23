@@ -8,8 +8,15 @@
 //! substitute texts it keeps, `deny.toml`'s grants against the canonical
 //! texts) land with the scenario and its drift case (ENG-27).
 
+pub mod cli;
+
+use std::collections::{BTreeMap, BTreeSet};
+use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Command;
+
+use crate::{Checkout, architecture, dependencies};
 
 /// The canonical text of each license the allow-list in `deny.toml`
 /// and its exceptions grant, by SPDX id. The text of a license a
@@ -258,26 +265,30 @@ pub fn packages(metadata: &str) -> Result<Vec<Package>, String> {
         serde_json::from_str(metadata).map_err(|e| format!("read cargo metadata: {e}"))?;
     let mut found = Vec::new();
     for p in value["packages"].as_array().into_iter().flatten() {
-        if !p["source"].is_string() {
-            continue;
+        if p["source"].is_string() {
+            found.push(package_of(p)?);
         }
-        let package = (|| {
-            Some(Package {
-                name: p["name"].as_str()?.to_owned(),
-                version: p["version"].as_str()?.to_owned(),
-                license: p["license"].as_str().map(str::to_owned),
-                dir: Path::new(p["manifest_path"].as_str()?)
-                    .parent()?
-                    .to_path_buf(),
-            })
-        })();
-        found.push(package.ok_or_else(|| {
-            format!("cargo metadata lists a crate without a name, version or manifest path: {p}")
-        })?);
     }
     found.sort_by(|a, b| (&a.name, &a.version).cmp(&(&b.name, &b.version)));
 
     Ok(found)
+}
+
+/// One package of `cargo metadata`.
+fn package_of(p: &serde_json::Value) -> Result<Package, String> {
+    (|| {
+        Some(Package {
+            name: p["name"].as_str()?.to_owned(),
+            version: p["version"].as_str()?.to_owned(),
+            license: p["license"].as_str().map(str::to_owned),
+            dir: Path::new(p["manifest_path"].as_str()?)
+                .parent()?
+                .to_path_buf(),
+        })
+    })()
+    .ok_or_else(|| {
+        format!("cargo metadata lists a crate without a name, version or manifest path: {p}")
+    })
 }
 
 /// The license files in `dir`, as (name, text), in name order: those
@@ -384,6 +395,370 @@ pub fn check_tree(
     }
 
     Ok(problems)
+}
+
+/// Problems with the canonical texts themselves: a license `deny.toml`
+/// allows, or grants by exception, that the tool keeps no text for.
+#[must_use]
+pub fn canon_covers(deny_toml: &str) -> Vec<String> {
+    let mut wanted: BTreeSet<String> = deny_allow(deny_toml).into_iter().collect();
+    wanted.extend(
+        dependencies::license_exceptions(deny_toml)
+            .into_values()
+            .flatten(),
+    );
+
+    wanted
+        .into_iter()
+        .filter(|id| canonical(id).is_none())
+        .map(|id| format!("deny.toml grants {id}, which the license tool keeps no text for"))
+        .collect()
+}
+
+/// The licenses `deny.toml`'s top-level `allow = [...]` lists, on one
+/// line or several.
+fn deny_allow(deny_toml: &str) -> Vec<String> {
+    let Some(at) = deny_toml
+        .lines()
+        .scan(0, |offset, line| {
+            let start = *offset;
+            *offset += line.len() + 1;
+            Some((start, line))
+        })
+        .find_map(|(start, line)| line.trim().starts_with("allow = [").then_some(start))
+    else {
+        return Vec::new();
+    };
+    let body = &deny_toml[at..];
+    let list = body
+        .split_once('[')
+        .and_then(|(_, rest)| rest.split_once(']'))
+        .map_or("", |(list, _)| list);
+
+    list.lines()
+        .map(|l| l.split('#').next().unwrap_or_default())
+        .flat_map(|l| l.split(','))
+        .map(|l| l.trim().trim_matches('"').to_owned())
+        .filter(|l| !l.is_empty())
+        .collect()
+}
+
+/// Problems with license texts the repository keeps for a crate: a
+/// license file under `licenses/`, `third_party/` or `vendor/` in a
+/// directory named for a crate, or for it and its version, other than a
+/// target's committed `THIRD_PARTY_LICENSES` (ENG-31). A directory the
+/// check cannot read is a problem too. A crate that ships no text is
+/// removed or replaced, never patched here.
+#[must_use]
+pub fn kept_texts(checkout: &Checkout, packages: &[Package]) -> Vec<String> {
+    let names: BTreeSet<String> = packages
+        .iter()
+        .flat_map(|p| [p.name.clone(), format!("{}-{}", p.name, p.version)])
+        .collect();
+    let (mut files, mut found) = (Vec::new(), Vec::new());
+    for top in ["licenses", "third_party", "vendor"] {
+        walk(&checkout.root.join(top), &mut files, &mut found);
+    }
+    for path in files {
+        let in_crate_dir = path
+            .parent()
+            .and_then(Path::file_name)
+            .is_some_and(|d| names.contains(d.to_string_lossy().as_ref()));
+        let named = path
+            .file_name()
+            .is_some_and(|n| license_file_name(&n.to_string_lossy()));
+        if in_crate_dir && named {
+            found.push(format!(
+                "the repository keeps a license text at {}",
+                path.strip_prefix(&checkout.root).unwrap_or(&path).display()
+            ));
+        }
+    }
+    found.sort();
+
+    found
+}
+
+/// Lists in `files` each file under `dir`, and notes in `problems` a
+/// directory it cannot read. A directory that does not exist holds
+/// nothing.
+fn walk(dir: &Path, files: &mut Vec<PathBuf>, problems: &mut Vec<String>) {
+    let entries = match fs::read_dir(dir) {
+        Ok(entries) => entries,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return,
+        Err(e) => {
+            problems.push(format!("read {}: {e}", dir.display()));
+            return;
+        }
+    };
+    let mut paths: Vec<PathBuf> = entries.filter_map(|e| Some(e.ok()?.path())).collect();
+    paths.sort();
+    for path in paths {
+        if path.is_dir() {
+            walk(&path, files, problems);
+        } else {
+            files.push(path);
+        }
+    }
+}
+
+/// The registry crates linked into a shipped executable: those reached
+/// through normal dependencies from each binary under `product`, which
+/// `cargo metadata --filter-platform <target>` resolved. A crate that
+/// only builds, tests or fuzzes is not linked.
+///
+/// # Errors
+///
+/// Fails when `metadata` is not cargo's JSON or holds no resolved graph.
+pub fn linked(metadata: &str, product: &Path) -> Result<Vec<Package>, String> {
+    let value: serde_json::Value =
+        serde_json::from_str(metadata).map_err(|e| format!("read cargo metadata: {e}"))?;
+    let nodes: BTreeMap<&str, &serde_json::Value> = value["resolve"]["nodes"]
+        .as_array()
+        .ok_or("cargo metadata holds no resolved graph")?
+        .iter()
+        .filter_map(|n| Some((n["id"].as_str()?, n)))
+        .collect();
+    let root = value["workspace_root"]
+        .as_str()
+        .ok_or("cargo metadata names no workspace_root")?;
+    let product = Path::new(root).join(product);
+    let mut todo: Vec<&str> = value["packages"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|p| dependencies::ships(p, &product))
+        .filter_map(|p| p["id"].as_str())
+        .collect();
+    let mut seen = BTreeSet::new();
+    while let Some(id) = todo.pop() {
+        if !seen.insert(id) {
+            continue;
+        }
+        let deps = nodes.get(id).map_or(&[][..], |n| {
+            n["deps"].as_array().map_or(&[][..], Vec::as_slice)
+        });
+        todo.extend(
+            deps.iter()
+                .filter(|d| {
+                    d["dep_kinds"]
+                        .as_array()
+                        .into_iter()
+                        .flatten()
+                        .any(|k| k["kind"].is_null())
+                })
+                .filter_map(|d| d["pkg"].as_str()),
+        );
+    }
+
+    let mut found = Vec::new();
+    for p in value["packages"].as_array().into_iter().flatten() {
+        if p["source"].is_string() && p["id"].as_str().is_some_and(|id| seen.contains(id)) {
+            found.push(package_of(p)?);
+        }
+    }
+    found.sort_by(|a, b| (&a.name, &a.version).cmp(&(&b.name, &b.version)));
+
+    Ok(found)
+}
+
+/// The release targets the build workflow names: the `rust-target` of
+/// each `rust-target:artifact-name` pair in its `*_TARGETS` lists.
+///
+/// # Errors
+///
+/// Fails when the workflow names no target.
+pub fn release_targets(build_workflow: &str) -> Result<Vec<String>, String> {
+    let mut targets = Vec::new();
+    let mut listing = false;
+    for line in build_workflow.lines().map(str::trim) {
+        if line.ends_with("_TARGETS: >-") {
+            listing = true;
+        } else if listing {
+            match line.split_once(':') {
+                Some((target, artifact)) if !line.contains(' ') && !artifact.is_empty() => {
+                    targets.push(target.to_owned());
+                }
+                _ => listing = false,
+            }
+        }
+    }
+    if targets.is_empty() {
+        return Err("the build workflow names no release target".to_owned());
+    }
+    targets.sort();
+    targets.dedup();
+
+    Ok(targets)
+}
+
+/// Runs `cargo metadata` on the workspace `manifest` resolved for
+/// `target`, with `PARINN_HOME` pointed at `parinn_home` (ENG-14).
+///
+/// # Errors
+///
+/// Fails when cargo cannot run, exits unsuccessfully, or prints no UTF-8.
+pub fn cargo_metadata_for(
+    cargo: &OsStr,
+    manifest: &Path,
+    parinn_home: &Path,
+    target: &str,
+) -> Result<String, String> {
+    let out = Command::new(cargo)
+        .args([
+            "metadata",
+            "--format-version",
+            "1",
+            "--locked",
+            "--filter-platform",
+        ])
+        .arg(target)
+        .arg("--manifest-path")
+        .arg(manifest)
+        .env("PARINN_HOME", parinn_home)
+        .output()
+        .map_err(|e| format!("run cargo metadata: {e}"))?;
+    if !out.status.success() {
+        return Err(format!(
+            "cargo metadata for {target} failed: {}",
+            String::from_utf8_lossy(&out.stderr).trim_end()
+        ));
+    }
+
+    String::from_utf8(out.stdout).map_err(|e| format!("read cargo metadata: {e}"))
+}
+
+/// The crates linked into a shipped executable for any of `targets`,
+/// from each target's `metadata`, once each.
+///
+/// # Errors
+///
+/// Fails when a target's metadata cannot be read.
+pub fn linked_for_release(
+    targets: &[String],
+    metadata: impl Fn(&str) -> Result<String, String>,
+) -> Result<Vec<Package>, String> {
+    let mut all: BTreeMap<(String, String), Package> = BTreeMap::new();
+    for target in targets {
+        for package in linked(&metadata(target)?, Path::new(architecture::PRODUCT))? {
+            all.insert((package.name.clone(), package.version.clone()), package);
+        }
+    }
+
+    Ok(all.into_values().collect())
+}
+
+/// Problems with the crates a release links: those of
+/// [`check_crate`] for each, reading its files through `read`.
+pub fn check_packages(
+    packages: &[Package],
+    read: impl Fn(&Path) -> Result<Vec<(String, String)>, String>,
+) -> Vec<String> {
+    let mut problems = Vec::new();
+    for package in packages {
+        match read(&package.dir) {
+            Ok(files) => problems.extend(check_crate(package, &files)),
+            Err(e) => problems.push(e),
+        }
+    }
+
+    problems
+}
+
+/// Problems with ENG-30's CI step: it runs `license-check` with the
+/// locked dependency tree.
+#[must_use]
+pub fn ci_runs_check(ci_workflow: &str) -> Vec<String> {
+    let runs = ci_workflow
+        .lines()
+        .any(|l| l.contains("--bin license-check") && l.contains("--locked"));
+
+    if runs {
+        Vec::new()
+    } else {
+        vec!["the CI workflow does not run license-check with --locked".to_owned()]
+    }
+}
+
+/// Problems with the repository for ENG-30: the crates a release links
+/// (`linked`) with no fitting license file, the canonical texts
+/// `deny.toml` grants that the tool lacks, and texts the repository
+/// keeps for a crate.
+#[must_use]
+pub fn check_repository(checkout: &Checkout, linked: &[Package]) -> Vec<String> {
+    let mut problems = check_packages(linked, license_files);
+    problems.extend(
+        checkout
+            .read("deny.toml")
+            .map_or_else(|e| vec![e], |deny| canon_covers(&deny)),
+    );
+    problems.extend(kept_texts(checkout, linked));
+
+    problems
+}
+
+/// Problems with what the product links of the check: a package under
+/// `crates/` that depends on the `engineering` crate, which holds it,
+/// would ship it.
+///
+/// # Errors
+///
+/// Fails when `metadata` is not cargo's JSON.
+pub fn product_links_check(metadata: &str) -> Result<Vec<String>, String> {
+    let value: serde_json::Value =
+        serde_json::from_str(metadata).map_err(|e| format!("read cargo metadata: {e}"))?;
+    let root = value["workspace_root"].as_str().unwrap_or_default();
+    let product = Path::new(root).join(architecture::PRODUCT);
+
+    Ok(value["packages"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|p| {
+            p["manifest_path"]
+                .as_str()
+                .is_some_and(|m| Path::new(m).starts_with(&product))
+        })
+        .filter(|p| {
+            p["dependencies"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .any(|d| d["name"] == "engineering" && d["kind"].is_null())
+        })
+        .map(|p| {
+            format!(
+                "{} depends on the engineering crate, which would ship the license check",
+                p["name"].as_str().unwrap_or_default()
+            )
+        })
+        .collect())
+}
+
+/// The workflow that names the release targets.
+pub const BUILD_WORKFLOW: &str = ".github/workflows/build.yml";
+
+/// Checks the repository at `root` for ENG-30: the crates linked into
+/// a shipped executable for each release target, whose sources cargo
+/// has fetched, and the repository's own records. It runs `cargo
+/// metadata` once per target, with `PARINN_HOME` pointed at an empty
+/// directory of its own (ENG-14).
+///
+/// # Errors
+///
+/// Fails when the build workflow, cargo or a crate's directory cannot be
+/// read.
+pub fn check_release(cargo: &OsStr, root: &Path) -> Result<Vec<String>, String> {
+    let checkout = Checkout::new(root);
+    let targets = release_targets(&checkout.read(BUILD_WORKFLOW)?)?;
+    let home = std::env::temp_dir().join(format!("license-check-{}", std::process::id()));
+    fs::create_dir_all(&home).map_err(|e| format!("create {}: {e}", home.display()))?;
+    let linked = linked_for_release(&targets, |target| {
+        cargo_metadata_for(cargo, &root.join("Cargo.toml"), &home, target)
+    });
+    let _ = fs::remove_dir_all(&home);
+
+    Ok(check_repository(&checkout, &linked?))
 }
 
 #[cfg(test)]

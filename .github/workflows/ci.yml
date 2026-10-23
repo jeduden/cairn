@@ -234,6 +234,10 @@ jobs:
       - run: cargo deny --manifest-path fuzz/Cargo.toml check licenses bans sources
       - run: cargo audit
       - run: cargo audit --file fuzz/Cargo.lock
+      # ENG-30: every crate a release links carries a license text that
+      # fits its declared license, so a dependency with none stops the
+      # pull request that adds it.
+      - run: cargo run --locked -p engineering --bin license-check
 
   # ENG-27: every check that keeps the specification, its scenarios
   # and the repository's records in step is proven here. The suite

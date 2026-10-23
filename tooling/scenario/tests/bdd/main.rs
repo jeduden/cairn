@@ -24,6 +24,7 @@ mod engineering_boundary;
 mod engineering_contract;
 mod engineering_drift;
 mod engineering_isolation;
+mod engineering_licenses;
 mod engineering_logs;
 mod engineering_panics;
 mod engineering_protection;

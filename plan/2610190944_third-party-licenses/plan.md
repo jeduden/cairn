@@ -104,12 +104,12 @@ footer: |
 
 | #   | Status | Phase                                                                      |
 | --- | ------ | -------------------------------------------------------------------------- |
-| 1   | 🔳     | [Every crate has a license text, checked on each pull request](phase-1.md) |
+| 1   | ✅     | [Every crate has a license text, checked on each pull request](phase-1.md) |
 <?/catalog?>
 
 ## Acceptance Criteria
 
-- [ ] ENG-30 is off `@pending` and its scenario passes in the scenario
+- [x] ENG-30 is off `@pending` and its scenario passes in the scenario
   suite; a crate with no recoverable license text fails CI in the pull
   request that adds it
 - [ ] ENG-31 is off `@pending` and its scenario passes; each target's
@@ -120,7 +120,7 @@ footer: |
   crate linked into its target, SQLite, the Rust standard library and the musl C
   library, and no build-only, test, fuzz or tooling crate
 - [ ] Drift cases for the ENG-30 check and the ENG-31 verification are
-  caught (ENG-27)
+  caught (ENG-27); the ENG-30 cases are
 - [ ] No module is added to any shipped executable; ENG-18's list is
   unchanged, or an accepted ADR covers any addition
 - [ ] `mdsmith check .` passes
