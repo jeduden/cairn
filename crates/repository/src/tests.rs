@@ -5,7 +5,10 @@ use std::time::SystemTime;
 
 use testkit::TempDir;
 
-use super::{CommitId, Error, RepositoryIdentity, git_dir, has_commit, identity, root_commit};
+use super::{
+    CommitId, Error, RepositoryIdentity, commit_object_id, git_dir, has_commit, identity,
+    root_commit,
+};
 use crate::fixture::{put_commit, put_object};
 use crate::loose::rel_of;
 
@@ -139,6 +142,18 @@ fn a_linked_worktree_names_the_repository_it_belongs_to() {
     checked_out(&linked, &second);
     assert_eq!(root(&linked).unwrap(), Some(first));
     assert!(has_commit(&linked, &second).unwrap());
+}
+
+#[test]
+fn a_commit_is_named_by_the_hash_of_its_header_and_body() {
+    let body = crate::fixture::commit_body(&[], "message");
+    let id = commit_object_id(body.as_bytes());
+    let dir = TempDir::new().unwrap();
+    assert_eq!(put_commit(&dir.path().join("objects"), &[], "message"), id);
+    assert_eq!(
+        commit_object_id(b"").as_str(),
+        "dcf5b16e76cce7425d0beaef62d79a7d10fce1f5"
+    );
 }
 
 #[test]
