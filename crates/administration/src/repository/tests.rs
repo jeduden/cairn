@@ -167,7 +167,10 @@ fn a_repository_with_no_commit_gets_a_provisional_identity_and_binds_later() {
     assert_eq!(f.bind(&empty), Outcome::Unchanged);
     let binds = f.binds();
     assert_eq!(binds.len(), 1);
-    assert_eq!(binds[0]["repository_provisional"].as_str().unwrap().len(), 32);
+    assert_eq!(
+        binds[0]["repository_provisional"].as_str().unwrap().len(),
+        32
+    );
 
     // A commit makes it a change; nothing is rebound or rewritten.
     repository(&empty, &[(A, &[])], Some(A));
