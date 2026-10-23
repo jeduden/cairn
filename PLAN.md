@@ -22,10 +22,10 @@ empty: |
 
 ?>
 
-| ID         | Model  | Title                                                                                 |
-| ---------- | ------ | ------------------------------------------------------------------------------------- |
-| 2609292011 | sonnet | [The remaining engineering gates in CI](plan/2609292011_ci-engineering-gates/plan.md) |
-| 2609292012 | opus   | [M1: record and recall](plan/2609292012_m1-record-and-recall/plan.md)                 |
+| ID         | Model  | Title                                                                                                            |
+| ---------- | ------ | ---------------------------------------------------------------------------------------------------------------- |
+| 2609292011 | sonnet | [The remaining engineering gates in CI](plan/2609292011_ci-engineering-gates/plan.md)                            |
+| 2609292012 | opus   | [M1: record and recall](plan/2609292012_m1-record-and-recall/plan.md)                                            |
 <?/catalog?>
 
 ## All plans
