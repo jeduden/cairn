@@ -585,3 +585,25 @@ fn a_server_start_in_a_home_without_a_node_looks_at_nothing() {
 
     assert!(binds(&p).is_empty());
 }
+
+#[test]
+fn a_look_the_store_cannot_mark_goes_on() {
+    let mut p = Process::new();
+    let app = clone(&p, "app", Some("a"));
+    start_in(&mut p, "s1", &app);
+    let (ctx, mut store, node) = node_and_held(&p);
+    let held = store.hook_observations().unwrap();
+    super::bind_held(&say(&ctx), None, &mut store, &node, held.clone(), &|| false);
+    rusqlite::Connection::open(p.parinn_home().join("store.db"))
+        .unwrap()
+        .execute_batch(
+            "DELETE FROM repository_directories WHERE directory LIKE 'looked:%';
+             CREATE TRIGGER no_marks BEFORE INSERT ON repository_directories
+             WHEN NEW.directory LIKE 'looked:%' BEGIN SELECT RAISE(ABORT, 'no marks'); END;",
+        )
+        .unwrap();
+
+    super::bind_held(&say(&ctx), None, &mut store, &node, held, &|| false);
+
+    assert_eq!(binds(&p).len(), 1);
+}
