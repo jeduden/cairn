@@ -1402,6 +1402,17 @@ fn mise_owner_case() -> Case {
     )
 }
 
+/// The developer tool pins, which CI's install step reads, must remain
+/// owned by the stakeholder.
+fn mise_dev_owner_case() -> Case {
+    protection_case(
+        "the developer tool pin without the stakeholder",
+        Injection::replace(CODEOWNERS, "/mise.dev.toml                @jeduden\n", ""),
+        "the_checkout_s_codeowners_name_the_stakeholder_on_the_enforcing_paths",
+        "mise.dev.toml (gate, CI,) is owned by [], want @jeduden",
+    )
+}
+
 fn signed_commits_case() -> Case {
     protection_case(
         "commits no longer required to be signed",
@@ -1469,6 +1480,7 @@ fn protection_cases() -> Vec<Case> {
             "CLAUDE.md (the agent instructions) is owned by [], want @jeduden",
         ),
         mise_owner_case(),
+        mise_dev_owner_case(),
         protection_case(
             "an owner on a path outside the allowed classes",
             Injection::replace(
