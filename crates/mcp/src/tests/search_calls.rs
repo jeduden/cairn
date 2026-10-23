@@ -256,3 +256,40 @@ fn hits_of_one_run_share_its_author_and_origin() {
         assert_eq!(item["origin"], "ingested");
     }
 }
+
+#[test]
+fn the_trust_filter_keeps_the_events_of_that_level_and_each_hit_shows_its_level() {
+    let f = fixture();
+    let mut store = Store::open(&f.home.store()).unwrap();
+    let node = Node::find(&f.home, &store).unwrap();
+    store
+        .append(
+            node.device_writer(),
+            &[store::NewEvent {
+                kind: record::event::EventKind::PrincipalAct,
+                provenance: record::event::Provenance::Operator,
+                content: json!({"text": "instructions the principal gave"}),
+                commitment_key: record::commitment::CommitmentKey::from_bytes([7; 32]),
+                transcript_timestamp: None,
+            }],
+        )
+        .unwrap();
+    drop(store);
+    let mut server = f.server();
+    let level = |result: &Value| {
+        envelope_of(result)["items"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|i| i["trust"].as_str().unwrap().to_owned())
+            .collect::<Vec<_>>()
+    };
+
+    let trusted = ask(&mut server, "instructions", json!({"trust": "trusted"}));
+    let untrusted = ask(&mut server, "instructions", json!({"trust": "untrusted"}));
+    let any = ask(&mut server, "instructions", json!({}));
+
+    assert_eq!(level(&trusted), ["trusted"]);
+    assert_eq!(level(&untrusted), ["untrusted"]);
+    assert_eq!(level(&any).len(), 2);
+}

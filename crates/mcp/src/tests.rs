@@ -227,6 +227,29 @@ fn a_device_seat_event_shows_its_content_as_json_and_its_origin_as_witnessed() {
     assert_eq!(content["room"], f.ingested.room.to_string());
 }
 
+#[test]
+fn the_trust_level_derives_from_the_policy_and_the_event_alone() {
+    let f = fixture();
+    let store = Store::open(&f.home.store()).unwrap();
+    let device = store
+        .seats()
+        .unwrap()
+        .into_iter()
+        .find(|s| s.writer != f.ingested.writer)
+        .unwrap();
+    let mut server = f.server();
+    let trust = |server: &mut Server, writer: WriterId, seq: u64| {
+        let args = json!({"address": format!("{writer}:{seq}"), "scope": "room"});
+        envelope_of(&event_get(server, args))["items"][0]["trust"].clone()
+    };
+
+    // The create room act and the key event are the node's own.
+    assert_eq!(trust(&mut server, device.writer, 1), "trusted");
+    assert_eq!(trust(&mut server, device.writer, 2), "trusted");
+    // A line ingested from a transcript is never trusted.
+    assert_eq!(trust(&mut server, f.ingested.writer, 2), "untrusted");
+}
+
 /// The text of a tool error.
 fn refusal(result: &Value) -> String {
     assert_eq!(result["isError"], true, "{result}");
