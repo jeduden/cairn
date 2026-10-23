@@ -756,5 +756,5 @@ fn finish_within_kills_a_child_still_running_at_the_deadline() {
 
     let err = finish_within(child, Duration::from_millis(100)).unwrap_err();
 
-    assert_eq!(err, "cargo did not finish within 0s");
+    assert_eq!(err, "cargo did not finish within 100ms");
 }

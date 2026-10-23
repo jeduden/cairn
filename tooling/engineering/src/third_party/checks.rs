@@ -173,36 +173,50 @@ pub fn embedding_selects(source: &str, targets: &[String]) -> Vec<String> {
     let mut problems = Vec::new();
     for target in targets {
         let path = committed_path(target);
-        let (os, arch) = target_cfg(target);
-        let include = lines
-            .iter()
-            .position(|l| l.contains("include_str!") && l.contains(&path));
-        let Some(at) = include else {
-            problems.push(format!("the core does not select {path}"));
-            continue;
-        };
-        let cfg = lines[..at]
-            .iter()
-            .rev()
-            .find(|l| l.trim_start().starts_with("#[cfg("))
-            .copied()
-            .unwrap_or_default();
-        let arch_named: Vec<&str> = cfg.split("target_arch = \"").skip(1).collect();
-        let wrong_arch = arch_named
-            .iter()
-            .any(|rest| !rest.starts_with(&format!("{arch}\"")));
-        let missing_arch = os == "linux" && arch_named.is_empty();
-        if !cfg.contains(&format!("target_os = \"{os}\"")) || wrong_arch || missing_arch {
-            problems.push(format!("the core selects {path} under {}", cfg.trim()));
-        }
-        if source.matches(&path).count() < 2 {
-            problems.push(format!(
-                "the core does not name {path} for the test that compares it"
-            ));
+        for (what, marker, missing) in [
+            ("selects", "include_str!", "does not select"),
+            (
+                "names",
+                "EMBEDDED_FILE",
+                "does not name for the test that compares it",
+            ),
+        ] {
+            let found: Vec<usize> = (0..lines.len())
+                .filter(|i| lines[*i].contains(&path))
+                .filter(|i| {
+                    lines[*i].contains(marker) || (*i > 0 && lines[*i - 1].contains(marker))
+                })
+                .collect();
+            if found.is_empty() {
+                problems.push(format!("the core {missing} {path}"));
+            }
+            for at in found {
+                problems.extend(wrong_cfg(&lines, at, target, what, &path));
+            }
         }
     }
 
     problems
+}
+
+/// The problem with the `#[cfg]` above line `at`, which `what` `path`:
+/// it names another operating system or architecture than `target`'s.
+fn wrong_cfg(lines: &[&str], at: usize, target: &str, what: &str, path: &str) -> Option<String> {
+    let (os, arch) = target_cfg(target);
+    let cfg = lines[..at]
+        .iter()
+        .rev()
+        .find(|l| l.trim_start().starts_with("#[cfg("))
+        .copied()
+        .unwrap_or_default();
+    let arch_named: Vec<&str> = cfg.split("target_arch = \"").skip(1).collect();
+    let wrong_arch = arch_named
+        .iter()
+        .any(|rest| !rest.starts_with(&format!("{arch}\"")));
+    let missing_arch = os == "linux" && arch_named.is_empty();
+    let wrong = !cfg.contains(&format!("target_os = \"{os}\"")) || wrong_arch || missing_arch;
+
+    wrong.then(|| format!("the core {what} {path} under {}", cfg.trim()))
 }
 
 /// Problems with the executables the repository ships: any binary but

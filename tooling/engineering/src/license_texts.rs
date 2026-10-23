@@ -673,10 +673,7 @@ pub fn finish_within(mut child: Child, deadline: Duration) -> Result<Output, Str
         if started.elapsed() >= deadline {
             let _ = child.kill();
             let _ = child.wait();
-            return Err(format!(
-                "cargo did not finish within {}s",
-                deadline.as_secs()
-            ));
+            return Err(format!("cargo did not finish within {deadline:?}"));
         }
         thread::sleep(Duration::from_millis(20));
     };

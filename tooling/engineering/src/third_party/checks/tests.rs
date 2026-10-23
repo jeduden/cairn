@@ -169,12 +169,14 @@ pub const THIRD_PARTY_LICENSES: &str =
 #[cfg(target_os = "macos")]
 pub const THIRD_PARTY_LICENSES: &str =
     include_str!("../../../licenses/aarch64-apple-darwin/THIRD_PARTY_LICENSES");
-const NAMED: [&str; 4] = [
-    "licenses/x86_64-unknown-linux-musl/THIRD_PARTY_LICENSES",
-    "licenses/aarch64-unknown-linux-musl/THIRD_PARTY_LICENSES",
-    "licenses/x86_64-pc-windows-gnu/THIRD_PARTY_LICENSES",
-    "licenses/aarch64-apple-darwin/THIRD_PARTY_LICENSES",
-];
+#[cfg(all(test, target_os = "linux", target_arch = "x86_64"))]
+pub const EMBEDDED_FILE: &str = "licenses/x86_64-unknown-linux-musl/THIRD_PARTY_LICENSES";
+#[cfg(all(test, target_os = "linux", target_arch = "aarch64"))]
+pub const EMBEDDED_FILE: &str = "licenses/aarch64-unknown-linux-musl/THIRD_PARTY_LICENSES";
+#[cfg(all(test, target_os = "windows"))]
+pub const EMBEDDED_FILE: &str = "licenses/x86_64-pc-windows-gnu/THIRD_PARTY_LICENSES";
+#[cfg(all(test, target_os = "macos"))]
+pub const EMBEDDED_FILE: &str = "licenses/aarch64-apple-darwin/THIRD_PARTY_LICENSES";
 "#;
 
 fn targets() -> Vec<String> {
@@ -215,7 +217,7 @@ fn two_arms_with_their_paths_swapped_are_caught() {
     assert_eq!(problems.len(), 2, "{problems:?}");
     assert!(problems[0].starts_with("the core selects licenses/x86_64-unknown-linux-musl/THIRD_PARTY_LICENSES under #[cfg(all(target_os = \"linux\", target_arch = \"aarch64\"))]"));
     let windows_as_macos = CORE.replace("target_os = \"windows\"", "target_os = \"macos\"");
-    assert_eq!(embedding_selects(&windows_as_macos, &targets()).len(), 1);
+    assert_eq!(embedding_selects(&windows_as_macos, &targets()).len(), 2);
 }
 
 #[test]
@@ -237,18 +239,38 @@ fn a_linux_arm_without_an_architecture_or_a_missing_arm_is_caught() {
 }
 
 #[test]
-fn the_comparing_test_must_name_each_file() {
-    let unnamed = CORE.replace(NAMED_DARWIN, "licenses/other");
-
+fn the_comparing_test_must_name_each_file_under_its_own_cfg() {
+    let darwin =
+        r#"pub const EMBEDDED_FILE: &str = "licenses/aarch64-apple-darwin/THIRD_PARTY_LICENSES";"#;
+    let unnamed = CORE.replace(darwin, "pub const EMBEDDED_FILE: &str = \"other\";");
     assert_eq!(
         embedding_selects(&unnamed, &targets()),
         [
-            "the core does not name licenses/aarch64-apple-darwin/THIRD_PARTY_LICENSES for the test that compares it"
+            "the core does not name for the test that compares it licenses/aarch64-apple-darwin/THIRD_PARTY_LICENSES"
         ]
     );
-}
 
-const NAMED_DARWIN: &str = "    \"licenses/aarch64-apple-darwin/THIRD_PARTY_LICENSES\",";
+    let (x86, arm) = ("x86_64-unknown-linux-musl", "aarch64-unknown-linux-musl");
+    let swapped = CORE
+        .replace(
+            &format!("EMBEDDED_FILE: &str = \"licenses/{x86}/"),
+            "EMBEDDED_FILE: &str = \"licenses/TMP/",
+        )
+        .replace(
+            &format!("EMBEDDED_FILE: &str = \"licenses/{arm}/"),
+            &format!("EMBEDDED_FILE: &str = \"licenses/{x86}/"),
+        )
+        .replace(
+            "EMBEDDED_FILE: &str = \"licenses/TMP/",
+            &format!("EMBEDDED_FILE: &str = \"licenses/{arm}/"),
+        );
+    let problems = embedding_selects(&swapped, &targets());
+    assert_eq!(problems.len(), 2, "{problems:?}");
+    assert!(
+        problems.iter().all(|p| p.starts_with("the core names ")),
+        "{problems:?}"
+    );
+}
 
 #[test]
 fn only_the_core_executable_may_ship() {
