@@ -61,11 +61,9 @@ pub fn time_benchmark(
             let input = fixture::SEARCH_REQUESTS.as_bytes().to_vec();
             time_program_fed(program, benchmark.args, &home.env(), input, deadline)
         }
-        Fixture::HookInput { hook } => retried(
-            ATTEMPTS,
-            || thread::sleep(SETTLE),
-            || hook_sample(program, benchmark, hook, deadline),
-        ),
+        Fixture::HookInput { hook } => retried(ATTEMPTS, settle, || {
+            hook_sample(program, benchmark, hook, deadline)
+        }),
     }
 }
 
@@ -85,6 +83,11 @@ const ATTEMPTS: usize = 4;
 /// How long the benchmark waits after an overrun before it takes the
 /// sample again.
 const SETTLE: Duration = Duration::from_millis(300);
+
+/// Waits [`SETTLE`] for the disk to calm down.
+fn settle() {
+    thread::sleep(SETTLE);
+}
 
 /// The time `attempt` gives, taken again after `settle` while its
 /// handler overran its hook budget, up to `attempts` times. The handler

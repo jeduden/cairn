@@ -228,6 +228,15 @@ fn a_handler_that_overruns_every_time_is_an_error_after_the_last_attempt() {
 }
 
 #[test]
+fn settling_waits_at_least_the_settle_time() {
+    let start = std::time::Instant::now();
+
+    settle();
+
+    assert!(start.elapsed() >= SETTLE);
+}
+
+#[test]
 fn a_sample_that_cannot_be_taken_is_not_taken_again() {
     let failed = Err(Attempt::Failed("no fixture".to_owned()));
 
