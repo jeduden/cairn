@@ -1191,3 +1191,71 @@ fn a_kept_origin_for_a_writer_the_record_does_not_hold_is_named_too() {
     assert_eq!(err.class(), "derived_artifact_consistency");
     assert!(err.to_string().contains(&stray.to_string()));
 }
+
+/// Records that the node bound the worktree `digest` to a commit.
+fn bind_worktree(f: &mut Fixture, digest: &str) {
+    let event = NewEvent {
+        kind: EventKind::RepositoryBind,
+        provenance: Provenance::Structural,
+        content: json!({"repository": "a".repeat(40), "worktree_digest": digest}),
+        commitment_key: CommitmentKey::from_bytes([7; 32]),
+        transcript_timestamp: None,
+    };
+    f.store.append(f.node.device_writer(), &[event]).unwrap();
+}
+
+#[test]
+fn a_node_with_no_worktree_bound_keeps_none_and_agrees() {
+    let f = fixture();
+
+    assert!(kept_worktrees_agree(&f.store, &f.node).is_ok());
+}
+
+#[test]
+fn a_worktree_the_record_binds_and_the_store_does_not_keep_is_named_by_its_digest() {
+    let mut f = fixture();
+    bind_worktree(&mut f, "w1");
+
+    let err = kept_worktrees_agree(&f.store, &f.node).unwrap_err();
+
+    assert_eq!(err.class(), "derived_artifact_consistency");
+    assert_eq!(err.address(), None);
+    assert_eq!(
+        err.to_string(),
+        "derived artifact consistency: the identity kept for worktree w1 differs from the record's: run parinn rebuild"
+    );
+}
+
+#[test]
+fn the_worktrees_rebuilt_from_the_record_agree_and_a_changed_or_stray_one_does_not() {
+    let mut f = fixture();
+    bind_worktree(&mut f, "w1");
+    let mut kept = crate::repository::derive_worktrees(&f.store, &f.node).unwrap();
+    f.store.replace_worktree_identities(&kept).unwrap();
+    assert!(kept_worktrees_agree(&f.store, &f.node).is_ok());
+
+    kept.insert("w1".to_owned(), "other".to_owned());
+    f.store.replace_worktree_identities(&kept).unwrap();
+    let changed = kept_worktrees_agree(&f.store, &f.node).unwrap_err();
+    kept.remove("w1");
+    kept.insert("stray".to_owned(), "x".to_owned());
+    f.store.replace_worktree_identities(&kept).unwrap();
+    let stray = kept_worktrees_agree(&f.store, &f.node).unwrap_err();
+
+    assert!(matches!(changed, VerifyError::DerivedWorktree { worktree } if worktree == "w1"));
+    assert!(matches!(stray, VerifyError::DerivedWorktree { worktree } if worktree == "stray"));
+}
+
+#[test]
+fn a_report_marker_is_no_worktree_and_a_derive_failure_keeps_its_kind() {
+    let mut f = fixture();
+    f.store.set_worktree_identity("reported:w1", "x").unwrap();
+
+    assert!(kept_worktrees_agree(&f.store, &f.node).is_ok());
+    assert!(matches!(
+        derive_failed(AdminError::Store(StoreError::NoIndex)),
+        VerifyError::Store(StoreError::NoIndex)
+    ));
+    let other = derive_failed(AdminError::Node("x"));
+    assert!(matches!(other, VerifyError::Corrupt(_)), "{other:?}");
+}

@@ -163,7 +163,8 @@ pub enum Act {
     /// Bind a repository's identity by hand, or rebind it after a change
     /// (LANE-02): `identity` holds the commit it binds to as
     /// `repository`, or a provisional one as `repository_provisional`.
-    /// Widening. It names no directory: the act replicates.
+    /// Widening. It names the worktree by a keyed digest, never a path: the
+    /// act replicates.
     RepositoryBind { identity: Value },
 }
 

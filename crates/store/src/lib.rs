@@ -964,50 +964,69 @@ impl Store {
         Ok(())
     }
 
-    /// The local secret `name` this node keeps, `fresh` when none is
-    /// kept yet (LANE-02): a value only this node knows, used to hash
-    /// names that must reveal nothing off it.
-    ///
-    /// # Errors
-    ///
-    /// Fails when SQLite does or the kept secret does not read.
-    pub fn local_secret(&mut self, name: &str, fresh: [u8; 32]) -> Result<[u8; 32], StoreError> {
-        repository::secret(&self.conn, name, fresh)
-    }
-
-    /// The identity, as its caller hashed it, the directory `directory`
+    /// The identity, as its caller named it, the worktree `worktree`
     /// last resolved to (LANE-02).
     ///
     /// # Errors
     ///
     /// Fails when SQLite does.
-    pub fn directory_identity(&self, directory: &str) -> Result<Option<String>, StoreError> {
-        repository::identity(&self.conn, directory)
+    pub fn worktree_identity(&self, worktree: &str) -> Result<Option<String>, StoreError> {
+        repository::identity(&self.conn, worktree)
     }
 
-    /// Keeps `identity` as what `directory` resolves to (LANE-02).
+    /// Keeps `identity` as what `worktree` resolves to (LANE-02).
     ///
     /// # Errors
     ///
     /// Fails when SQLite does.
-    pub fn set_directory_identity(
+    pub fn set_worktree_identity(
         &mut self,
-        directory: &str,
+        worktree: &str,
         identity: &str,
     ) -> Result<(), StoreError> {
-        repository::set_identity(&self.conn, directory, identity)?;
+        repository::set_identity(&self.conn, worktree, identity)?;
 
         Ok(())
     }
 
-    /// Forgets what `directory` resolved to; nothing, when it never did
+    /// Forgets what `worktree` resolved to; nothing, when it never did
     /// (LANE-02).
     ///
     /// # Errors
     ///
     /// Fails when SQLite does.
-    pub fn forget_directory_identity(&mut self, directory: &str) -> Result<(), StoreError> {
-        repository::forget_identity(&self.conn, directory)?;
+    pub fn forget_worktree_identity(&mut self, worktree: &str) -> Result<(), StoreError> {
+        repository::forget_identity(&self.conn, worktree)?;
+
+        Ok(())
+    }
+
+    /// The identity each worktree resolved to, as derived from the
+    /// record: every kept worktree whose key holds no `:`; the rest are
+    /// node-local report markers (LANE-02, I10).
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does.
+    pub fn worktree_identities(&self) -> Result<BTreeMap<String, String>, StoreError> {
+        repository::identities(&self.conn)
+    }
+
+    /// Replaces the derived worktree identities with `identities` in one
+    /// transaction, leaving the report markers alone (LANE-02, I10).
+    ///
+    /// # Errors
+    ///
+    /// Fails, changing nothing, when SQLite does.
+    pub fn replace_worktree_identities(
+        &mut self,
+        identities: &BTreeMap<String, String>,
+    ) -> Result<(), StoreError> {
+        let tx = self
+            .conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)?;
+        repository::replace(&tx, identities)?;
+        tx.commit()?;
 
         Ok(())
     }

@@ -134,7 +134,7 @@ pub(crate) fn bind_held(
         if o.hook == "SessionStart"
             && !o.cwd.is_empty()
             && store
-                .directory_identity(&looked(h.id))
+                .worktree_identity(&looked(h.id))
                 .ok()
                 .flatten()
                 .is_none()
@@ -188,7 +188,7 @@ pub(crate) fn bind_held(
         }
         for id in ids {
             // Unmarked, the observation is looked at again; say why.
-            let _ = store.set_directory_identity(&looked(id), "1").map_err(|e| {
+            let _ = store.set_worktree_identity(&looked(id), "1").map_err(|e| {
                 tracing::warn!(error = e.to_string().as_str(), "mark a repository look");
             });
         }
@@ -245,7 +245,6 @@ fn shown_line(ctx: &Context, asked: &Asked) -> Result<String, String> {
     let shown = repository::show(
         &mut taking.store,
         &taking.node,
-        &mut OsEntropy,
         &asked.directory,
         ctx.home.as_deref().map(Path::new),
         &deadline(WITHIN),

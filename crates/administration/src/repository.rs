@@ -4,7 +4,11 @@
 //! when there are several, found inside the core (no program start, no
 //! socket) and bound once, at the first hook event that shows it, by a
 //! structural event of the device seat that replicates (never an
-//! `operator` one).
+//! `operator` one). The event names the worktree by a keyed digest of its
+//! root path, as does each later event that binds another worktree to an
+//! identity or a commit to a worktree that held a provisional one; a
+//! node rebuilds which identity each of its worktrees is bound to from
+//! its writer logs alone (I10).
 //!
 //! - A node whose clone contains a commit already bound uses that
 //!   identity. One whose clone lacks it mints none: a widening principal
@@ -17,9 +21,10 @@
 //!   widening act.
 //! - The identity serves only to identify branches and relate a room's
 //!   branches and commits, never to scope ParleyInn state. What this
-//!   node keeps of a directory and its identity is hashed under a secret
-//!   only this node knows, so no local name reveals either off it.
+//!   node keeps of a worktree and its identity is hashed under a secret
+//!   derived from its device key, so no local name reveals either off it.
 
+use std::collections::BTreeMap;
 use std::path::Path;
 
 use key::random::{Entropy, draw};
@@ -75,14 +80,39 @@ enum Current {
 /// The label a local name is hashed under.
 const LABEL: &[u8] = b"parinn repository v1\0";
 
-/// The name this node keeps for `directory`: hashed under `secret`, so
-/// it reveals neither the path nor anything of the repository.
+/// What a provisional identity's table value starts with; a bound one's
+/// is a digest, which never does.
+const PROVISIONAL: &str = "provisional:";
+
+/// The secret this node hashes its local repository names under, derived
+/// from its device key, so it rebuilds with the key set (I10).
+fn name_secret(node: &Node) -> [u8; 32] {
+    node.device().derive_secret(b"repository names")
+}
+
+/// The digest of a worktree's root: keyed under `secret`, so it reveals
+/// neither the path nor anything of the repository.
 ///
 /// # Errors
 ///
-/// Fails when the directory cannot be resolved: a path as spelled would
-/// keep one directory under two names.
-fn directory_key(secret: &[u8; 32], directory: &Path) -> Result<String, AdminError> {
+/// Fails when the worktree cannot be resolved: a path as spelled would
+/// keep one worktree under two names.
+fn worktree_digest(secret: &[u8; 32], worktree: &Path) -> Result<String, AdminError> {
+    let resolved = std::fs::canonicalize(worktree)
+        .map_err(|_| AdminError::Repository("the worktree cannot be resolved"))?;
+
+    Ok(Digest::of(&[
+        LABEL,
+        b"worktree\0",
+        secret,
+        resolved.to_string_lossy().as_bytes(),
+    ])
+    .to_hex())
+}
+
+/// The name of a directory whose clone could not be read: its worktree
+/// is not known, so it is the directory's own.
+fn directory_marker(secret: &[u8; 32], directory: &Path) -> Result<String, AdminError> {
     let resolved = std::fs::canonicalize(directory)
         .map_err(|_| AdminError::Repository("the directory cannot be resolved"))?;
 
@@ -95,15 +125,79 @@ fn directory_key(secret: &[u8; 32], directory: &Path) -> Result<String, AdminErr
     .to_hex())
 }
 
-/// The name this node keeps for what a directory resolves to: a bound
-/// commit's, or the one every provisional identity shares.
-fn identity_key(secret: &[u8; 32], current: &Current) -> String {
-    let what: &[u8] = match current {
-        Current::Bound(id) => id.as_str().as_bytes(),
-        Current::Provisional => b"provisional",
-    };
+/// What this node keeps for a worktree bound to the commit `id`.
+fn bound_value(secret: &[u8; 32], id: &CommitId) -> String {
+    Digest::of(&[LABEL, b"identity\0", secret, id.as_str().as_bytes()]).to_hex()
+}
 
-    Digest::of(&[LABEL, b"identity\0", secret, what]).to_hex()
+/// What this node keeps for a worktree bound to the provisional identity
+/// `id`.
+fn provisional_value(id: &str) -> String {
+    format!("{PROVISIONAL}{id}")
+}
+
+/// The provisional identity a table value names, if it names one.
+fn provisional_in(value: &str) -> Option<&str> {
+    value.strip_prefix(PROVISIONAL)
+}
+
+/// What a clone shows now, as a change report names it: a bound
+/// commit's value, or the bare word for none yet.
+fn seen(secret: &[u8; 32], current: &Current) -> String {
+    match current {
+        Current::Bound(id) => bound_value(secret, id),
+        Current::Provisional => "provisional".to_owned(),
+    }
+}
+
+/// Whether `stored` records a bind: a structural event of the device
+/// seat, or the principal act that binds by hand (not any act naming a
+/// commit).
+fn is_bind(stored: &store::Stored) -> bool {
+    match stored.link.header.kind {
+        EventKind::RepositoryBind => true,
+        EventKind::PrincipalAct => stored
+            .content
+            .as_ref()
+            .is_some_and(|c| c["act"] == "repository_bind"),
+        _ => false,
+    }
+}
+
+/// What the worktrees of this node are bound to, as the record says it:
+/// each worktree's digest and its identity's table value, the later bind
+/// of a worktree replacing the earlier (I10). The table `parinn rebuild`
+/// writes and `parinn verify` checks.
+///
+/// # Errors
+///
+/// Fails when the store does.
+pub fn derive_worktrees(
+    store: &Store,
+    node: &Node,
+) -> Result<BTreeMap<String, String>, AdminError> {
+    let secret = name_secret(node);
+    let mut worktrees = BTreeMap::new();
+    let log = store.log(node.device_writer())?;
+    for content in log
+        .iter()
+        .filter(|s| is_bind(s))
+        .filter_map(|s| s.content.as_ref())
+    {
+        let value = match (
+            content["repository"].as_str().and_then(CommitId::parse),
+            content["repository_provisional"].as_str(),
+        ) {
+            (Some(id), _) => bound_value(&secret, &id),
+            (None, Some(id)) => provisional_value(id),
+            (None, None) => continue,
+        };
+        if let Some(worktree) = content["worktree_digest"].as_str() {
+            worktrees.insert(worktree.to_owned(), value);
+        }
+    }
+
+    Ok(worktrees)
 }
 
 /// The commits this node has bound, by the structural events of its
@@ -112,15 +206,7 @@ fn bound_commits(store: &Store, node: &Node) -> Result<Vec<CommitId>, AdminError
     let mut bound: Vec<CommitId> = store
         .log(node.device_writer())?
         .iter()
-        .filter(|s| match s.link.header.kind {
-            EventKind::RepositoryBind => true,
-            // Only the act that binds by hand, not any act naming a commit.
-            EventKind::PrincipalAct => s
-                .content
-                .as_ref()
-                .is_some_and(|c| c["act"] == "repository_bind"),
-            _ => false,
-        })
+        .filter(|s| is_bind(s))
         .filter_map(|s| s.content.as_ref()?["repository"].as_str())
         .filter_map(CommitId::parse)
         .collect();
@@ -150,27 +236,31 @@ fn resolve(
 /// never again until it reads.
 fn unreadable(
     store: &mut Store,
-    entropy: &mut dyn Entropy,
+    secret: &[u8; 32],
     directory: &Path,
 ) -> Result<Outcome, AdminError> {
-    let secret = store.local_secret("repository", draw(entropy)?)?;
-    let marker = format!("unreadable:{}", directory_key(&secret, directory)?);
-    if store.directory_identity(&marker)?.as_deref() == Some(UNREADABLE) {
+    let marker = format!("unreadable:{}", directory_marker(secret, directory)?);
+    if store.worktree_identity(&marker)?.as_deref() == Some(UNREADABLE) {
         return Ok(Outcome::StillUnreadable);
     }
-    store.set_directory_identity(&marker, UNREADABLE)?;
+    store.set_worktree_identity(&marker, UNREADABLE)?;
 
     Ok(Outcome::Unreadable)
 }
 
 /// What a directory's marker holds while its clone is reported
-/// unreadable; no identity key is this short.
+/// unreadable; no identity value is this short.
 const UNREADABLE: &str = "unreadable";
 
-/// Looks at `directory` as a hook event shows it: binds its repository's
-/// identity if this node never has. The search for the repository stops
-/// before `ceiling`, the OS user's home directory, so a dotfiles
-/// repository there is never bound for the directories below it
+/// A fresh node-local id for a provisional identity.
+fn fresh_provisional(entropy: &mut dyn Entropy) -> Result<String, AdminError> {
+    Ok(Digest::of(&[&draw::<32>(entropy)?]).to_hex()[..32].to_owned())
+}
+
+/// Looks at `directory` as a hook event shows it: binds its worktree's
+/// repository identity if this node never has. The search for the
+/// repository stops before `ceiling`, the OS user's home directory, so a
+/// dotfiles repository there is never bound for the directories below it
 /// (`None` only in tests).
 ///
 /// # Errors
@@ -184,65 +274,75 @@ pub fn bind(
     ceiling: Option<&Path>,
     deadline: &dyn Deadline,
 ) -> Result<Outcome, AdminError> {
-    let git_dir = match repository::git_dir(directory, ceiling) {
-        Ok(Some(git_dir)) => git_dir,
+    let secret = name_secret(node);
+    let located = match repository::locate(directory, ceiling) {
+        Ok(Some(located)) => located,
         Ok(None) => return Ok(Outcome::NoRepository),
-        Err(_) => return unreadable(store, entropy, directory),
+        Err(_) => return unreadable(store, &secret, directory),
     };
     let bound = bound_commits(store, node)?;
-    let current = match resolve(&git_dir, &bound, deadline) {
+    let current = match resolve(&located.git_dir, &bound, deadline) {
         Ok(current) => current,
         Err(repository::Error::Deadline) => return Ok(Outcome::TimedOut),
-        Err(_) => return unreadable(store, entropy, directory),
+        Err(_) => return unreadable(store, &secret, directory),
     };
-    let secret = store.local_secret("repository", draw(entropy)?)?;
-    let (directory, now) = (
-        directory_key(&secret, directory)?,
-        identity_key(&secret, &current),
-    );
-    let provisional_key = identity_key(&secret, &Current::Provisional);
+    let worktree = worktree_digest(&secret, &located.worktree)?;
     // A clone that reads has no unreadable report to keep.
-    store.forget_directory_identity(&format!("unreadable:{directory}"))?;
-    match store.directory_identity(&directory)? {
-        Some(kept) if kept == now => {
-            // Back to the identity bound: the next change reports again.
-            store.forget_directory_identity(&format!("reported:{directory}"))?;
+    let marker = directory_marker(&secret, directory)?;
+    store.forget_worktree_identity(&format!("unreadable:{marker}"))?;
+    let mut replaces = None;
+    match (store.worktree_identity(&worktree)?, &current) {
+        // Still provisional: nothing to bind until a commit appears.
+        (Some(kept), Current::Provisional) if provisional_in(&kept).is_some() => {
             return Ok(Outcome::Unchanged);
         }
         // A provisional identity binds later, on its own, once its clone
-        // names a commit: no change, and the record is not rewritten.
-        Some(kept) if kept == provisional_key => {}
-        Some(_) => {
-            let marker = format!("reported:{directory}");
-            if store.directory_identity(&marker)?.as_deref() == Some(now.as_str()) {
+        // names a commit, naming the provisional identity it replaces.
+        (Some(kept), Current::Bound(_)) if provisional_in(&kept).is_some() => {
+            replaces = provisional_in(&kept).map(str::to_owned);
+        }
+        (Some(kept), _) if kept == seen(&secret, &current) => {
+            // Back to the identity bound: the next change reports again.
+            store.forget_worktree_identity(&format!("reported:{worktree}"))?;
+            return Ok(Outcome::Unchanged);
+        }
+        (Some(_), _) => {
+            let (marker, now) = (format!("reported:{worktree}"), seen(&secret, &current));
+            if store.worktree_identity(&marker)?.as_deref() == Some(now.as_str()) {
                 return Ok(Outcome::StillChanged);
             }
-            store.set_directory_identity(&marker, &now)?;
+            store.set_worktree_identity(&marker, &now)?;
             return Ok(Outcome::Changed);
         }
-        None => {}
+        (None, _) => {}
     }
-    let provisional = matches!(current, Current::Provisional);
-    let content = match &current {
-        Current::Bound(id) if bound.contains(id) => None,
-        Current::Bound(id) => Some(json!({"repository": id.as_str()})),
-        Current::Provisional => Some(json!({
-            "repository_provisional": Digest::of(&[&draw::<32>(entropy)?]).to_hex()[..32],
-        })),
+    let (mut content, value) = match &current {
+        Current::Bound(id) => (json!({"repository": id.as_str()}), bound_value(&secret, id)),
+        Current::Provisional => {
+            let id = fresh_provisional(entropy)?;
+            (
+                json!({"repository_provisional": id}),
+                provisional_value(&id),
+            )
+        }
     };
-    if let Some(content) = content {
-        let event = NewEvent {
-            kind: EventKind::RepositoryBind,
-            provenance: Provenance::Structural,
-            content,
-            commitment_key: CommitmentKey::from_bytes(draw(entropy)?),
-            transcript_timestamp: None,
-        };
-        store.append(node.device_writer(), &[event])?;
+    content["worktree_digest"] = json!(worktree);
+    if let Some(provisional) = replaces {
+        content["replaces_provisional"] = json!(provisional);
     }
-    store.set_directory_identity(&directory, &now)?;
+    let event = NewEvent {
+        kind: EventKind::RepositoryBind,
+        provenance: Provenance::Structural,
+        content,
+        commitment_key: CommitmentKey::from_bytes(draw(entropy)?),
+        transcript_timestamp: None,
+    };
+    store.append(node.device_writer(), &[event])?;
+    store.set_worktree_identity(&worktree, &value)?;
 
-    Ok(Outcome::Bound { provisional })
+    Ok(Outcome::Bound {
+        provisional: matches!(current, Current::Provisional),
+    })
 }
 
 /// What `parinn repository show` says of a directory.
@@ -251,11 +351,11 @@ pub enum Shown {
     NoRepository,
     Unreadable,
     /// The clone's identity, which this node has not bound for the
-    /// directory yet.
+    /// worktree yet.
     Unbound(Option<CommitId>),
-    /// The identity the directory is bound to and still resolves to.
+    /// The identity the worktree is bound to and still resolves to.
     Bound(Option<CommitId>),
-    /// The directory resolves to another identity than it was bound to.
+    /// The worktree resolves to another identity than it was bound to.
     Changed(Option<CommitId>),
 }
 
@@ -263,68 +363,77 @@ pub enum Shown {
 ///
 /// # Errors
 ///
-/// Fails when the store or the random source fails.
+/// Fails when the store fails.
 pub fn show(
     store: &mut Store,
     node: &Node,
-    entropy: &mut dyn Entropy,
     directory: &Path,
     ceiling: Option<&Path>,
     deadline: &dyn Deadline,
 ) -> Result<Shown, AdminError> {
-    let git_dir = match repository::git_dir(directory, ceiling) {
-        Ok(Some(git_dir)) => git_dir,
+    let located = match repository::locate(directory, ceiling) {
+        Ok(Some(located)) => located,
         Ok(None) => return Ok(Shown::NoRepository),
         Err(_) => return Ok(Shown::Unreadable),
     };
     let bound = bound_commits(store, node)?;
-    let Ok(current) = resolve(&git_dir, &bound, deadline) else {
+    let Ok(current) = resolve(&located.git_dir, &bound, deadline) else {
         return Ok(Shown::Unreadable);
     };
-    let secret = store.local_secret("repository", draw(entropy)?)?;
-    let kept = store.directory_identity(&directory_key(&secret, directory)?)?;
+    let secret = name_secret(node);
+    let kept = store.worktree_identity(&worktree_digest(&secret, &located.worktree)?)?;
     let commit = match &current {
         Current::Bound(id) => Some(id.clone()),
         Current::Provisional => None,
     };
 
-    let provisional = identity_key(&secret, &Current::Provisional);
-
     Ok(match kept {
         None => Shown::Unbound(commit),
-        Some(kept) if kept == identity_key(&secret, &current) => Shown::Bound(commit),
         // Binds on its own at the next look (see `bind`).
-        Some(kept) if kept == provisional => Shown::Unbound(commit),
+        Some(kept) if provisional_in(&kept).is_some() => match current {
+            Current::Provisional => Shown::Bound(None),
+            Current::Bound(_) => Shown::Unbound(commit),
+        },
+        Some(kept) if kept == seen(&secret, &current) => Shown::Bound(commit),
         Some(_) => Shown::Changed(commit),
     })
 }
 
-/// What a widening bind will bind a directory to.
+/// What a widening bind will bind a worktree to.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Rebind {
     /// The commit it binds to; none for a provisional identity.
     pub commit: Option<CommitId>,
     /// The node-local id of a provisional identity.
     pub provisional: Option<String>,
-    directory: String,
-    identity: String,
+    worktree: String,
+    value: String,
+    replaces: Option<String>,
 }
 
 impl Rebind {
-    /// The identity the act records: a commit, or a provisional id.
+    /// The identity the act records: a commit, or a provisional id, with
+    /// the digest of the worktree it binds, and the provisional identity
+    /// a commit replaces.
     #[must_use]
     pub fn content(&self) -> Value {
-        match (&self.commit, &self.provisional) {
+        let mut content = match (&self.commit, &self.provisional) {
             (Some(id), _) => json!({"repository": id.as_str()}),
             (None, Some(id)) => json!({"repository_provisional": id}),
             (None, None) => json!({}),
+        };
+        content["worktree_digest"] = json!(self.worktree);
+        if let Some(provisional) = &self.replaces {
+            content["replaces_provisional"] = json!(provisional);
         }
+
+        content
     }
 }
 
-/// The identity a widening bind of `directory` will give it: `commit`
-/// when the principal names one, else what its clone resolves to. Nothing
-/// changes until [`apply`] runs, after the act is recorded.
+/// The identity a widening bind of `directory`'s worktree will give it:
+/// `commit` when the principal names one, else what its clone resolves
+/// to. Nothing changes until [`apply`] runs, after the act is recorded.
 ///
 /// # Errors
 ///
@@ -339,41 +448,52 @@ pub fn plan(
     commit: Option<CommitId>,
     deadline: &dyn Deadline,
 ) -> Result<Rebind, AdminError> {
-    let git_dir = repository::git_dir(directory, ceiling)
-        .map_err(|_| AdminError::Repository("the repository's git data cannot be read"))?
+    let unreadable = |_| AdminError::Repository("the repository's git data cannot be read");
+    let located = repository::locate(directory, ceiling)
+        .map_err(unreadable)?
         .ok_or(AdminError::Repository(
             "the directory lies in no repository",
         ))?;
     let current = match commit {
         Some(id) => Current::Bound(id),
-        None => resolve(&git_dir, &bound_commits(store, node)?, deadline)
-            .map_err(|_| AdminError::Repository("the repository's git data cannot be read"))?,
+        None => {
+            resolve(&located.git_dir, &bound_commits(store, node)?, deadline).map_err(unreadable)?
+        }
     };
-    let secret = store.local_secret("repository", draw(entropy)?)?;
-    let provisional = matches!(current, Current::Provisional)
-        .then(|| {
-            Ok::<_, AdminError>(Digest::of(&[&draw::<32>(entropy)?]).to_hex()[..32].to_owned())
-        })
-        .transpose()?;
+    let secret = name_secret(node);
+    let worktree = worktree_digest(&secret, &located.worktree)?;
+    let replaces = match (&current, store.worktree_identity(&worktree)?) {
+        (Current::Bound(_), Some(kept)) => provisional_in(&kept).map(str::to_owned),
+        _ => None,
+    };
+    let provisional = match current {
+        Current::Provisional => Some(fresh_provisional(entropy)?),
+        Current::Bound(_) => None,
+    };
+    let value = match (&current, &provisional) {
+        (Current::Bound(id), _) => bound_value(&secret, id),
+        (Current::Provisional, id) => provisional_value(id.as_deref().unwrap_or_default()),
+    };
 
     Ok(Rebind {
-        commit: match &current {
-            Current::Bound(id) => Some(id.clone()),
+        commit: match current {
+            Current::Bound(id) => Some(id),
             Current::Provisional => None,
         },
         provisional,
-        directory: directory_key(&secret, directory)?,
-        identity: identity_key(&secret, &current),
+        worktree,
+        value,
+        replaces,
     })
 }
 
-/// Makes `rebind` what its directory resolves to.
+/// Makes `rebind` what its worktree resolves to.
 ///
 /// # Errors
 ///
 /// Fails when the store does.
 pub fn apply(store: &mut Store, rebind: &Rebind) -> Result<(), AdminError> {
-    store.set_directory_identity(&rebind.directory, &rebind.identity)?;
+    store.set_worktree_identity(&rebind.worktree, &rebind.value)?;
 
     Ok(())
 }

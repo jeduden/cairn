@@ -2,76 +2,93 @@ use super::*;
 
 fn conn() -> Connection {
     let conn = Connection::open_in_memory().unwrap();
-    conn.execute_batch("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL) STRICT;")
-        .unwrap();
     conn.execute_batch(SCHEMA).unwrap();
     conn
 }
 
-#[test]
-fn a_secret_is_kept_when_first_asked_and_never_replaced() {
-    let conn = conn();
-
-    let first = secret(&conn, "repository", [1; 32]).unwrap();
-    let second = secret(&conn, "repository", [2; 32]).unwrap();
-    let other = secret(&conn, "other", [3; 32]).unwrap();
-
-    assert_eq!((first, second, other), ([1; 32], [1; 32], [3; 32]));
+fn map(rows: &[(&str, &str)]) -> BTreeMap<String, String> {
+    rows.iter()
+        .map(|(w, i)| ((*w).to_owned(), (*i).to_owned()))
+        .collect()
 }
 
 #[test]
-fn a_secret_that_does_not_read_is_corrupt() {
+fn a_worktree_keeps_the_identity_it_last_resolved_to() {
     let conn = conn();
-    conn.execute(
-        "INSERT INTO meta (key, value) VALUES (?1, 'short')",
-        [key("repository")],
-    )
-    .unwrap();
+    assert_eq!(identity(&conn, "w").unwrap(), None);
 
-    assert!(matches!(
-        secret(&conn, "repository", [1; 32]),
-        Err(StoreError::Corrupt { .. })
-    ));
+    set_identity(&conn, "w", "one").unwrap();
+    assert_eq!(identity(&conn, "w").unwrap().as_deref(), Some("one"));
+    set_identity(&conn, "w", "two").unwrap();
+    assert_eq!(identity(&conn, "w").unwrap().as_deref(), Some("two"));
+    assert_eq!(identity(&conn, "x").unwrap(), None);
 }
 
 #[test]
-fn a_directory_keeps_the_identity_it_last_resolved_to() {
+fn a_worktree_can_be_forgotten_and_forgetting_one_never_kept_is_nothing() {
     let conn = conn();
-    assert_eq!(identity(&conn, "d").unwrap(), None);
+    set_identity(&conn, "w", "one").unwrap();
 
-    set_identity(&conn, "d", "one").unwrap();
-    assert_eq!(identity(&conn, "d").unwrap().as_deref(), Some("one"));
-    set_identity(&conn, "d", "two").unwrap();
-    assert_eq!(identity(&conn, "d").unwrap().as_deref(), Some("two"));
-    assert_eq!(identity(&conn, "e").unwrap(), None);
+    forget_identity(&conn, "w").unwrap();
+    forget_identity(&conn, "x").unwrap();
+
+    assert_eq!(identity(&conn, "w").unwrap(), None);
 }
 
 #[test]
-fn a_directory_can_be_forgotten_and_forgetting_one_never_kept_is_nothing() {
-    let conn = conn();
-    set_identity(&conn, "d", "one").unwrap();
-
-    forget_identity(&conn, "d").unwrap();
-    forget_identity(&conn, "e").unwrap();
-
-    assert_eq!(identity(&conn, "d").unwrap(), None);
-}
-
-#[test]
-fn a_store_that_never_kept_a_directory_has_no_table_and_none_resolved() {
+fn a_store_that_never_kept_a_worktree_has_no_table_none_resolved_and_no_rows() {
     let conn = Connection::open_in_memory().unwrap();
 
-    assert_eq!(identity(&conn, "d").unwrap(), None);
-    let _ = conn
-        .query_row("SELECT 1", [], |r| r.get::<_, i64>(0))
-        .optional();
+    assert_eq!(identity(&conn, "w").unwrap(), None);
+    assert!(identities(&conn).unwrap().is_empty());
 }
 
 #[test]
-fn a_store_that_takes_no_write_keeps_neither_a_secret_nor_a_directory() {
+fn a_store_that_takes_no_write_keeps_no_worktree() {
     let conn = conn();
     conn.execute_batch("PRAGMA query_only = ON").unwrap();
 
-    assert!(secret(&conn, "repository", [1; 32]).is_err());
-    assert!(set_identity(&conn, "d", "i").is_err());
+    assert!(set_identity(&conn, "w", "i").is_err());
+}
+
+#[test]
+fn the_derived_rows_leave_out_the_markers() {
+    let conn = conn();
+    set_identity(&conn, "b", "two").unwrap();
+    set_identity(&conn, "a", "one").unwrap();
+    set_identity(&conn, "reported:a", "x").unwrap();
+    set_identity(&conn, "looked:1", "1").unwrap();
+
+    assert_eq!(
+        identities(&conn).unwrap(),
+        map(&[("a", "one"), ("b", "two")])
+    );
+}
+
+#[test]
+fn replacing_the_derived_rows_keeps_the_markers_and_drops_the_stale_rows() {
+    let conn = conn();
+    set_identity(&conn, "stale", "old").unwrap();
+    set_identity(&conn, "a", "old").unwrap();
+    set_identity(&conn, "unreadable:a", "unreadable").unwrap();
+
+    replace(&conn, &map(&[("a", "new"), ("b", "two")])).unwrap();
+
+    assert_eq!(
+        identities(&conn).unwrap(),
+        map(&[("a", "new"), ("b", "two")])
+    );
+    assert_eq!(
+        identity(&conn, "unreadable:a").unwrap().as_deref(),
+        Some("unreadable")
+    );
+}
+
+#[test]
+fn replacing_in_a_store_without_the_table_makes_it() {
+    let conn = Connection::open_in_memory().unwrap();
+
+    replace(&conn, &map(&[("a", "one")])).unwrap();
+
+    assert_eq!(identities(&conn).unwrap(), map(&[("a", "one")]));
 }

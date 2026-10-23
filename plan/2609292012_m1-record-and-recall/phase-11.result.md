@@ -40,25 +40,22 @@ Outcome:
   key alone, in one place that recall and `parinn verify` share. A
   replaced key's writers read `peer`, so do another node's. `parinn
   rebuild` writes the `origins` table and the search index, appending no
-  event; `parinn verify` exits 3 naming "derived artifact consistency"
-  when a kept origin differs. `@PRV-13` stays pending: no arrival event
+  event; `parinn verify` exits 3 on a kept origin that differs. `@PRV-13` stays pending: no arrival event
   exists yet.
 - LANE-01 and LANE-31's M1 part is proven by the `room` crate's unit and
   property tests: `standing_link` lets the first link in causal order
   stand, the lower commitment among concurrent ones, whatever the
   arrival order; `seat_for_run_event` routes a run's event to a joined
   room's run seat or else the personal-room seat. Both stay pending.
-- ADM-13's M1 part holds: `e2e_no_git_write.rs` finds every file of a
-  repository unchanged after every component ran. It stays pending (M2).
-- I2 security review recorded (persona-security-officer, PRV-02 and
-  PRV-13). It found no path from untrusted content to a trusted event.
-  It found the git reader open to a hostile checkout, now fixed: only
-  regular files open, every object's SHA-1 is verified, the ancestor
-  walk stops short of the home, `commondir` must be the git directory's
-  ancestor. The key set is this node's key alone, and the policy reads
-  the seat kind.
-- I2, I4, I6, I8, I9 and I10 hold: the core starts no program and opens
-  no socket, and a changed repository identity is audited and counted.
+- ADM-13's M1 part holds: `e2e_no_git_write.rs` finds a repository
+  unchanged after every component ran. It stays pending (M2).
+- The I2 security review (PRV-02, PRV-13) found no path from untrusted
+  content to a trusted event. Its hostile-checkout findings on the git
+  reader are fixed: only regular files open, every object's SHA-1 is
+  verified, the ancestor walk stops short of the home, `commondir` must
+  be an ancestor of the git directory.
+- I2, I4, I6, I8, I9 and I10 hold: no program, no socket, a changed
+  repository identity audited and counted.
 
 Inherited:
 
@@ -69,9 +66,11 @@ Inherited:
   `trust_policy::{trust_level, Input, TrustLevel, Taint}`,
   `repository::{bind, show, plan, apply, Outcome}`, `Act::RepositoryBind`,
   `verify`'s `VerifyError::Derived`.
-- `store`: `origins` and `replace_origins`, `local_secret`,
-  `directory_identity`; `EventKind::RepositoryBind`; four
-  `repository_*` counters.
+- `store`: `origins` and `replace_origins`, `worktree_identity` and
+  `worktree_identities` (rebuilt from `repository_bind` events and acts,
+  which name a worktree by `worktree_digest` and a provisional
+  identity's replacement by `replaces_provisional`);
+  `EventKind::RepositoryBind`; four `repository_*` counters.
 - `parinn rebuild`, `parinn repository show|bind`; `mcp::Server::new`
   takes the device key; `event_search`'s `trust` filter applies after
   the ranking.
@@ -82,6 +81,9 @@ quarantine (phase 14) must change no origin.
 
 For the stakeholder:
 
+- Proposed: LANE-02 reads "bound once per identity", each worktree
+  recorded by a keyed digest. That key derives from the device key, a
+  use `seats-and-keys.md` does not name: open.
 - Needs a ruling: LANE-02 binds at the first hook event; here it is
   recorded when `parinn ingest` or an MCP server starts, as reading git
   cannot stay within NFR-02's 150 ms.

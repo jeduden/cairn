@@ -154,6 +154,32 @@ impl Fixture {
     }
 
     /// The repository bind events the device seat holds.
+    /// Records `content` as a structural bind event.
+    fn append_bind(&mut self, content: serde_json::Value) {
+        self.append(EventKind::RepositoryBind, Provenance::Structural, content);
+    }
+
+    fn append(&mut self, kind: EventKind, provenance: Provenance, content: serde_json::Value) {
+        let event = NewEvent {
+            kind,
+            provenance,
+            content,
+            commitment_key: record::commitment::CommitmentKey::from_bytes([3; 32]),
+            transcript_timestamp: None,
+        };
+        self.store
+            .append(self.node.device_writer(), &[event])
+            .unwrap();
+    }
+
+    /// Records the widening act that binds by hand, and applies it.
+    fn record_rebind(&mut self, rebind: &Rebind) {
+        let mut content = rebind.content();
+        content["act"] = serde_json::json!("repository_bind");
+        self.append(EventKind::PrincipalAct, Provenance::Operator, content);
+        apply(&mut self.store, rebind).unwrap();
+    }
+
     fn binds(&self) -> Vec<serde_json::Value> {
         self.store
             .log(self.node.device_writer())
@@ -191,11 +217,13 @@ fn the_first_look_binds_the_lowest_root_commit_once_by_a_structural_event() {
     assert_eq!(f.bind(&app), Outcome::Bound { provisional: false });
     assert_eq!(f.bind(&app), Outcome::Unchanged);
 
-    assert_eq!(f.binds(), [serde_json::json!({"repository": low.as_str()})]);
+    let binds = f.binds();
+    assert_eq!(binds.len(), 1);
+    assert_eq!(binds[0]["repository"], low.as_str());
 }
 
 #[test]
-fn a_second_clone_of_a_bound_repository_binds_no_second_event() {
+fn a_second_clone_of_a_bound_repository_is_recorded_as_another_worktree_of_that_identity() {
     let mut f = fixture();
     let (one, two) = (f.path("one"), f.path("two"));
     let root = rooted(&one, "root");
@@ -206,7 +234,10 @@ fn a_second_clone_of_a_bound_repository_binds_no_second_event() {
     assert_eq!(f.bind(&one), Outcome::Bound { provisional: false });
     assert_eq!(f.bind(&two), Outcome::Bound { provisional: false });
 
-    assert_eq!(f.binds().len(), 1);
+    let binds = f.binds();
+    assert_eq!(binds.len(), 2);
+    assert_eq!(binds[0]["repository"], binds[1]["repository"]);
+    assert_ne!(binds[0]["worktree_digest"], binds[1]["worktree_digest"]);
 }
 
 #[test]
@@ -228,10 +259,9 @@ fn a_clone_holding_a_bound_commit_takes_that_identity() {
     f.bind(&one);
     assert_eq!(f.bind(&two), Outcome::Bound { provisional: false });
 
-    assert_eq!(
-        f.binds(),
-        [serde_json::json!({"repository": high.as_str()})]
-    );
+    let binds = f.binds();
+    assert_eq!(binds.len(), 2);
+    assert!(binds.iter().all(|b| b["repository"] == high.as_str()));
 }
 
 #[test]
@@ -258,11 +288,18 @@ fn a_repository_with_no_commit_gets_a_provisional_identity_and_binds_later() {
     let binds = f.binds();
     assert_eq!(binds.len(), 2);
     assert!(binds[0]["repository_provisional"].is_string());
-    assert_eq!(binds[1], serde_json::json!({"repository": root.as_str()}));
+    // The commit's bind names the provisional identity it replaces, for
+    // the same worktree.
+    assert_eq!(binds[1]["repository"], root.as_str());
+    assert_eq!(
+        binds[1]["replaces_provisional"],
+        binds[0]["repository_provisional"]
+    );
+    assert_eq!(binds[1]["worktree_digest"], binds[0]["worktree_digest"]);
 }
 
 #[test]
-fn a_provisional_directory_whose_clone_gains_a_bound_commit_joins_that_identity_without_a_second_bind()
+fn a_provisional_directory_whose_clone_gains_a_bound_commit_joins_that_identity_naming_what_it_replaces()
  {
     let mut f = fixture();
     let (one, blank) = (f.path("one"), f.path("blank"));
@@ -276,7 +313,13 @@ fn a_provisional_directory_whose_clone_gains_a_bound_commit_joins_that_identity_
 
     assert_eq!(f.bind(&blank), Outcome::Bound { provisional: false });
 
-    assert_eq!(f.binds().len(), 2);
+    let binds = f.binds();
+    assert_eq!(binds.len(), 3);
+    assert_eq!(binds[2]["repository"], root.as_str());
+    assert_eq!(
+        binds[2]["replaces_provisional"],
+        binds[1]["repository_provisional"]
+    );
 }
 
 #[test]
@@ -349,7 +392,7 @@ fn no_name_this_node_keeps_reveals_the_directory_or_the_identity() {
 
     let conn = rusqlite::Connection::open(f.dir.path().join(".parinn/store.db")).unwrap();
     let mut statement = conn
-        .prepare("SELECT directory, identity FROM repository_directories")
+        .prepare("SELECT worktree, identity FROM repository_worktrees")
         .unwrap();
     let rows: Vec<(String, String)> = statement
         .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))
@@ -358,9 +401,9 @@ fn no_name_this_node_keeps_reveals_the_directory_or_the_identity() {
         .collect();
 
     assert_eq!(rows.len(), 1);
-    for (directory, identity) in rows {
-        assert!(!identity.contains(root.as_str()) && !directory.contains("app"));
-        assert_eq!((directory.len(), identity.len()), (64, 64));
+    for (worktree, identity) in rows {
+        assert!(!identity.contains(root.as_str()) && !worktree.contains("app"));
+        assert_eq!((worktree.len(), identity.len()), (64, 64));
     }
 }
 
@@ -370,15 +413,7 @@ impl Fixture {
     }
 
     fn show_below(&mut self, directory: &Path, ceiling: Option<&Path>) -> Shown {
-        show(
-            &mut self.store,
-            &self.node,
-            &mut OsEntropy,
-            directory,
-            ceiling,
-            &|| false,
-        )
-        .unwrap()
+        show(&mut self.store, &self.node, directory, ceiling, &|| false).unwrap()
     }
 
     fn plan(&mut self, directory: &Path, commit: Option<&CommitId>) -> Result<Rebind, AdminError> {
@@ -517,20 +552,36 @@ fn a_rebind_records_the_commit_or_the_provisional_id_it_names() {
     let rebind = |commit: Option<&str>, provisional: Option<&str>| Rebind {
         commit: commit.and_then(CommitId::parse),
         provisional: provisional.map(str::to_owned),
-        directory: String::new(),
-        identity: String::new(),
+        worktree: "w".to_owned(),
+        value: String::new(),
+        replaces: None,
     };
 
     let a = commit_id(&[], "a");
     assert_eq!(
         rebind(Some(a.as_str()), None).content(),
-        serde_json::json!({"repository": a.as_str()})
+        serde_json::json!({"repository": a.as_str(), "worktree_digest": "w"})
     );
     assert_eq!(
         rebind(None, Some("ab")).content(),
-        serde_json::json!({"repository_provisional": "ab"})
+        serde_json::json!({"repository_provisional": "ab", "worktree_digest": "w"})
     );
-    assert_eq!(rebind(None, None).content(), serde_json::json!({}));
+    assert_eq!(
+        rebind(None, None).content(),
+        serde_json::json!({"worktree_digest": "w"})
+    );
+    let replacing = Rebind {
+        replaces: Some("ab".to_owned()),
+        ..rebind(Some(a.as_str()), None)
+    };
+    assert_eq!(
+        replacing.content(),
+        serde_json::json!({
+            "repository": a.as_str(),
+            "worktree_digest": "w",
+            "replaces_provisional": "ab",
+        })
+    );
 }
 
 #[test]
@@ -654,4 +705,57 @@ fn an_unreadable_clone_and_a_change_report_again_after_the_directory_reads_or_re
     rooted(&app, "b");
 
     assert_eq!(f.bind(&app), Outcome::Changed);
+}
+
+#[test]
+fn a_bound_worktree_whose_clone_lost_every_commit_is_a_change_reported_once() {
+    let mut f = fixture();
+    let app = f.path("app");
+    rooted(&app, "a");
+    f.bind(&app);
+    reinit(&app);
+    empty(&app);
+
+    assert_eq!(f.bind(&app), Outcome::Changed);
+    assert_eq!(f.bind(&app), Outcome::StillChanged);
+}
+
+#[test]
+fn the_table_of_worktrees_derives_from_the_record_alone() {
+    let mut f = fixture();
+    let (one, blank, gone) = (f.path("one"), f.path("blank"), f.path("gone"));
+    rooted(&one, "x");
+    empty(&blank);
+    f.bind(&one);
+    f.bind(&blank);
+    // A provisional worktree that later gains a commit, and one a
+    // widening bind rebinds.
+    let root = commit(&blank, &[], "later");
+    point(&blank, &root);
+    f.bind(&blank);
+    rooted(&gone, "a");
+    f.bind(&gone);
+    reinit(&gone);
+    rooted(&gone, "b");
+    let rebind = f.plan(&gone, None).unwrap();
+    f.record_rebind(&rebind);
+
+    let derived = derive_worktrees(&f.store, &f.node).unwrap();
+
+    assert_eq!(derived, f.store.worktree_identities().unwrap());
+    assert_eq!(derived.len(), 3);
+}
+
+#[test]
+fn a_bind_naming_no_identity_or_no_worktree_derives_nothing() {
+    let mut f = fixture();
+    for content in [
+        serde_json::json!({"worktree_digest": "w"}),
+        serde_json::json!({"repository": "a".repeat(40)}),
+        serde_json::json!({"repository": "not a commit", "worktree_digest": "w"}),
+    ] {
+        f.append_bind(content);
+    }
+
+    assert!(derive_worktrees(&f.store, &f.node).unwrap().is_empty());
 }

@@ -1,106 +1,101 @@
-//! What this node keeps locally of the repositories its directories
-//! hold (LANE-02): a secret only this node knows, and, per directory,
-//! the identity it last resolved to. Both are hashed under that secret
-//! by the caller, so no name here reveals a directory or an identity off
-//! this node. Neither is part of the record and neither replicates.
+//! What this node keeps locally of the repositories its worktrees hold
+//! (LANE-02): per worktree, the identity it last resolved to. Both are
+//! named by a keyed digest the caller made, so no name here reveals a
+//! worktree or an identity off this node. Neither is part of the record
+//! and neither replicates. The rows whose key holds no `:` are derived
+//! from the record's bind events and acts (I10; `parinn rebuild` writes
+//! them again); the rows whose key holds one are node-local markers of
+//! what this node already reported, and are not derived.
+
+use std::collections::BTreeMap;
 
 use rusqlite::{Connection, OptionalExtension};
 
 use crate::StoreError;
 
-/// The directories' table.
+/// The worktrees' table.
 pub(crate) const SCHEMA: &str = "
-CREATE TABLE IF NOT EXISTS repository_directories (
-    directory TEXT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS repository_worktrees (
+    worktree TEXT PRIMARY KEY,
     identity TEXT NOT NULL
 ) STRICT, WITHOUT ROWID;
 ";
 
-/// The `meta` key the local secret called `name` is kept under.
-fn key(name: &str) -> String {
-    format!("local_secret:{name}")
-}
+/// Whether the store has made the worktrees' table.
+const HAS_TABLE: &str = "SELECT count(*) FROM sqlite_master WHERE name = 'repository_worktrees'";
 
-/// Whether the store has made the directories' table.
-const HAS_TABLE: &str = "SELECT count(*) FROM sqlite_master WHERE name = 'repository_directories'";
-
-/// The local secret `name`, keeping `fresh` when none is kept yet.
-pub(crate) fn secret(
-    conn: &Connection,
-    name: &str,
-    fresh: [u8; 32],
-) -> Result<[u8; 32], StoreError> {
-    let key = key(name);
-    conn.execute(
-        "INSERT OR IGNORE INTO meta (key, value) VALUES (?1, ?2)",
-        (&key, hex(&fresh)),
-    )?;
-    let kept: String = conn.query_row("SELECT value FROM meta WHERE key = ?1", [&key], |r| {
-        r.get(0)
-    })?;
-
-    unhex(&kept).ok_or_else(|| StoreError::Corrupt {
-        address: None,
-        what: "local secret".to_owned(),
-    })
-}
-
-/// The identity the directory `directory` last resolved to.
-pub(crate) fn identity(conn: &Connection, directory: &str) -> Result<Option<String>, StoreError> {
+/// The identity the worktree `worktree` last resolved to.
+pub(crate) fn identity(conn: &Connection, worktree: &str) -> Result<Option<String>, StoreError> {
     if !conn.query_row(HAS_TABLE, [], |r| r.get::<_, bool>(0))? {
         return Ok(None);
     }
 
     Ok(conn
         .query_row(
-            "SELECT identity FROM repository_directories WHERE directory = ?1",
-            [directory],
+            "SELECT identity FROM repository_worktrees WHERE worktree = ?1",
+            [worktree],
             |r| r.get(0),
         )
         .optional()?)
 }
 
-/// Keeps `identity` as what `directory` resolves to.
+/// Keeps `identity` as what `worktree` resolves to.
 pub(crate) fn set_identity(
     conn: &Connection,
-    directory: &str,
+    worktree: &str,
     identity: &str,
 ) -> rusqlite::Result<()> {
     conn.execute_batch(SCHEMA)?;
     conn.execute(
-        "INSERT OR REPLACE INTO repository_directories (directory, identity) VALUES (?1, ?2)",
-        [directory, identity],
+        "INSERT OR REPLACE INTO repository_worktrees (worktree, identity) VALUES (?1, ?2)",
+        [worktree, identity],
     )?;
 
     Ok(())
 }
 
-/// Forgets what `directory` resolved to.
-pub(crate) fn forget_identity(conn: &Connection, directory: &str) -> rusqlite::Result<()> {
+/// Forgets what `worktree` resolved to.
+pub(crate) fn forget_identity(conn: &Connection, worktree: &str) -> rusqlite::Result<()> {
     conn.execute_batch(SCHEMA)?;
     conn.execute(
-        "DELETE FROM repository_directories WHERE directory = ?1",
-        [directory],
+        "DELETE FROM repository_worktrees WHERE worktree = ?1",
+        [worktree],
     )
     .map(|_| ())
 }
 
-/// `bytes` as lowercase hex.
-fn hex(bytes: &[u8; 32]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
+/// The derived rows are those whose key holds no `:`; the rest are
+/// markers.
+const DERIVED: &str = "SELECT worktree, identity FROM repository_worktrees
+    WHERE instr(worktree, ':') = 0 ORDER BY worktree";
+const DELETE_DERIVED: &str = "DELETE FROM repository_worktrees WHERE instr(worktree, ':') = 0";
+const INSERT: &str =
+    "INSERT OR REPLACE INTO repository_worktrees (worktree, identity) VALUES (?1, ?2)";
+
+/// The derived rows: every worktree whose key holds no `:`.
+pub(crate) fn identities(conn: &Connection) -> Result<BTreeMap<String, String>, StoreError> {
+    if !conn.query_row(HAS_TABLE, [], |r| r.get::<_, bool>(0))? {
+        return Ok(BTreeMap::new());
+    }
+    let mut statement = conn.prepare(DERIVED)?;
+    let rows = statement.query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)))?;
+
+    Ok(rows.collect::<Result<_, _>>()?)
 }
 
-/// The 32 bytes `text` holds as hex.
-fn unhex(text: &str) -> Option<[u8; 32]> {
-    if text.len() != 64 || !text.is_ascii() {
-        return None;
-    }
-    let mut out = [0; 32];
-    for (i, byte) in out.iter_mut().enumerate() {
-        *byte = u8::from_str_radix(&text[2 * i..2 * i + 2], 16).ok()?;
+/// Replaces the derived rows with `identities`, inside the transaction
+/// `conn` is in, leaving the markers alone.
+pub(crate) fn replace(
+    conn: &Connection,
+    identities: &BTreeMap<String, String>,
+) -> rusqlite::Result<()> {
+    conn.execute_batch(SCHEMA)?;
+    conn.execute(DELETE_DERIVED, [])?;
+    for (worktree, identity) in identities {
+        conn.execute(INSERT, [worktree, identity])?;
     }
 
-    Some(out)
+    Ok(())
 }
 
 #[cfg(test)]

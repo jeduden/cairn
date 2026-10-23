@@ -237,8 +237,18 @@ fn no_identity_from_the_path(w: &mut World) -> Result<(), String> {
         )?;
         first_hook_event(w, &second, "lane-02-second")?;
         let v = shown(w, &second)?;
-        if v["repository"] != json!(root) || events(w, "repository_bind")?.len() != 1 {
-            return Err(format!("the copy at another path shows {v}"));
+        // The copy is another worktree of the same identity: one more
+        // bind, naming that identity and a worktree of its own.
+        let binds = events(w, "repository_bind")?;
+        let digests: Vec<_> = binds
+            .iter()
+            .map(|(_, c)| c["worktree_digest"].clone())
+            .collect();
+        let same = binds
+            .iter()
+            .all(|(_, c)| json!(c["repository"]) == json!(root));
+        if v["repository"] != json!(root) || binds.len() != 2 || !same || digests[0] == digests[1] {
+            return Err(format!("the copy at another path shows {v}: {binds:?}"));
         }
     } else {
         let first_id = provisional_id(w)?;
@@ -286,7 +296,7 @@ fn no_local_name_reveals_it(w: &mut World) -> Result<(), String> {
         .collect();
     let conn = rusqlite::Connection::open(home(w)?.store()).map_err(|e| e.to_string())?;
     let mut statement = conn
-        .prepare("SELECT directory, identity FROM repository_directories")
+        .prepare("SELECT worktree, identity FROM repository_worktrees")
         .map_err(|e| e.to_string())?;
     let rows: Vec<(String, String)> = statement
         .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))
@@ -356,6 +366,22 @@ fn a_later_change(w: &mut World) -> Result<(), String> {
         first_hook_event(w, &dir, "lane-02-binds-later")?;
         if shown(w, &dir)?["status"] != "bound" || changed(w)? != 0 {
             return Err("a provisional identity did not bind on its own".to_owned());
+        }
+        // The commit's bind names the provisional identity it replaces,
+        // for the same worktree.
+        let binds = events(w, "repository_bind")?;
+        let linked = binds.iter().any(|(_, later)| {
+            later["repository"].is_string()
+                && binds.iter().any(|(_, first)| {
+                    first["worktree_digest"] == later["worktree_digest"]
+                        && first["repository_provisional"].is_string()
+                        && later["replaces_provisional"] == first["repository_provisional"]
+                })
+        });
+        if !linked {
+            return Err(format!(
+                "the later bind does not name what it replaces: {binds:?}"
+            ));
         }
     }
     let before = events(w, "repository_bind")?;

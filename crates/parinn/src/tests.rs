@@ -3303,11 +3303,40 @@ fn rebuild_derives_the_origins_again_and_appends_no_event() {
     assert_eq!((code, err.as_str()), (EXIT_OK, ""));
     let v: serde_json::Value = serde_json::from_str(&out).unwrap();
     assert_eq!(v["origins"], 2);
+    assert_eq!(v["worktrees"], 0);
     assert_eq!(v["indexed"], before);
     assert_eq!(event_count(&p), before);
     assert_eq!(p.invoke(&["verify"], &DEV).0, EXIT_OK);
     let (_, text, _) = p.invoke(&["rebuild"], &DEV);
-    assert!(text.starts_with("rebuilt: 2 origins"), "{text}");
+    assert!(
+        text.starts_with("rebuilt: 2 origins, 0 worktrees"),
+        "{text}"
+    );
+}
+
+#[test]
+fn a_kept_worktree_identity_the_record_lacks_fails_verify_until_rebuild_derives_it_again() {
+    let p = Process::new();
+    transcript_in(&p, "-w-a", "s1.jsonl", CLEAN_LINE.as_bytes());
+    assert_eq!(p.invoke(&["ingest", "--all"], &DEV).0, EXIT_OK);
+    assert_eq!(p.invoke(&["rebuild"], &DEV).0, EXIT_OK);
+    let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
+    conn.execute(
+        "INSERT INTO repository_worktrees (worktree, identity) VALUES ('stray', 'x')",
+        [],
+    )
+    .unwrap();
+    drop(conn);
+
+    let (code, _, err) = p.invoke(&["verify"], &DEV);
+    assert_eq!(code, EXIT_INTEGRITY);
+    assert!(
+        err.contains("the identity kept for worktree stray"),
+        "{err}"
+    );
+
+    assert_eq!(p.invoke(&["rebuild"], &DEV).0, EXIT_OK);
+    assert_eq!(p.invoke(&["verify"], &DEV).0, EXIT_OK);
 }
 
 #[test]

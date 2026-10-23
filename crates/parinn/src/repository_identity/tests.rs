@@ -290,7 +290,10 @@ fn the_first_hook_event_in_a_clone_binds_its_identity_when_ingest_next_runs_once
     start_in(&mut p, "s2", &app);
     assert_eq!(run(&p, &["ingest", "--all"]).0, EXIT_OK);
 
-    assert_eq!(binds(&p), [serde_json::json!({"repository": a})]);
+    let binds = binds(&p);
+    assert_eq!(binds.len(), 1);
+    assert_eq!(binds[0]["repository"], a);
+    assert_eq!(binds[0]["worktree_digest"].as_str().map(str::len), Some(64));
     assert_eq!(shown(&p, &app)["status"], "bound");
 }
 
@@ -597,9 +600,9 @@ fn a_look_the_store_cannot_mark_goes_on() {
     rusqlite::Connection::open(p.parinn_home().join("store.db"))
         .unwrap()
         .execute_batch(
-            "DELETE FROM repository_directories WHERE directory LIKE 'looked:%';
-             CREATE TRIGGER no_marks BEFORE INSERT ON repository_directories
-             WHEN NEW.directory LIKE 'looked:%' BEGIN SELECT RAISE(ABORT, 'no marks'); END;",
+            "DELETE FROM repository_worktrees WHERE worktree LIKE 'looked:%';
+             CREATE TRIGGER no_marks BEFORE INSERT ON repository_worktrees
+             WHEN NEW.worktree LIKE 'looked:%' BEGIN SELECT RAISE(ABORT, 'no marks'); END;",
         )
         .unwrap();
 

@@ -1367,7 +1367,18 @@ fn verify_record(
     store: &Store,
 ) -> Result<Result<(Report, bool), VerifyError>, administration::AdminError> {
     Ok(match administration::node::verifying_key(home, store)? {
-        Some((key, staged)) => verify(store, &key).map(|r| (r, staged)),
+        Some((key, staged)) => {
+            let verified = verify(store, &key);
+            // The worktrees' names derive from the device key, which a
+            // staged first start has not placed yet.
+            if verified.is_ok() && !staged {
+                let node = Node::find(home, store)?;
+                if let Err(e) = administration::verify::kept_worktrees_agree(store, &node) {
+                    return Ok(Err(e));
+                }
+            }
+            verified.map(|r| (r, staged))
+        }
         None => Ok((
             Report {
                 writers: 0,

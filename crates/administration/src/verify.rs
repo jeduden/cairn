@@ -42,8 +42,10 @@ use record::id::{Address, RoomId, SeatId, WriterId};
 use serde_json::Value;
 use store::{Segment, Store, StoreError, Stored, StoredSeat};
 
-use crate::node::begins_genesis;
+use crate::AdminError;
+use crate::node::{Node, begins_genesis};
 use crate::origin;
+use crate::repository;
 
 /// What a verified record holds, and the causal order its cited heads
 /// give.
@@ -112,6 +114,10 @@ pub enum VerifyError {
     /// and the node's key set derive (I10): the origin kept for this
     /// writer.
     Derived { writer: WriterId },
+    /// A derived artifact the store keeps differs from what the record
+    /// derives (I10): the identity kept for this worktree, named by its
+    /// digest, or one the record holds and the store does not.
+    DerivedWorktree { worktree: String },
     /// A segment is of a newer format version than this parinn's: it is
     /// refused and left as it is (ADM-05).
     NewerSegment(Segment),
@@ -137,7 +143,7 @@ impl VerifyError {
             Self::Provenance { .. } => "provenance",
             Self::Seat { .. } => "seat",
             Self::Genesis(_) => "genesis",
-            Self::Derived { .. } => "derived_artifact_consistency",
+            Self::Derived { .. } | Self::DerivedWorktree { .. } => "derived_artifact_consistency",
             Self::NewerSegment(_) => "newer_segment",
             Self::Segments { .. } => "segment",
             Self::Payload { .. } => "payload",
@@ -160,6 +166,7 @@ impl VerifyError {
             Self::Seat { .. }
             | Self::Genesis(_)
             | Self::Derived { .. }
+            | Self::DerivedWorktree { .. }
             | Self::NewerSegment(_)
             | Self::Segments { .. }
             | Self::Corrupt(_)
@@ -208,6 +215,10 @@ impl fmt::Display for VerifyError {
             Self::Derived { writer } => write!(
                 f,
                 "derived artifact consistency: the origin kept for writer {writer} differs from the record's: run parinn rebuild"
+            ),
+            Self::DerivedWorktree { worktree } => write!(
+                f,
+                "derived artifact consistency: the identity kept for worktree {worktree} differs from the record's: run parinn rebuild"
             ),
             Self::Corrupt(e) | Self::Store(e) => write!(f, "{e}"),
         }
@@ -332,6 +343,45 @@ fn kept_origins_agree(store: &Store, node_key: &PublicKey) -> Result<(), VerifyE
     }
 
     Ok(())
+}
+
+/// Checks that the identity this node keeps for each of its worktrees is
+/// the one its record derives, and that it keeps one for every worktree
+/// the record binds (LANE-02, I10, I6): a store restored without its
+/// table reports it rather than lose change detection silently. A store
+/// that never made the table keeps none. It needs the node's device key,
+/// which the names derive from, so it runs beside [`verify`], not in it.
+///
+/// # Errors
+///
+/// Fails naming the first worktree whose kept identity differs, or when
+/// the store fails.
+pub fn kept_worktrees_agree(store: &Store, node: &Node) -> Result<(), VerifyError> {
+    let derived = repository::derive_worktrees(store, node).map_err(derive_failed)?;
+    let kept = store.worktree_identities()?;
+    let worktrees: BTreeSet<&String> = kept.keys().chain(derived.keys()).collect();
+    for worktree in worktrees {
+        if kept.get(worktree) != derived.get(worktree) {
+            return Err(VerifyError::DerivedWorktree {
+                worktree: worktree.clone(),
+            });
+        }
+    }
+
+    Ok(())
+}
+
+/// Why the worktrees' identities could not be derived, as verification
+/// names it: the store failed, or the record held something it cannot
+/// read.
+fn derive_failed(e: AdminError) -> VerifyError {
+    match e {
+        AdminError::Store(e) => VerifyError::Store(e),
+        other => VerifyError::Corrupt(StoreError::Corrupt {
+            address: None,
+            what: other.to_string(),
+        }),
+    }
 }
 
 /// Why a writer's log could not be read, as verification names it.
