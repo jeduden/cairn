@@ -15,6 +15,7 @@ use std::path::Path;
 
 use serde_json::Value;
 
+use crate::approvals::{self, Verdict};
 use crate::{Snapshot, analyse, render};
 
 /// The review bundle and the findings were written.
@@ -46,6 +47,10 @@ pub fn run(
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> u8 {
+    let mut args = args.into_iter().peekable();
+    if args.next_if(|a| a == "approvals").is_some() {
+        return run_approvals(args, stdout, stderr);
+    }
     let [base, head, diff, out, consent] = match parse_flags(args) {
         Ok(values) => values,
         Err(msg) => {
@@ -66,6 +71,50 @@ pub fn run(
         }
         Err(msg) => {
             let _ = writeln!(stderr, "{msg}");
+            EXIT_FAILURE
+        }
+    }
+}
+
+const APPROVALS_USAGE: &str = "usage: review-bundle approvals --codeowners FILE --files FILE --reviews FILE --author LOGIN --head SHA";
+
+/// The flags of `approvals`, in the order the usage names them.
+const APPROVALS_FLAGS: [&str; 5] = ["codeowners", "files", "reviews", "author", "head"];
+
+/// The `approvals` subcommand (ENG-21): prints `ok` or `not-security`
+/// when the pull request has the approvals its files need, and exits
+/// [`EXIT_FAILURE`] with the shortfall on stderr when it has not.
+fn run_approvals(
+    args: impl Iterator<Item = String>,
+    stdout: &mut dyn Write,
+    stderr: &mut dyn Write,
+) -> u8 {
+    let [codeowners, files, reviews, author, head] = match parse_named(args, &APPROVALS_FLAGS) {
+        Ok(values) => values,
+        Err(msg) => {
+            let _ = writeln!(stderr, "review-bundle: {msg}\n{APPROVALS_USAGE}");
+            return EXIT_USAGE;
+        }
+    };
+    let read = |p: &str| fs::read_to_string(p).map_err(failed("read", Path::new(p)));
+    let verdict = read(&codeowners).and_then(|owners| {
+        let files =
+            approvals::parse_files(&read(&files)?).map_err(failed("parse", Path::new(&files)))?;
+        let reviews = approvals::parse_reviews(&read(&reviews)?)
+            .map_err(failed("parse", Path::new(&reviews)))?;
+        approvals::check(&owners, &files, &author, &head, &reviews)
+    });
+    match verdict {
+        Ok(Verdict::NotSecurity) => {
+            let _ = writeln!(stdout, "not-security");
+            EXIT_OK
+        }
+        Ok(Verdict::Approved) => {
+            let _ = writeln!(stdout, "ok");
+            EXIT_OK
+        }
+        Err(msg) => {
+            let _ = writeln!(stderr, "review-bundle: {msg}");
             EXIT_FAILURE
         }
     }
@@ -135,6 +184,15 @@ fn consents(json: &str) -> Result<bool, String> {
 /// Reads `--name value` and `--name=value` pairs into the values of
 /// [`FLAGS`], each required.
 fn parse_flags(args: impl IntoIterator<Item = String>) -> Result<[String; 5], String> {
+    parse_named(args, &FLAGS)
+}
+
+/// Reads `--name value` and `--name=value` pairs into the values of
+/// `names`, each required.
+fn parse_named(
+    args: impl IntoIterator<Item = String>,
+    names: &[&str; 5],
+) -> Result<[String; 5], String> {
     let mut values: [Option<String>; 5] = Default::default();
     let mut args = args.into_iter();
     while let Some(arg) = args.next() {
@@ -145,7 +203,7 @@ fn parse_flags(args: impl IntoIterator<Item = String>) -> Result<[String; 5], St
             Some((name, value)) => (name, Some(value.to_owned())),
             None => (flag, None),
         };
-        let slot = FLAGS
+        let slot = names
             .iter()
             .position(|f| *f == name)
             .ok_or_else(|| format!("unknown flag {arg:?}"))?;
@@ -158,7 +216,7 @@ fn parse_flags(args: impl IntoIterator<Item = String>) -> Result<[String; 5], St
 
     let mut out: [String; 5] = Default::default();
     for (i, value) in values.into_iter().enumerate() {
-        out[i] = value.ok_or_else(|| format!("--{} is required", FLAGS[i]))?;
+        out[i] = value.ok_or_else(|| format!("--{} is required", names[i]))?;
     }
 
     Ok(out)

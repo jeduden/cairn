@@ -9,6 +9,7 @@
 //! links into a shipped executable.
 
 pub mod analysis;
+pub mod approvals;
 pub mod cli;
 pub mod diff;
 pub mod owners;

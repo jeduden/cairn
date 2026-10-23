@@ -22,6 +22,6 @@ workspace = true
 
 # ENG-02: see crates/parinn/Cargo.toml.
 [package.metadata.parinn]
-responsibility = "Builds the review agent's bundle and the deterministic findings from main's tree, the pull request's tree and its diff"
+responsibility = "Builds the review agent's bundle and the deterministic findings, and counts the approvals security-sensitive crates need"
 may-depend-on = ["adr", "scenario", "srs"]
 may-dev-depend-on = ["testkit"]

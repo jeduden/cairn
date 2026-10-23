@@ -213,3 +213,90 @@ fn consents_holds_on_one_comment_with_a_body() {
         assert!(consents(bad).is_err(), "{bad}");
     }
 }
+
+fn approvals_world(files: &str, reviews: &str) -> TempDir {
+    let dir = TempDir::new().unwrap();
+    fs::write(dir.path().join("owners"), "/crates/pin/ @sec\n").unwrap();
+    fs::write(dir.path().join("files.json"), files).unwrap();
+    fs::write(dir.path().join("reviews.json"), reviews).unwrap();
+    dir
+}
+
+fn invoke_approvals(dir: &TempDir) -> (u8, String, String) {
+    let at = |n: &str| dir.path().join(n).display().to_string();
+    invoke(&[
+        "approvals",
+        "--codeowners",
+        &at("owners"),
+        "--files",
+        &at("files.json"),
+        "--reviews",
+        &at("reviews.json"),
+        "--author",
+        "ann",
+        "--head",
+        "h1",
+    ])
+}
+
+#[test]
+fn approvals_passes_a_change_outside_the_security_crates() {
+    let dir = approvals_world(r#"[{"filename":"a.rs"}]"#, "[]");
+
+    assert_eq!(
+        invoke_approvals(&dir),
+        (EXIT_OK, "not-security\n".into(), String::new())
+    );
+}
+
+#[test]
+fn approvals_passes_two_approvals_with_the_owner() {
+    let reviews = r#"[{"user":{"login":"sec"},"state":"APPROVED","commit_id":"h1"},
+        {"user":{"login":"bob"},"state":"APPROVED","commit_id":"h1"}]"#;
+    let dir = approvals_world(r#"[{"filename":"crates/pin/a.rs"}]"#, reviews);
+
+    assert_eq!(
+        invoke_approvals(&dir),
+        (EXIT_OK, "ok\n".into(), String::new())
+    );
+}
+
+#[test]
+fn approvals_fails_with_the_shortfall() {
+    let dir = approvals_world(r#"[{"filename":"crates/pin/a.rs"}]"#, "[]");
+
+    let (code, out, err) = invoke_approvals(&dir);
+
+    assert_eq!((code, out.as_str()), (EXIT_FAILURE, ""));
+    assert!(err.contains("needs 2 approvals"), "{err}");
+}
+
+#[test]
+fn approvals_fails_on_unreadable_or_malformed_input() {
+    let dir = approvals_world("{}", "[]");
+    assert_eq!(invoke_approvals(&dir).0, EXIT_FAILURE);
+    let dir = approvals_world("[]", "{}");
+    assert_eq!(invoke_approvals(&dir).0, EXIT_FAILURE);
+    let missing = invoke(&[
+        "approvals",
+        "--codeowners",
+        "/nope",
+        "--files",
+        "/nope",
+        "--reviews",
+        "/nope",
+        "--author",
+        "a",
+        "--head",
+        "h",
+    ]);
+    assert_eq!(missing.0, EXIT_FAILURE);
+}
+
+#[test]
+fn approvals_needs_every_flag() {
+    let (code, _, err) = invoke(&["approvals", "--author", "ann"]);
+
+    assert_eq!(code, EXIT_USAGE);
+    assert!(err.contains("--codeowners is required"), "{err}");
+}
