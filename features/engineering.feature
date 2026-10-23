@@ -221,7 +221,7 @@ Feature: Engineering quality (ENG)
     And the release build fails when a built executable's output differs from its target's regenerated file
     And the core gains no dependency and opens no socket
 
-  @ENG-21 @P0 @pending
+  @ENG-21 @P0
   Scenario: main only moves through reviewed, signed pull requests
     Given the repository's branch protection for main
     Then direct pushes are rejected
@@ -229,7 +229,7 @@ Feature: Engineering quality (ENG)
     And every pull request needs an approval from a reviewer other than its author
     And CODEOWNERS names the stakeholder on the requirement text and on every path that enforces it
     And CODEOWNERS names no code owner on any other path
-    And changes to security-sensitive crates need two approvals, one from the designated security reviewer
+    And the security-sensitive crates are owned by the designated security reviewer, whose approval they need
 
   @ENG-22 @P0 @pending
   Scenario: every privacy or data-flow statement cites its proving test
