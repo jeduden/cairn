@@ -188,5 +188,75 @@ pub fn bind(
     Ok(Outcome::Bound { provisional })
 }
 
+/// What `parinn repository show` says of a directory.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Shown {
+    NoRepository,
+    Unreadable,
+    /// The clone's identity, which this node has not bound for the
+    /// directory yet.
+    Unbound(Option<CommitId>),
+    /// The identity the directory is bound to and still resolves to.
+    Bound(Option<CommitId>),
+    /// The directory resolves to another identity than it was bound to.
+    Changed(Option<CommitId>),
+}
+
+/// What `directory` is, as this node sees it, binding nothing.
+///
+/// # Errors
+///
+/// Fails when the store or the random source fails.
+pub fn show(
+    _store: &mut Store,
+    _node: &Node,
+    _entropy: &mut dyn Entropy,
+    _directory: &Path,
+    _deadline: &dyn Deadline,
+) -> Result<Shown, AdminError> {
+    Ok(Shown::NoRepository)
+}
+
+/// What a widening bind will bind a directory to.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Rebind {
+    /// The commit it binds to; none for a provisional identity.
+    pub commit: Option<CommitId>,
+    directory: String,
+    identity: String,
+}
+
+/// The identity a widening bind of `directory` will give it: `commit`
+/// when the principal names one, else what its clone resolves to. Nothing
+/// changes until [`apply`] runs, after the act is recorded.
+///
+/// # Errors
+///
+/// Fails when the store or the random source fails; the directory lies in
+/// no repository or its git data cannot be read.
+pub fn plan(
+    _store: &mut Store,
+    _node: &Node,
+    _entropy: &mut dyn Entropy,
+    _directory: &Path,
+    _commit: Option<CommitId>,
+    _deadline: &dyn Deadline,
+) -> Result<Rebind, AdminError> {
+    Ok(Rebind {
+        commit: None,
+        directory: String::new(),
+        identity: String::new(),
+    })
+}
+
+/// Makes `rebind` what its directory resolves to.
+///
+/// # Errors
+///
+/// Fails when the store does.
+pub fn apply(_store: &mut Store, _rebind: &Rebind) -> Result<(), AdminError> {
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests;

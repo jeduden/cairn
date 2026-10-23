@@ -230,3 +230,100 @@ fn no_name_this_node_keeps_reveals_the_directory_or_the_identity() {
         assert_eq!((directory.len(), identity.len()), (64, 64));
     }
 }
+
+impl Fixture {
+    fn show(&mut self, directory: &Path) -> Shown {
+        show(&mut self.store, &self.node, &mut OsEntropy, directory, &|| false).unwrap()
+    }
+
+    fn plan(&mut self, directory: &Path, commit: Option<&str>) -> Result<Rebind, AdminError> {
+        plan(
+            &mut self.store,
+            &self.node,
+            &mut OsEntropy,
+            directory,
+            commit.and_then(CommitId::parse),
+            &|| false,
+        )
+    }
+}
+
+fn id(text: &str) -> Option<CommitId> {
+    CommitId::parse(text)
+}
+
+#[test]
+fn show_says_what_a_directory_is_and_binds_nothing() {
+    let mut f = fixture();
+    let (plain, app) = (f.path("plain"), f.path("app"));
+    repository(&app, &[(A, &[])], Some(A));
+
+    assert_eq!(f.show(&plain), Shown::NoRepository);
+    assert_eq!(f.show(&app), Shown::Unbound(id(A)));
+    assert!(f.binds().is_empty());
+    f.bind(&app);
+    assert_eq!(f.show(&app), Shown::Bound(id(A)));
+    fs::remove_dir_all(app.join(".git")).unwrap();
+    repository(&app, &[(B, &[])], Some(B));
+    assert_eq!(f.show(&app), Shown::Changed(id(B)));
+}
+
+#[test]
+fn show_names_a_provisional_directory_without_a_commit_and_an_unreadable_one() {
+    let mut f = fixture();
+    let (empty, bad) = (f.path("empty"), f.path("bad"));
+    repository(&empty, &[], None);
+    repository(&bad, &[(A, &[])], Some(A));
+    fs::write(bad.join(".git/config"), "[extensions]\n\tobjectformat = sha256\n").unwrap();
+
+    assert_eq!(f.show(&empty), Shown::Unbound(None));
+    assert_eq!(f.show(&bad), Shown::Unreadable);
+}
+
+#[test]
+fn a_widening_bind_makes_the_directory_resolve_to_the_identity_it_names() {
+    let mut f = fixture();
+    let app = f.path("app");
+    repository(&app, &[(A, &[])], Some(A));
+    f.bind(&app);
+    fs::remove_dir_all(app.join(".git")).unwrap();
+    repository(&app, &[(B, &[])], Some(B));
+    assert_eq!(f.bind(&app), Outcome::Changed);
+
+    let rebind = f.plan(&app, None).unwrap();
+    assert_eq!(rebind.commit, id(B));
+    // Nothing moves until the act is recorded and the plan applied.
+    assert_eq!(f.bind(&app), Outcome::Changed);
+    apply(&mut f.store, &rebind).unwrap();
+
+    assert_eq!(f.bind(&app), Outcome::Unchanged);
+}
+
+#[test]
+fn a_widening_bind_may_name_a_commit_the_clone_lacks() {
+    let mut f = fixture();
+    let shallow = f.path("shallow");
+    repository(&shallow, &[(B, &[])], Some(B));
+
+    let rebind = f.plan(&shallow, Some(A)).unwrap();
+
+    assert_eq!(rebind.commit, id(A));
+}
+
+#[test]
+fn a_widening_bind_of_a_clone_with_no_commit_is_provisional() {
+    let mut f = fixture();
+    let empty = f.path("empty");
+    repository(&empty, &[], None);
+
+    assert_eq!(f.plan(&empty, None).unwrap().commit, None);
+}
+
+#[test]
+fn a_widening_bind_of_a_directory_in_no_repository_is_refused() {
+    let mut f = fixture();
+    let plain = f.path("plain");
+
+    assert!(f.plan(&plain, None).is_err());
+    assert!(f.plan(&plain, Some(A)).is_err());
+}
