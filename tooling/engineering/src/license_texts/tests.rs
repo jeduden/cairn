@@ -389,3 +389,12 @@ fn check_tree_reports_every_crate_that_fails_and_every_dir_it_cannot_read() {
     );
     assert!(check_tree("nope", |_| Ok(vec![])).is_err());
 }
+
+#[test]
+fn license_files_without_a_licenses_directory_reads_the_top_only() {
+    let (dir, _) = checkout(&[("LICENSE", "top")]);
+
+    let files = license_files(dir.path()).unwrap();
+
+    assert_eq!(files, [("LICENSE".to_owned(), "top".to_owned())]);
+}

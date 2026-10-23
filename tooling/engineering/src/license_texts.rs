@@ -282,29 +282,30 @@ pub fn packages(metadata: &str) -> Result<Vec<Package>, String> {
 ///
 /// Fails when the directory cannot be read.
 pub fn license_files(dir: &Path) -> Result<Vec<(String, String)>, String> {
-    let mut files = files_in(dir, "", license_file_name)?;
-    let reuse = dir.join("LICENSES");
-    if reuse.is_dir() {
-        files.extend(files_in(&reuse, "LICENSES/", |_| true)?);
+    let mut files = Vec::new();
+    for (sub, prefix) in [("", ""), ("LICENSES", "LICENSES/")] {
+        files.extend(files_in(&dir.join(sub), prefix)?);
     }
     files.sort();
 
     Ok(files)
 }
 
-/// The files in `dir` that `wanted` accepts by name, each listed under
-/// `prefix` and its name.
-fn files_in(
-    dir: &Path,
-    prefix: &str,
-    wanted: impl Fn(&str) -> bool,
-) -> Result<Vec<(String, String)>, String> {
-    let entries = fs::read_dir(dir).map_err(|e| format!("read {}: {e}", dir.display()))?;
+/// The files in `dir` listed under `prefix` and their names: with no
+/// prefix, those named for a license; under `LICENSES/`, every file. A
+/// `LICENSES` directory that does not exist holds nothing.
+fn files_in(dir: &Path, prefix: &str) -> Result<Vec<(String, String)>, String> {
+    let entries = match fs::read_dir(dir) {
+        Err(e) if !prefix.is_empty() && e.kind() == std::io::ErrorKind::NotFound => {
+            return Ok(Vec::new());
+        }
+        other => other.map_err(|e| format!("read {}: {e}", dir.display()))?,
+    };
     let mut files = Vec::new();
     for entry in entries {
         let entry = entry.map_err(|e| format!("read {}: {e}", dir.display()))?;
         let name = entry.file_name().to_string_lossy().into_owned();
-        if wanted(&name) && entry.path().is_file() {
+        if (!prefix.is_empty() || license_file_name(&name)) && entry.path().is_file() {
             // Not UTF-8 means no canonical text fits it; lossy keeps it listed.
             let bytes = fs::read(entry.path()).map_err(|e| format!("read {name}: {e}"))?;
             files.push((
