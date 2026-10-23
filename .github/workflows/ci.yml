@@ -348,7 +348,21 @@ jobs:
               bin="$head"
               [ "$side" = base ] && bin="$base"
               core="$bin/parinn"
-              "$bin/benchmark" run --core "$core" --samples "$SAMPLES" >> "$out/$side.samples"
+              # The base side runs main's benchmark, which fails a round
+              # when a stalled disk overruns the hook budget twice; a
+              # round that failed only so is taken again, three times.
+              for try in 1 2 3; do
+                if "$bin/benchmark" run --core "$core" --samples "$SAMPLES" \
+                  > "$out/round.samples" 2> "$out/round.err"; then
+                  cat "$out/round.samples" >> "$out/$side.samples"
+                  break
+                fi
+                cat "$out/round.err" >&2
+                if [ "$try" -eq 3 ] || ! grep -q "overran its hook budget" "$out/round.err"; then
+                  exit 1
+                fi
+                sleep 2
+              done
             done
           done
           status=0

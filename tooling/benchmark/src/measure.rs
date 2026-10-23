@@ -61,7 +61,11 @@ pub fn time_benchmark(
             let input = fixture::SEARCH_REQUESTS.as_bytes().to_vec();
             time_program_fed(program, benchmark.args, &home.env(), input, deadline)
         }
-        Fixture::HookInput { hook } => twice(|| hook_sample(program, benchmark, hook, deadline)),
+        Fixture::HookInput { hook } => retried(
+            ATTEMPTS,
+            || thread::sleep(SETTLE),
+            || hook_sample(program, benchmark, hook, deadline),
+        ),
     }
 }
 
@@ -74,17 +78,36 @@ enum Attempt {
     Failed(String),
 }
 
-/// The time `attempt` gives, taken once more when the first attempt's
-/// handler overran its hook budget: a stall of the machine under one
-/// sample passes on a fresh home, and a handler that overruns twice in
-/// a row fails the benchmark. Any other failure is final.
-fn twice(mut attempt: impl FnMut() -> Result<Duration, Attempt>) -> Result<Duration, String> {
-    match attempt() {
-        Ok(took) => Ok(took),
-        Err(Attempt::Failed(e)) => Err(e),
-        Err(Attempt::Overran(_)) => attempt().map_err(|e| match e {
-            Attempt::Overran(e) | Attempt::Failed(e) => e,
-        }),
+/// How many times a hook sample is taken before its overruns are the
+/// handler's.
+const ATTEMPTS: usize = 4;
+
+/// How long the benchmark waits after an overrun before it takes the
+/// sample again.
+const SETTLE: Duration = Duration::from_millis(300);
+
+/// The time `attempt` gives, taken again after `settle` while its
+/// handler overran its hook budget, up to `attempts` times. The handler
+/// commits durably (NFR-02), and a disk that stalls its `fsync` past the
+/// budget under one sample passes on a fresh home a moment later; a
+/// handler that overruns every time fails the benchmark. Any other
+/// failure is final.
+fn retried(
+    attempts: usize,
+    mut settle: impl FnMut(),
+    mut attempt: impl FnMut() -> Result<Duration, Attempt>,
+) -> Result<Duration, String> {
+    let mut taken = 1;
+    loop {
+        match attempt() {
+            Ok(took) => return Ok(took),
+            Err(Attempt::Failed(e)) => return Err(e),
+            Err(Attempt::Overran(e)) if taken >= attempts => return Err(e),
+            Err(Attempt::Overran(_)) => {
+                taken += 1;
+                settle();
+            }
+        }
     }
 }
 
@@ -99,6 +122,9 @@ fn hook_sample(
     let home =
         fixture::Home::with_transcript(&std::env::temp_dir(), &fixture::transcript(HOOK_LINES))
             .map_err(|e| Attempt::Failed(format!("make the fixture of {}: {e}", benchmark.name)))?;
+    // Flush what earlier work left dirty, so the handler's own durable
+    // commit does not wait on it; a failed flush only costs a retry.
+    let _ = Command::new("sync").status();
     let input = home.hook_input(hook).into_bytes();
     let took = time_program_fed(program, benchmark.args, &home.env(), input, deadline)
         .map_err(Attempt::Failed)?;
