@@ -1,7 +1,7 @@
 ---
 n: 11
 title: "Trust, origin, branch links and repository identity"
-status: "🔳"
+status: "✅"
 result: false
 ---
 # Phase 11: trust, origin, branch links and repository identity
