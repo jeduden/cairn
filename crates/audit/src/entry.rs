@@ -180,6 +180,13 @@ pub enum Counter {
     /// The search index's unreported gaps could not be looked up after
     /// an ingest recorded its events (REC-11, I6).
     SearchIndexGapLookupFailed,
+    /// The identity a directory's repository resolves to changed since
+    /// it was bound; no room's branch link is relinked for it (LANE-02,
+    /// I6).
+    RepositoryIdentityChanged,
+    /// A clone's git data could not be read, so its repository identity
+    /// stays as it was (LANE-02, I6).
+    RepositoryReadFailed,
 }
 
 impl Counter {
@@ -233,6 +240,8 @@ impl Counter {
             Self::SearchIndexSeqBeyondLimit => "search_index_seq_beyond_limit",
             Self::ForkConflict => "fork_conflict",
             Self::SearchIndexGapLookupFailed => "search_index_gap_lookup_failed",
+            Self::RepositoryIdentityChanged => "repository_identity_changed",
+            Self::RepositoryReadFailed => "repository_read_failed",
         }
     }
 }
