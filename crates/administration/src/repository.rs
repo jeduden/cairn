@@ -27,7 +27,7 @@ use record::commitment::CommitmentKey;
 use record::digest::Digest;
 use record::event::{EventKind, Provenance};
 use repository::{CommitId, Deadline};
-use serde_json::json;
+use serde_json::{Value, json};
 use store::{NewEvent, Store};
 
 use crate::AdminError;
@@ -208,13 +208,33 @@ pub enum Shown {
 ///
 /// Fails when the store or the random source fails.
 pub fn show(
-    _store: &mut Store,
-    _node: &Node,
-    _entropy: &mut dyn Entropy,
-    _directory: &Path,
-    _deadline: &dyn Deadline,
+    store: &mut Store,
+    node: &Node,
+    entropy: &mut dyn Entropy,
+    directory: &Path,
+    deadline: &dyn Deadline,
 ) -> Result<Shown, AdminError> {
-    Ok(Shown::NoRepository)
+    let git_dir = match repository::git_dir(directory) {
+        Ok(Some(git_dir)) => git_dir,
+        Ok(None) => return Ok(Shown::NoRepository),
+        Err(_) => return Ok(Shown::Unreadable),
+    };
+    let bound = bound_commits(store, node)?;
+    let Ok(current) = resolve(&git_dir, &bound, deadline) else {
+        return Ok(Shown::Unreadable);
+    };
+    let secret = store.local_secret("repository", draw(entropy)?)?;
+    let kept = store.directory_identity(&directory_key(&secret, directory))?;
+    let commit = match &current {
+        Current::Bound(id) => Some(id.clone()),
+        Current::Provisional => None,
+    };
+
+    Ok(match kept {
+        None => Shown::Unbound(commit),
+        Some(kept) if kept == identity_key(&secret, &current) => Shown::Bound(commit),
+        Some(_) => Shown::Changed(commit),
+    })
 }
 
 /// What a widening bind will bind a directory to.
@@ -222,8 +242,22 @@ pub fn show(
 pub struct Rebind {
     /// The commit it binds to; none for a provisional identity.
     pub commit: Option<CommitId>,
+    /// The node-local id of a provisional identity.
+    pub provisional: Option<String>,
     directory: String,
     identity: String,
+}
+
+impl Rebind {
+    /// The identity the act records: a commit, or a provisional id.
+    #[must_use]
+    pub fn content(&self) -> Value {
+        match (&self.commit, &self.provisional) {
+            (Some(id), _) => json!({"repository": id.as_str()}),
+            (None, Some(id)) => json!({"repository_provisional": id}),
+            (None, None) => json!({}),
+        }
+    }
 }
 
 /// The identity a widening bind of `directory` will give it: `commit`
@@ -232,20 +266,41 @@ pub struct Rebind {
 ///
 /// # Errors
 ///
-/// Fails when the store or the random source fails; the directory lies in
-/// no repository or its git data cannot be read.
+/// Fails when the store or the random source fails, when the directory
+/// lies in no repository, or when its git data cannot be read.
 pub fn plan(
-    _store: &mut Store,
-    _node: &Node,
-    _entropy: &mut dyn Entropy,
-    _directory: &Path,
-    _commit: Option<CommitId>,
-    _deadline: &dyn Deadline,
+    store: &mut Store,
+    node: &Node,
+    entropy: &mut dyn Entropy,
+    directory: &Path,
+    commit: Option<CommitId>,
+    deadline: &dyn Deadline,
 ) -> Result<Rebind, AdminError> {
+    let git_dir = repository::git_dir(directory)
+        .map_err(|_| AdminError::Repository("the repository's git data cannot be read"))?
+        .ok_or(AdminError::Repository(
+            "the directory lies in no repository",
+        ))?;
+    let current = match commit {
+        Some(id) => Current::Bound(id),
+        None => resolve(&git_dir, &bound_commits(store, node)?, deadline)
+            .map_err(|_| AdminError::Repository("the repository's git data cannot be read"))?,
+    };
+    let secret = store.local_secret("repository", draw(entropy)?)?;
+    let provisional = matches!(current, Current::Provisional)
+        .then(|| {
+            Ok::<_, AdminError>(Digest::of(&[&draw::<32>(entropy)?]).to_hex()[..32].to_owned())
+        })
+        .transpose()?;
+
     Ok(Rebind {
-        commit: None,
-        directory: String::new(),
-        identity: String::new(),
+        commit: match &current {
+            Current::Bound(id) => Some(id.clone()),
+            Current::Provisional => None,
+        },
+        provisional,
+        directory: directory_key(&secret, directory),
+        identity: identity_key(&secret, &current),
     })
 }
 
@@ -254,7 +309,9 @@ pub fn plan(
 /// # Errors
 ///
 /// Fails when the store does.
-pub fn apply(_store: &mut Store, _rebind: &Rebind) -> Result<(), AdminError> {
+pub fn apply(store: &mut Store, rebind: &Rebind) -> Result<(), AdminError> {
+    store.set_directory_identity(&rebind.directory, &rebind.identity)?;
+
     Ok(())
 }
 

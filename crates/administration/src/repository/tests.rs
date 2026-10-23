@@ -233,7 +233,14 @@ fn no_name_this_node_keeps_reveals_the_directory_or_the_identity() {
 
 impl Fixture {
     fn show(&mut self, directory: &Path) -> Shown {
-        show(&mut self.store, &self.node, &mut OsEntropy, directory, &|| false).unwrap()
+        show(
+            &mut self.store,
+            &self.node,
+            &mut OsEntropy,
+            directory,
+            &|| false,
+        )
+        .unwrap()
     }
 
     fn plan(&mut self, directory: &Path, commit: Option<&str>) -> Result<Rebind, AdminError> {
@@ -274,7 +281,11 @@ fn show_names_a_provisional_directory_without_a_commit_and_an_unreadable_one() {
     let (empty, bad) = (f.path("empty"), f.path("bad"));
     repository(&empty, &[], None);
     repository(&bad, &[(A, &[])], Some(A));
-    fs::write(bad.join(".git/config"), "[extensions]\n\tobjectformat = sha256\n").unwrap();
+    fs::write(
+        bad.join(".git/config"),
+        "[extensions]\n\tobjectformat = sha256\n",
+    )
+    .unwrap();
 
     assert_eq!(f.show(&empty), Shown::Unbound(None));
     assert_eq!(f.show(&bad), Shown::Unreadable);

@@ -32,6 +32,8 @@ pub enum AdminError {
     Store(store::StoreError),
     /// The home and the store disagree about the node.
     Node(&'static str),
+    /// A repository's identity cannot be read or bound (LANE-02).
+    Repository(&'static str),
     /// The device key is missing from the key store, but the store holds
     /// this node's record: no second genesis starts (PRV-12).
     DeviceKeyMissing,
@@ -63,7 +65,7 @@ impl fmt::Display for AdminError {
             Self::Io { path, source } => write!(f, "{}: {source}", path.display()),
             Self::Key(e) => write!(f, "{e}"),
             Self::Store(e) => write!(f, "{e}"),
-            Self::Node(why) => f.write_str(why),
+            Self::Node(why) | Self::Repository(why) => f.write_str(why),
             Self::DeviceKeyMissing => f.write_str(
                 "the device key is missing from the key store, but the store holds this node's record; no second genesis starts",
             ),
@@ -102,6 +104,7 @@ impl std::error::Error for AdminError {
             Self::Store(e) => Some(e),
             Self::NoHome
             | Self::Node(_)
+            | Self::Repository(_)
             | Self::DeviceKeyMissing
             | Self::LoosePermissions { .. }
             | Self::OtherOsUser { .. }

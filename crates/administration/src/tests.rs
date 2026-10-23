@@ -16,6 +16,9 @@ fn errors_explain_themselves_and_keep_their_cause() {
     assert!(std::error::Error::source(&store).is_some());
     assert!(std::error::Error::source(&AdminError::NoHome).is_none());
     assert!(std::error::Error::source(&AdminError::Node("n")).is_none());
+    let repository = AdminError::Repository("r");
+    assert_eq!(repository.to_string(), "r");
+    assert!(std::error::Error::source(&repository).is_none());
 }
 
 #[test]
