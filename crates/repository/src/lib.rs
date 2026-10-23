@@ -8,7 +8,10 @@
 
 mod deadline;
 mod error;
+#[cfg(test)]
+mod fixture;
 mod identity;
+mod inflate;
 
 pub use deadline::Deadline;
 pub use error::Error;
