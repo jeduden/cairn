@@ -23,15 +23,16 @@
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::time::SystemTime;
+use std::process::{Command, Stdio};
+use std::time::{Duration, SystemTime};
 
 use serde_json::json;
 use testkit::TempDir;
 use testkit::boundary::{Component, Confinement};
 
 fn git(home: &Path, dir: &Path, args: &[&str]) {
-    let out = testkit::isolate(&mut Command::new("git"), home)
+    let mut command = Command::new("git");
+    testkit::isolate(&mut command, home)
         .current_dir(dir)
         .env("GIT_CONFIG_NOSYSTEM", "1")
         .args([
@@ -45,9 +46,18 @@ fn git(home: &Path, dir: &Path, args: &[&str]) {
             "init.defaultBranch=main",
         ])
         .args(args)
-        .output()
-        .unwrap();
-    assert!(out.status.success(), "git {args:?}");
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+    let mut child = command.spawn().unwrap();
+    for _ in 0..2_000 {
+        if let Some(status) = child.try_wait().unwrap() {
+            assert!(status.success(), "git {args:?}");
+            return;
+        }
+        std::thread::sleep(Duration::from_millis(5));
+    }
+    let _ = child.kill();
+    panic!("git {args:?} did not finish");
 }
 
 /// Every file and directory under `dir`: its bytes and modification time.
