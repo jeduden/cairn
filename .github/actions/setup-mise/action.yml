@@ -51,7 +51,7 @@ runs:
       shell: bash
       env:
         TOOLS: ${{ inputs.tools }}
-        MISE_GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_TOKEN: ${{ github.token }}
       run: |
         # shellcheck disable=SC2086 # TOOLS is a space-separated list
         "$GITHUB_ACTION_PATH/../../../scripts/setup-tools.sh" $TOOLS
