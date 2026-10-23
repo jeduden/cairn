@@ -1,12 +1,12 @@
 ---
 n: 7
 title: "The core confined in the end-to-end suite (ENG-12)"
-status: "🔳"
+status: "✅"
 result: true
 summary: >-
   The core's end-to-end tests run it with all network denied, and a
   socket probe fails the suite naming the core and the caller; the CI
-  wiring awaits its first run on the hosted runner.
+  wiring has passed on the hosted runner.
 ---
 ## Handoff
 
@@ -44,6 +44,5 @@ What landed:
 publish and bridge rows need those components (M7 to M9) and their
 rows in the testkit's confinement.
 
-Open: the CI wiring is unverified on `ubuntu-latest` until this
-branch's first CI run; flip this phase to ✅ once the `test`,
-`coverage` and `drift` jobs pass there.
+CI wiring: the `test`, `coverage` and `drift` jobs pass on `ubuntu-latest`
+at main (CI run 668), so the confinement holds on the hosted runner.
