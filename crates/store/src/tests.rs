@@ -1472,3 +1472,18 @@ fn a_copy_of_the_same_history_refuses_nothing_and_makes_no_table() {
         .unwrap();
     assert_eq!(table, 0);
 }
+
+#[test]
+fn the_kept_origins_are_empty_until_written_and_then_replaced_whole() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    assert!(store.origins().unwrap().is_empty());
+
+    let first: BTreeMap<_, _> = [(writer(1), "witnessed".to_owned())].into();
+    store.replace_origins(&first).unwrap();
+    assert_eq!(store.origins().unwrap(), first);
+
+    let second: BTreeMap<_, _> = [(writer(2), "peer".to_owned())].into();
+    store.replace_origins(&second).unwrap();
+    assert_eq!(store.origins().unwrap(), second);
+}

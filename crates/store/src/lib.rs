@@ -23,6 +23,7 @@ pub mod search_index;
 pub mod segment;
 pub mod source;
 
+use std::collections::BTreeMap;
 use std::fmt;
 use std::path::Path;
 use std::time::Duration;
@@ -916,6 +917,36 @@ impl Store {
     /// Fails when SQLite does or a row does not parse.
     pub fn refused_forks(&self) -> Result<Vec<Fork>, StoreError> {
         refusal::all(&self.conn)
+    }
+
+    /// Every writer's kept origin, by writer: a derived artifact (PRV-13,
+    /// I10) that decides nothing, kept so `parinn verify` can compare it
+    /// to a fresh derivation. None while `parinn rebuild` has not written
+    /// it.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does or a writer id does not parse.
+    pub fn origins(&self) -> Result<BTreeMap<WriterId, String>, StoreError> {
+        origin::all(&self.conn)
+    }
+
+    /// Replaces the kept origins with `origins`, in one transaction.
+    ///
+    /// # Errors
+    ///
+    /// Fails, changing nothing, when SQLite does.
+    pub fn replace_origins(
+        &mut self,
+        origins: &BTreeMap<WriterId, String>,
+    ) -> Result<(), StoreError> {
+        let tx = self
+            .conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)?;
+        origin::replace(&tx, origins)?;
+        tx.commit()?;
+
+        Ok(())
     }
 
     /// Closes `writer`'s open segment, if it has one (REC-19).
