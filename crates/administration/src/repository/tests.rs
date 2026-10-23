@@ -249,11 +249,46 @@ fn a_repository_with_no_commit_gets_a_provisional_identity_and_binds_later() {
         32
     );
 
-    // A commit makes it a change; nothing is rebound or rewritten.
+    // The first commit binds it, without a change and without rewriting
+    // the provisional bind the record holds.
     let root = commit(&blank, &[], "first");
     point(&blank, &root);
-    assert_eq!(f.bind(&blank), Outcome::Changed);
-    assert_eq!(f.binds().len(), 1);
+    assert_eq!(f.bind(&blank), Outcome::Bound { provisional: false });
+    assert_eq!(f.bind(&blank), Outcome::Unchanged);
+    let binds = f.binds();
+    assert_eq!(binds.len(), 2);
+    assert!(binds[0]["repository_provisional"].is_string());
+    assert_eq!(binds[1], serde_json::json!({"repository": root.as_str()}));
+}
+
+#[test]
+fn a_provisional_directory_whose_clone_gains_a_bound_commit_joins_that_identity_without_a_second_bind() {
+    let mut f = fixture();
+    let (one, blank) = (f.path("one"), f.path("blank"));
+    let root = rooted(&one, "x");
+    f.bind(&one);
+    empty(&blank);
+    f.bind(&blank);
+    // The empty clone fetches the commit this node already bound.
+    commit(&blank, &[], "x");
+    point(&blank, &root);
+
+    assert_eq!(f.bind(&blank), Outcome::Bound { provisional: false });
+
+    assert_eq!(f.binds().len(), 2);
+}
+
+#[test]
+fn a_look_that_has_run_out_of_time_does_not_go_on_to_the_commits_this_node_bound() {
+    let mut f = fixture();
+    let (one, two) = (f.path("one"), f.path("two"));
+    rooted(&one, "x");
+    f.bind(&one);
+    rooted(&two, "x");
+
+    let outcome = bind(&mut f.store, &f.node, &mut OsEntropy, &two, None, &|| true).unwrap();
+
+    assert_eq!(outcome, Outcome::TimedOut);
 }
 
 #[test]
