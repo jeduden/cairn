@@ -10,6 +10,7 @@ pub mod act;
 pub mod home;
 pub mod node;
 pub mod node_identity;
+pub mod origin;
 pub mod role;
 pub mod verify;
 
