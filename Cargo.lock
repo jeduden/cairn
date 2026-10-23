@@ -1033,6 +1033,7 @@ dependencies = [
  "mcp",
  "record",
  "redaction",
+ "repository",
  "rusqlite",
  "serde_json",
  "store",
