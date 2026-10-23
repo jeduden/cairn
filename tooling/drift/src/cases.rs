@@ -232,6 +232,17 @@ fn license_text_cases() -> Vec<Case> {
             "deny.toml grants WTFPL, which the license tool keeps no text for",
         ),
         case(
+            "CI no longer runs the license check",
+            "ENG-30",
+            Injection::replace(CI_WORKFLOW, "--bin license-check", "--bin protection-check"),
+            scenario("ENG-30"),
+            "the CI workflow does not run license-check with --locked",
+        ),
+        // Last: the suite restores the checkout with its original file
+        // times, and the canonical text is compiled in, so cargo keeps
+        // this case's build for the cases that follow. No other case of
+        // the license scenario may run after it.
+        case(
             "a canonical text that no longer fits the license files",
             "ENG-30",
             Injection::replace(
@@ -241,13 +252,6 @@ fn license_text_cases() -> Vec<Case> {
             ),
             scenario("ENG-30"),
             "declares MIT, but no license file fits MIT",
-        ),
-        case(
-            "CI no longer runs the license check",
-            "ENG-30",
-            Injection::replace(CI_WORKFLOW, "--bin license-check", "--bin protection-check"),
-            scenario("ENG-30"),
-            "the CI workflow does not run license-check with --locked",
         ),
     ]
 }
