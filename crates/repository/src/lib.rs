@@ -7,11 +7,14 @@
 //! hostile clone's hooks or configuration.
 
 mod deadline;
+mod delta;
 mod error;
 #[cfg(test)]
 mod fixture;
 mod identity;
 mod inflate;
+mod object;
+mod pack;
 
 pub use deadline::Deadline;
 pub use error::Error;

@@ -4,6 +4,8 @@
 
 use crate::inflate::adler32;
 
+pub(crate) mod pack;
+
 /// The bytes `text` spells in hexadecimal digits.
 pub(crate) fn hex(text: &str) -> Vec<u8> {
     let digits: Vec<u8> = text
