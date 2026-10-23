@@ -19,6 +19,7 @@ pub mod hook;
 mod origin;
 pub mod payload;
 mod refusal;
+mod repository;
 pub mod search_index;
 pub mod segment;
 pub mod source;
