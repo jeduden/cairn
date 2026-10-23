@@ -1,0 +1,127 @@
+use super::*;
+
+fn input(provenance: &Provenance, kind: EventKind) -> Input<'_> {
+    Input {
+        provenance,
+        kind,
+        origin: Origin::Witnessed,
+        launcher_signed: false,
+        interactive: false,
+        prompt_matched: false,
+        attended: false,
+        risk_open: RISK_OPEN,
+    }
+}
+
+fn level(provenance: Provenance, kind: EventKind) -> TrustLevel {
+    trust_level(&input(&provenance, kind))
+}
+
+#[test]
+fn an_operator_event_of_a_witnessed_writer_is_trusted() {
+    assert_eq!(
+        level(Provenance::Operator, EventKind::PrincipalAct),
+        TrustLevel::Trusted
+    );
+}
+
+#[test]
+fn the_structural_events_the_core_records_itself_are_trusted() {
+    for kind in [
+        EventKind::KeyEvent,
+        EventKind::CreateRoom,
+        EventKind::CertificateRecord,
+        EventKind::NodeIdentityChange,
+    ] {
+        assert_eq!(level(Provenance::Structural, kind), TrustLevel::Trusted);
+    }
+}
+
+#[test]
+fn a_hook_observation_and_the_structural_events_capture_derives_are_untrusted() {
+    for kind in [
+        EventKind::HookObservation,
+        EventKind::PromptMatch,
+        EventKind::RepeatReference,
+        EventKind::RepeatOwner,
+    ] {
+        assert_eq!(level(Provenance::Structural, kind), TrustLevel::Untrusted);
+    }
+}
+
+#[test]
+fn no_event_of_another_origin_is_trusted() {
+    for origin in [Origin::Ingested, Origin::Bundle, Origin::Peer] {
+        let mut i = input(&Provenance::Operator, EventKind::PrincipalAct);
+        i.origin = origin;
+        assert_eq!(trust_level(&i), TrustLevel::Untrusted);
+    }
+}
+
+#[test]
+fn every_model_reproducible_or_third_party_class_is_untrusted() {
+    for provenance in [
+        Provenance::Assistant,
+        Provenance::ToolCall,
+        Provenance::ToolResult("Bash".to_owned()),
+        Provenance::Web,
+        Provenance::Mcp("github".to_owned()),
+        Provenance::File,
+        Provenance::SubagentResult,
+        Provenance::HarnessText,
+        Provenance::Post,
+        Provenance::Summary,
+        Provenance::Unparsed,
+    ] {
+        assert_eq!(
+            level(provenance, EventKind::TranscriptLine),
+            TrustLevel::Untrusted
+        );
+    }
+}
+
+#[test]
+fn harness_meta_is_trusted_only_when_the_launcher_signed_it() {
+    let mut i = input(&Provenance::HarnessMeta, EventKind::TranscriptLine);
+    assert_eq!(trust_level(&i), TrustLevel::Untrusted);
+    i.launcher_signed = true;
+    assert_eq!(trust_level(&i), TrustLevel::Trusted);
+}
+
+#[test]
+fn a_user_event_is_trusted_only_when_every_condition_holds() {
+    let mut i = input(&Provenance::User, EventKind::TranscriptLine);
+    i.interactive = true;
+    i.prompt_matched = true;
+    i.attended = true;
+    i.risk_open = false;
+    assert_eq!(trust_level(&i), TrustLevel::Trusted);
+    for spoil in [
+        |i: &mut Input<'_>| i.interactive = false,
+        |i: &mut Input<'_>| i.prompt_matched = false,
+        |i: &mut Input<'_>| i.attended = false,
+        |i: &mut Input<'_>| i.risk_open = true,
+        |i: &mut Input<'_>| i.origin = Origin::Ingested,
+    ] {
+        let mut j = i;
+        spoil(&mut j);
+        assert_eq!(trust_level(&j), TrustLevel::Untrusted);
+    }
+}
+
+#[test]
+fn under_m1_no_user_event_is_trusted() {
+    let mut i = input(&Provenance::User, EventKind::TranscriptLine);
+    i.interactive = true;
+    i.prompt_matched = true;
+    i.attended = true;
+
+    assert!(RISK_OPEN);
+    assert_eq!(trust_level(&i), TrustLevel::Untrusted);
+}
+
+#[test]
+fn the_levels_names_are_fixed() {
+    assert_eq!(TrustLevel::Trusted.as_str(), "trusted");
+    assert_eq!(TrustLevel::Untrusted.as_str(), "untrusted");
+}

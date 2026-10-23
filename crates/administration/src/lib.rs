@@ -12,6 +12,7 @@ pub mod node;
 pub mod node_identity;
 pub mod origin;
 pub mod role;
+pub mod trust_policy;
 pub mod verify;
 
 /// What can go wrong administering the home.
