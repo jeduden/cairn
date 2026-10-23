@@ -4,7 +4,7 @@ use std::path::Path;
 
 use testkit::TempDir;
 
-use super::{open_below, read_limited, refuse_symlink};
+use super::{open_below, open_checked, read_limited, refuse_symlink};
 use crate::Error;
 
 fn unsupported<T>(result: Result<T, Error>) -> bool {
@@ -138,4 +138,56 @@ fn a_symbolic_link_is_what_refuse_symlink_refuses() {
     assert!(unsupported(refuse_symlink(&dir.path().join("l"))));
     let long = dir.path().join("x".repeat(300));
     assert!(matches!(refuse_symlink(&long), Err(Error::Io { .. })));
+}
+
+/// Makes a FIFO at `path` with `mkfifo`, which std cannot, waiting for
+/// it up to a deadline (ENG-03).
+#[expect(
+    clippy::disallowed_types,
+    reason = "a test makes a FIFO with mkfifo; the crate under test starts no program"
+)]
+fn mkfifo(path: &Path) {
+    let mut child = std::process::Command::new("mkfifo")
+        .arg(path)
+        .spawn()
+        .unwrap();
+    let step = std::time::Duration::from_millis(10);
+    let mut waited = std::time::Duration::ZERO;
+    while child.try_wait().unwrap().is_none() {
+        assert!(waited < std::time::Duration::from_secs(10), "mkfifo did not exit");
+        std::thread::sleep(step);
+        waited += step;
+    }
+}
+
+#[test]
+fn a_regular_file_is_opened_checked() {
+    let dir = TempDir::new().unwrap();
+    fs::write(dir.path().join("f"), "x").unwrap();
+
+    assert!(open_checked(&dir.path().join("f")).is_ok());
+}
+
+#[test]
+fn a_fifo_swapped_in_after_the_look_is_refused_not_waited_on() {
+    let dir = TempDir::new().unwrap();
+    mkfifo(&dir.path().join("f"));
+    let path = dir.path().join("f");
+    let (tx, rx) = std::sync::mpsc::channel();
+    std::thread::spawn(move || {
+        let _ = tx.send(open_checked(&path).map(|_| ()));
+    });
+
+    let answer = rx.recv_timeout(std::time::Duration::from_secs(5));
+
+    assert!(matches!(answer, Ok(Err(Error::Unsupported(_)))), "{answer:?}");
+}
+
+#[test]
+fn a_link_swapped_in_after_the_look_is_refused_not_followed() {
+    let dir = TempDir::new().unwrap();
+    fs::write(dir.path().join("target"), "x").unwrap();
+    symlink(dir.path().join("target"), dir.path().join("f")).unwrap();
+
+    assert!(unsupported(open_checked(&dir.path().join("f"))));
 }

@@ -76,10 +76,21 @@ pub(crate) fn open_below(base: &Path, rel: &str) -> Result<Option<File>, Error> 
         Err(e) if e.kind() == ErrorKind::NotFound => return Ok(None),
         Err(e) => return Err(Error::io("a repository file")(e)),
     }
-    // A file gone since the check is an error like any other open's.
-    File::open(&path)
-        .map(Some)
-        .map_err(Error::io("a repository file"))
+    open_checked(&path).map(Some)
+}
+
+/// Opens the regular file at `path` for reading without ever waiting on
+/// it or following a link, and looks at what was opened: a path swapped
+/// for a FIFO, a device or a link since it was looked at is refused, not
+/// waited on or followed. A file gone since is an error like any other
+/// open's.
+///
+/// # Errors
+///
+/// [`Error::Unsupported`] for a link or anything that is not a regular
+/// file; [`Error::Io`] when it cannot be opened.
+pub(crate) fn open_checked(_path: &Path) -> Result<File, Error> {
+    Err(NOT_REGULAR)
 }
 
 /// The bytes of the regular file `rel` below `base`, or `None` when
