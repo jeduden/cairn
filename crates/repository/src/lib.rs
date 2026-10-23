@@ -21,6 +21,7 @@ mod objects;
 mod pack;
 mod refs;
 mod repo;
+mod sha1;
 mod walk;
 
 pub use deadline::Deadline;
@@ -32,6 +33,14 @@ use std::path::Path;
 
 use objects::Objects;
 use repo::Repo;
+
+/// The id git gives the commit whose object body is `body`: the SHA-1
+/// of `commit <length>\0` and the body. A test builds a commit under
+/// its real id with it.
+#[must_use]
+pub fn commit_object_id(body: &[u8]) -> CommitId {
+    sha1::object_id("commit", body)
+}
 
 /// The root commit that names the repository whose git directory is
 /// `git_dir`: the parentless commit with the lowest id among those

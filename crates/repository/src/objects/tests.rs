@@ -258,6 +258,46 @@ fn files_that_are_not_packs_are_ignored() {
 }
 
 #[test]
+fn a_loose_object_that_hashes_to_another_id_is_corrupt() {
+    let dir = TempDir::new().unwrap();
+    put_loose(dir.path(), &id(1), "commit", b"tree x\n");
+    assert!(matches!(read(dir.path(), &id(1)), Err(Error::Corrupt(_))));
+}
+
+#[test]
+fn a_packed_object_that_hashes_to_another_id_is_corrupt() {
+    let dir = TempDir::new().unwrap();
+    let mut pack = PackBuilder::new();
+    pack.whole(raw(1), 1, b"first");
+    let (bytes, index) = pack.finish();
+    put_pack(dir.path(), "a", &bytes, &index);
+    assert!(matches!(read(dir.path(), &id(1)), Err(Error::Corrupt(_))));
+}
+
+#[test]
+fn a_delta_result_that_hashes_to_another_id_is_corrupt() {
+    let dir = TempDir::new().unwrap();
+    let mut pack = PackBuilder::new();
+    let real = crate::sha1::object_id("commit", b"hello").to_bytes();
+    let base = pack.whole(real, 1, b"hello");
+    pack.offset_delta(raw(2), base, &delta(5, 2, &[delta_copy(0, 2)]));
+    let (bytes, index) = pack.finish();
+    put_pack(dir.path(), "a", &bytes, &index);
+    assert!(matches!(read(dir.path(), &id(2)), Err(Error::Corrupt(_))));
+}
+
+#[test]
+fn an_object_under_its_real_id_is_read() {
+    let dir = TempDir::new().unwrap();
+    let real = crate::sha1::object_id("commit", b"tree x\n");
+    put_loose(dir.path(), &real, "commit", b"tree x\n");
+    assert_eq!(
+        read(dir.path(), &real).unwrap(),
+        object(Kind::Commit, b"tree x\n")
+    );
+}
+
+#[test]
 fn a_pack_index_that_is_a_directory_is_refused() {
     let dir = TempDir::new().unwrap();
     fs::create_dir_all(dir.path().join("pack/pack-dir.idx")).unwrap();

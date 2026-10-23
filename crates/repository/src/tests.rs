@@ -214,6 +214,32 @@ fn has_commit_tells_a_held_commit_from_an_absent_one() {
 }
 
 #[test]
+fn has_commit_refuses_an_object_filed_under_the_wrong_id() {
+    let dir = TempDir::new().unwrap();
+    commit(dir.path(), &id(1), &[]);
+    assert!(matches!(
+        has_commit(dir.path(), &id(1)),
+        Err(Error::Corrupt(_))
+    ));
+}
+
+#[test]
+fn has_commit_is_never_true_for_an_empty_file() {
+    let dir = TempDir::new().unwrap();
+    write(dir.path(), &format!("objects/01/{}", "01".repeat(19)), "");
+    let held = has_commit(dir.path(), &id(1));
+    assert!(matches!(held, Ok(false) | Err(_)), "{held:?}");
+}
+
+#[test]
+fn the_walk_refuses_a_commit_filed_under_the_wrong_id() {
+    let dir = TempDir::new().unwrap();
+    commit(dir.path(), &id(1), &[]);
+    checked_out(dir.path(), &id(1));
+    assert!(matches!(root(dir.path()), Err(Error::Corrupt(_))));
+}
+
+#[test]
 fn has_commit_cannot_tell_when_alternates_could_hold_it() {
     let dir = TempDir::new().unwrap();
     write(
