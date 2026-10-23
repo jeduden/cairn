@@ -461,3 +461,24 @@ fn a_look_that_runs_out_of_the_shared_time_is_counted_as_that_and_not_as_a_broke
     assert_eq!(counter(&p, "repository_read_failed"), 0);
     assert!(binds(&p).is_empty());
 }
+
+#[test]
+fn a_look_the_audit_log_takes_no_note_of_goes_on_and_leaves_the_record_as_it_was() {
+    let mut p = Process::new();
+    let app = clone(&p, "app", Some("a"));
+    start_in(&mut p, "s1", &app);
+    let ctx = crate::settings::tests::ctx_of(&p);
+    let home = ctx.home().unwrap();
+    let mut store = store::Store::open(&home.store()).unwrap();
+    let node =
+        administration::node::Node::open(&home, &mut store, &mut key::random::OsEntropy).unwrap();
+    let held = store.hook_observations().unwrap();
+    let audit_dir = p.parinn_home().join("audit");
+    let _ = fs::remove_dir_all(&audit_dir);
+    fs::write(&audit_dir, "").unwrap();
+    crate::tests::set_mode(&audit_dir, 0o600);
+
+    super::bind_held(&ctx, &mut store, &node, held, &|| true);
+
+    assert!(binds(&p).is_empty());
+}
