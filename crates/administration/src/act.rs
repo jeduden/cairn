@@ -160,6 +160,11 @@ pub enum Act {
     RiskAcceptanceRecord { risks: BTreeSet<ResidualRisk> },
     /// Withdraw the risk acceptance; a cut act.
     RiskAcceptanceWithdraw,
+    /// Bind a repository's identity by hand, or rebind it after a change
+    /// (LANE-02): `identity` holds the commit it binds to as
+    /// `repository`, or a provisional one as `repository_provisional`.
+    /// Widening. It names no directory: the act replicates.
+    RepositoryBind { identity: Value },
 }
 
 impl Act {
@@ -171,6 +176,7 @@ impl Act {
             Self::ConfigurationAccept { .. } => "configuration_accept",
             Self::RiskAcceptanceRecord { .. } => "risk_acceptance_record",
             Self::RiskAcceptanceWithdraw => "risk_acceptance_withdraw",
+            Self::RepositoryBind { .. } => "repository_bind",
         }
     }
 
@@ -205,6 +211,11 @@ impl Act {
                 content.insert("forgeable".into(), json!(FORGEABLE));
             }
             Self::RiskAcceptanceWithdraw => {}
+            Self::RepositoryBind { identity } => {
+                if let Value::Object(fields) = identity {
+                    content.extend(fields.clone());
+                }
+            }
         }
 
         Value::Object(content)
