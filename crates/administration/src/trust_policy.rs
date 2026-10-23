@@ -41,6 +41,17 @@ impl TrustLevel {
 /// run does (OWN-22).
 pub const RISK_OPEN: bool = true;
 
+/// The structural events the core records itself. A hook observation, a
+/// prompt match and a repeat record are derived from a transcript line or
+/// a hook input, so they are trusted for their sanitized structural
+/// fields alone (PRV-08, PRV-06).
+const STRUCTURAL: [EventKind; 4] = [
+    EventKind::KeyEvent,
+    EventKind::CreateRoom,
+    EventKind::CertificateRecord,
+    EventKind::NodeIdentityChange,
+];
+
 /// What the trust policy reads of an event.
 #[derive(Debug, Clone, Copy)]
 pub struct Input<'a> {
@@ -63,8 +74,25 @@ pub struct Input<'a> {
 
 /// The trust level the policy gives the event `input` describes.
 #[must_use]
-pub fn trust_level(_input: &Input<'_>) -> TrustLevel {
-    TrustLevel::Untrusted
+pub fn trust_level(input: &Input<'_>) -> TrustLevel {
+    if input.origin != Origin::Witnessed {
+        return TrustLevel::Untrusted;
+    }
+    let trusted = match input.provenance {
+        Provenance::Operator => true,
+        Provenance::Structural => STRUCTURAL.contains(&input.kind),
+        Provenance::HarnessMeta => input.launcher_signed,
+        Provenance::User => {
+            input.interactive && input.prompt_matched && input.attended && !input.risk_open
+        }
+        _ => false,
+    };
+
+    if trusted {
+        TrustLevel::Trusted
+    } else {
+        TrustLevel::Untrusted
+    }
 }
 
 #[cfg(test)]
