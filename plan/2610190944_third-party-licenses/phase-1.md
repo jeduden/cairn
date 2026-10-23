@@ -46,7 +46,7 @@ removed, and confirm the second run exits non-zero naming that crate.
 
 Done, red then green: the license-text check in
 `tooling/engineering/src/license_texts.rs`. It keeps the canonical text
-of every license `deny.toml` allows or grants by exception. Seventeen
+of every license `deny.toml` allows or grants by exception. Twenty-four
 unit tests sit beside it.
 
 - A fitting license file passes.
@@ -74,4 +74,11 @@ Held back, awaiting the stakeholder:
 - The stakeholder rules. Replace the stack, amend ENG-30 to allow a
   recorded exception, or restrict the check to the crates linked on
   release targets.
+- A second finding comes from holding a file to ENG-30's wording: the
+  canonical text, a title, and nothing after it. The 18 ICU4X crates
+  (`icu_*`, `litemap`, `potential_utf`, `tinystr`, `writeable`, `yoke*`,
+  `zerofrom*`, `zerotrie`, `zerovec*`) end their Unicode-3.0 file with
+  an SPDX line and an attribution to ICU4C and IBM. The check refuses
+  that trailing text. The stakeholder rules whether such an
+  attribution fits, and if so how ENG-30 words it.
 - `@ENG-30` stays `@pending`.

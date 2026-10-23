@@ -36,15 +36,14 @@ fn every_canonical_text_fits_itself_and_keeps_its_id() {
 #[test]
 fn normalize_ignores_case_whitespace_and_copyright_lines() {
     assert_eq!(
-        normalize(
-            "Copyright (c) 2020 A\n© 2021 B\n(C) 2022 C\nCopyright 2023 D\nHello\n  World \n"
-        ),
+        normalize("Copyright (c) 2020 A\n© 2021 B\nCopyright 2023 D\nHello\n  World \n"),
         "hello world"
     );
     assert_eq!(
         normalize("the\ncopyright\nholders"),
         "the copyright holders"
     );
+    assert_eq!(normalize("(c) You must retain"), "(c) you must retain");
 }
 
 #[test]
@@ -54,7 +53,7 @@ fn fits_lets_a_template_fill_in_what_it_leaves_free() {
 
     assert!(fits(&text, bsd3));
     assert!(fits(
-        &format!("Copyright (c) 2020 X\n\n{text}\nAn extra notice."),
+        &format!("BSD 3-Clause License\n\nCopyright (c) 2020 X\n\n{text}"),
         bsd3
     ));
     assert!(!fits(
@@ -65,35 +64,85 @@ fn fits_lets_a_template_fill_in_what_it_leaves_free() {
 }
 
 #[test]
-fn the_apache_appendix_is_optional() {
+fn fits_refuses_a_term_added_after_the_text_or_a_long_preamble() {
+    let mit = canonical("MIT").unwrap();
+
+    assert!(!fits(
+        &format!("{mit}\nYou may not use this commercially."),
+        mit
+    ));
+    assert!(!fits(
+        &format!("Use is limited to non commercial work, as agreed by all parties here.\n{mit}"),
+        mit
+    ));
+}
+
+#[test]
+fn a_clause_starting_c_is_license_text_not_a_copyright_line() {
+    let apache = canonical("Apache-2.0").unwrap();
+    let clause = "(c) You must retain, in the Source form";
+    let altered = apache.replace(clause, "(c) You may drop, in the Source form");
+
+    assert!(apache.contains(clause));
+    assert!(!fits(&altered, apache));
+}
+
+#[test]
+fn the_apache_appendix_is_optional_and_nothing_else_may_follow() {
     let apache = canonical("Apache-2.0").unwrap();
     let with = format!("{apache}\nAPPENDIX: How to apply the Apache License to your work.\n");
 
     assert!(fits(apache, apache));
     assert!(fits(&with, apache));
+    assert!(!fits(&format!("{apache}\nAnd you owe us a fee."), apache));
+}
+
+fn id(s: &str) -> Expr {
+    Expr::Id(s.to_owned())
 }
 
 #[test]
-fn choices_group_and_split_an_expression() {
-    let want = |g: &[&[&str]]| -> Vec<Vec<String>> {
-        g.iter()
-            .map(|c| c.iter().map(|s| (*s).to_owned()).collect())
-            .collect()
-    };
+fn parse_reads_or_and_with_and_the_legacy_slash() {
+    let either = Expr::Or(vec![id("MIT"), id("Apache-2.0")]);
 
+    assert_eq!(parse("MIT OR Apache-2.0").unwrap(), either);
+    assert_eq!(parse("MIT/Apache-2.0").unwrap(), either);
     assert_eq!(
-        choices("MIT OR Apache-2.0"),
-        want(&[&["MIT", "Apache-2.0"]])
+        parse("Apache-2.0 WITH LLVM-exception OR MIT").unwrap(),
+        Expr::Or(vec![id("Apache-2.0"), id("MIT")])
     );
-    assert_eq!(choices("MIT/Apache-2.0"), want(&[&["MIT", "Apache-2.0"]]));
+    assert_eq!(parse("MIT").unwrap(), id("MIT"));
+}
+
+#[test]
+fn parse_binds_and_tighter_than_or_and_honours_parentheses() {
     assert_eq!(
-        choices("(MIT OR Apache-2.0) AND Unicode-3.0"),
-        want(&[&["MIT", "Apache-2.0"], &["Unicode-3.0"]])
+        parse("(MIT OR Apache-2.0) AND Unicode-3.0").unwrap(),
+        Expr::And(vec![
+            Expr::Or(vec![id("MIT"), id("Apache-2.0")]),
+            id("Unicode-3.0")
+        ])
     );
     assert_eq!(
-        choices("Apache-2.0 WITH LLVM-exception OR MIT"),
-        want(&[&["Apache-2.0", "MIT"]])
+        parse("Apache-2.0 OR (MIT AND Unicode-3.0)").unwrap(),
+        Expr::Or(vec![
+            id("Apache-2.0"),
+            Expr::And(vec![id("MIT"), id("Unicode-3.0")])
+        ])
     );
+    assert_eq!(
+        parse("A OR B AND C").unwrap(),
+        Expr::Or(vec![id("A"), Expr::And(vec![id("B"), id("C")])])
+    );
+}
+
+#[test]
+fn parse_refuses_what_is_not_an_expression() {
+    for bad in [
+        "", "MIT OR", "(MIT", "MIT)", "AND MIT", "MIT WITH", "MIT MIT",
+    ] {
+        assert!(parse(bad).is_err(), "{bad:?}");
+    }
 }
 
 #[test]
@@ -173,7 +222,31 @@ fn a_part_joined_by_and_needs_its_own_file() {
 fn a_license_with_no_canonical_text_cannot_be_checked() {
     assert_eq!(
         check_crate(&package("a", Some("WTFPL")), &[mit_file()]),
-        ["a 1.0.0 declares WTFPL, none of WTFPL has a canonical text"]
+        [
+            "a 1.0.0 declares WTFPL, but no license file fits WTFPL (the tool keeps no text for WTFPL)"
+        ]
+    );
+}
+
+#[test]
+fn a_nested_expression_is_satisfied_by_either_side_of_its_or() {
+    let nested = package("a", Some("Apache-2.0 OR (MIT AND Unicode-3.0)"));
+    let apache = file("LICENSE", canonical("Apache-2.0").unwrap());
+
+    assert!(check_crate(&nested, &[apache]).is_empty());
+    assert_eq!(
+        check_crate(&nested, &[mit_file()]),
+        [
+            "a 1.0.0 declares Apache-2.0 OR (MIT AND Unicode-3.0), but no license file fits Apache-2.0 or Unicode-3.0"
+        ]
+    );
+}
+
+#[test]
+fn a_license_that_does_not_parse_fails() {
+    assert_eq!(
+        check_crate(&package("a", Some("MIT OR")), &[mit_file()]),
+        ["a 1.0.0 declares a license that does not parse: expression ends early"]
     );
 }
 
@@ -196,6 +269,12 @@ fn packages_lists_registry_crates_by_name_and_leaves_the_workspace_out() {
         packages("nope")
             .unwrap_err()
             .starts_with("read cargo metadata: ")
+    );
+    let nameless = r#"{"packages":[{"version":"1.0.0","source":"registry+x","manifest_path":"/r/x/Cargo.toml"}]}"#;
+    assert!(
+        packages(nameless)
+            .unwrap_err()
+            .starts_with("cargo metadata lists a crate without a name, version or manifest path")
     );
 }
 
@@ -257,6 +336,12 @@ fn canon_covers_every_license_deny_toml_allows_or_grants() {
         ["deny.toml grants WTFPL, which the license tool keeps no text for"]
     );
     assert!(canon_covers("").is_empty());
+
+    let reflowed = "[licenses]\nallow = [\n  \"MIT\", # one\n  \"WTFPL\",\n]\n";
+    assert_eq!(
+        canon_covers(reflowed),
+        ["deny.toml grants WTFPL, which the license tool keeps no text for"]
+    );
 }
 
 #[test]
@@ -270,6 +355,7 @@ fn kept_texts_flags_a_license_file_the_repository_keeps_for_a_crate() {
         ("vendor/syn/COPYING", "c"),
         ("vendor/syn/README.md", "r"),
         ("vendor/other/LICENSE", "o"),
+        ("vendor/syn-extra-1/LICENSE", "o"),
     ]);
     let found = kept_texts(&c, &[package("serde", None), package("syn", None)]);
 
@@ -282,4 +368,14 @@ fn kept_texts_flags_a_license_file_the_repository_keeps_for_a_crate() {
     );
     let (_dir, none) = checkout(&[("README.md", "x")]);
     assert!(kept_texts(&none, &[package("serde", None)]).is_empty());
+}
+
+#[test]
+fn kept_texts_reports_a_directory_it_cannot_read() {
+    let (_dir, c) = checkout(&[("vendor", "a file where a directory should be")]);
+
+    let found = kept_texts(&c, &[package("serde", None)]);
+
+    assert_eq!(found.len(), 1);
+    assert!(found[0].starts_with("read "), "{found:?}");
 }

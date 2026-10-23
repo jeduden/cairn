@@ -76,52 +76,146 @@ pub fn normalize(text: &str) -> String {
 }
 
 /// Whether `line` states who holds the copyright and since when,
-/// rather than wrapping a sentence that mentions the word.
+/// rather than wrapping a sentence that mentions the word. A clause that
+/// starts "(c)", such as Apache-2.0's section 4(c), is license text.
 fn copyright_line(line: &str) -> bool {
     let line = line.trim().to_lowercase();
     let stated = line.starts_with("copyright")
         && (line.contains("(c)") || line.contains('©') || line.chars().any(|c| c.is_ascii_digit()));
 
-    stated || line.starts_with("(c)") || line.starts_with('©')
+    stated || line.starts_with('©')
 }
 
-/// Whether `text` fits `canon`: the canonical text appears in it, ignoring
-/// case, whitespace and copyright lines, with each [`FREE`] standing for
-/// any run of words.
+/// How many words a title may take before the canonical text: "MIT
+/// License", "The MIT License (MIT)", "Apache License Version 2.0".
+const TITLE_WORDS: usize = 8;
+
+/// Whether `text` fits `canon`: it is the canonical text, ignoring case,
+/// whitespace and copyright lines, with each [`FREE`] standing for any
+/// run of words and a title before it. Nothing may follow it, so a term
+/// added after the text does not fit, except Apache-2.0's optional
+/// appendix.
 #[must_use]
 pub fn fits(text: &str, canon: &str) -> bool {
     let text = normalize(text);
     let canon = normalize(canon);
-    let mut rest = text.as_str();
-    for part in canon.split(FREE) {
-        let part = part.trim();
+    let parts: Vec<&str> = canon.split(FREE).map(str::trim).collect();
+    let Some(first) = text.find(parts[0]) else {
+        return false;
+    };
+    if text[..first].split_whitespace().count() > TITLE_WORDS {
+        return false;
+    }
+    let mut rest = &text[first + parts[0].len()..];
+    for part in &parts[1..] {
         let Some(at) = rest.find(part) else {
             return false;
         };
         rest = &rest[at + part.len()..];
     }
 
-    true
+    rest.trim().is_empty() || appendix(rest)
 }
 
-/// The licenses an SPDX expression offers, as groups that must all be
-/// satisfied: `A AND B` is two groups, `A OR B` one group of two
-/// choices. An exception (`WITH ...`) is dropped, and the legacy `/`
-/// counts as `OR`.
-#[must_use]
-pub fn choices(expression: &str) -> Vec<Vec<String>> {
-    expression
-        .replace(['(', ')'], " ")
-        .split(" AND ")
-        .map(|group| {
-            group
-                .split(" OR ")
-                .flat_map(|choice| choice.split('/'))
-                .filter_map(|choice| choice.split_whitespace().next())
-                .map(str::to_owned)
-                .collect()
-        })
-        .collect()
+/// Whether `rest`, the words after Apache-2.0's text, are its appendix.
+fn appendix(rest: &str) -> bool {
+    rest.trim_start()
+        .starts_with("appendix: how to apply the apache license")
+}
+
+/// An SPDX license expression.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Expr {
+    Id(String),
+    And(Vec<Expr>),
+    Or(Vec<Expr>),
+}
+
+/// Parses an SPDX expression: `OR` binds looser than `AND`, parentheses
+/// group, an exception (`WITH ...`) is dropped, and the legacy `/` counts
+/// as `OR`.
+///
+/// # Errors
+///
+/// Fails on an empty expression or unbalanced parentheses.
+pub fn parse(expression: &str) -> Result<Expr, String> {
+    let spaced = expression
+        .replace('(', " ( ")
+        .replace(')', " ) ")
+        .replace('/', " OR ");
+    let mut tokens = spaced.split_whitespace().peekable();
+    let expr = parse_or(&mut tokens)?;
+    match tokens.next() {
+        None => Ok(expr),
+        Some(extra) => Err(format!("{expression:?}: unexpected {extra:?}")),
+    }
+}
+
+type Tokens<'a> = std::iter::Peekable<std::str::SplitWhitespace<'a>>;
+
+fn parse_or(tokens: &mut Tokens) -> Result<Expr, String> {
+    let mut parts = vec![parse_and(tokens)?];
+    while tokens.next_if_eq(&"OR").is_some() {
+        parts.push(parse_and(tokens)?);
+    }
+
+    Ok(if parts.len() == 1 {
+        parts.remove(0)
+    } else {
+        Expr::Or(parts)
+    })
+}
+
+fn parse_and(tokens: &mut Tokens) -> Result<Expr, String> {
+    let mut parts = vec![parse_term(tokens)?];
+    while tokens.next_if_eq(&"AND").is_some() {
+        parts.push(parse_term(tokens)?);
+    }
+
+    Ok(if parts.len() == 1 {
+        parts.remove(0)
+    } else {
+        Expr::And(parts)
+    })
+}
+
+fn parse_term(tokens: &mut Tokens) -> Result<Expr, String> {
+    match tokens.next() {
+        Some("(") => {
+            let inner = parse_or(tokens)?;
+            (tokens.next() == Some(")"))
+                .then_some(inner)
+                .ok_or_else(|| "missing closing parenthesis".to_owned())
+        }
+        Some(id @ ("AND" | "OR" | ")")) => Err(format!("unexpected {id:?}")),
+        Some(id) => {
+            if tokens.next_if_eq(&"WITH").is_some() {
+                tokens.next().ok_or("WITH names no exception")?;
+            }
+            Ok(Expr::Id(id.to_owned()))
+        }
+        None => Err("expression ends early".to_owned()),
+    }
+}
+
+/// What keeps `expr` from being satisfied when `met` says which licenses
+/// are: the ids still unmet, `None` when it is satisfied.
+fn unmet(expr: &Expr, met: &dyn Fn(&str) -> bool) -> Option<Vec<String>> {
+    match expr {
+        Expr::Id(id) => (!met(id)).then(|| vec![id.clone()]),
+        Expr::And(parts) => {
+            let all: Vec<String> = parts
+                .iter()
+                .filter_map(|p| unmet(p, met))
+                .flatten()
+                .collect();
+            (!all.is_empty()).then_some(all)
+        }
+        Expr::Or(parts) => {
+            let all: Option<Vec<Vec<String>>> = parts.iter().map(|p| unmet(p, met)).collect();
+            all.map(|lists| lists.into_iter().flatten().collect())
+        }
+    }
 }
 
 /// Whether a file name is one a crate keeps a license text in.
@@ -139,16 +233,17 @@ pub fn license_file_name(name: &str) -> bool {
 ///
 /// # Errors
 ///
-/// Fails when `metadata` is not cargo's JSON.
+/// Fails when `metadata` is not cargo's JSON, or lists a crate without
+/// a name, version or manifest path, which would go unchecked.
 pub fn packages(metadata: &str) -> Result<Vec<Package>, String> {
     let value: serde_json::Value =
         serde_json::from_str(metadata).map_err(|e| format!("read cargo metadata: {e}"))?;
-    let mut found: Vec<Package> = value["packages"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .filter(|p| p["source"].is_string())
-        .filter_map(|p| {
+    let mut found = Vec::new();
+    for p in value["packages"].as_array().into_iter().flatten() {
+        if !p["source"].is_string() {
+            continue;
+        }
+        let package = (|| {
             Some(Package {
                 name: p["name"].as_str()?.to_owned(),
                 version: p["version"].as_str()?.to_owned(),
@@ -157,8 +252,11 @@ pub fn packages(metadata: &str) -> Result<Vec<Package>, String> {
                     .parent()?
                     .to_path_buf(),
             })
-        })
-        .collect();
+        })();
+        found.push(package.ok_or_else(|| {
+            format!("cargo metadata lists a crate without a name, version or manifest path: {p}")
+        })?);
+    }
     found.sort_by(|a, b| (&a.name, &a.version).cmp(&(&b.name, &b.version)));
 
     Ok(found)
@@ -186,9 +284,9 @@ pub fn license_files(dir: &Path) -> Result<Vec<(String, String)>, String> {
     Ok(files)
 }
 
-/// Problems with one crate: no license file, no license declared, a
-/// license in its expression with no canonical text, or a part of its
-/// expression no file fits.
+/// Problems with one crate: no license file, no license declared, an
+/// expression that does not parse, or a part of the expression no file
+/// fits, with a note for each license the tool keeps no text for.
 #[must_use]
 pub fn check_crate(package: &Package, files: &[(String, String)]) -> Vec<String> {
     let who = format!("{} {}", package.name, package.version);
@@ -198,31 +296,32 @@ pub fn check_crate(package: &Package, files: &[(String, String)]) -> Vec<String>
     let Some(expression) = &package.license else {
         return vec![format!("{who} declares no license")];
     };
-    choices(expression)
-        .iter()
-        .filter_map(|group| {
-            let known: Vec<&str> = group
+    let expr = match parse(expression) {
+        Ok(expr) => expr,
+        Err(e) => return vec![format!("{who} declares a license that does not parse: {e}")],
+    };
+    let met = |id: &str| {
+        canonical(id).is_some_and(|canon| files.iter().any(|(_, text)| fits(text, canon)))
+    };
+
+    unmet(&expr, &met)
+        .map(|ids| {
+            let no_text: Vec<&str> = ids
                 .iter()
                 .map(String::as_str)
-                .filter(|id| canonical(id).is_some())
+                .filter(|id| canonical(id).is_none())
                 .collect();
-            if known.is_empty() {
-                return Some(format!(
-                    "{who} declares {expression}, none of {} has a canonical text",
-                    group.join(", ")
-                ));
-            }
-            let satisfied = known.iter().any(|id| {
-                canonical(id).is_some_and(|canon| files.iter().any(|(_, text)| fits(text, canon)))
-            });
-
-            (!satisfied).then(|| {
-                format!(
-                    "{who} declares {expression}, but no license file fits {}",
-                    known.join(" or ")
-                )
-            })
+            let note = if no_text.is_empty() {
+                String::new()
+            } else {
+                format!(" (the tool keeps no text for {})", no_text.join(", "))
+            };
+            format!(
+                "{who} declares {expression}, but no license file fits {}{note}",
+                ids.join(" or ")
+            )
         })
+        .into_iter()
         .collect()
 }
 
@@ -265,67 +364,89 @@ pub fn canon_covers(deny_toml: &str) -> Vec<String> {
         .collect()
 }
 
-/// The licenses `deny.toml`'s `allow = [...]` line lists.
+/// The licenses `deny.toml`'s top-level `allow = [...]` lists, on one
+/// line or several.
 fn deny_allow(deny_toml: &str) -> Vec<String> {
-    deny_toml
+    let Some(at) = deny_toml
         .lines()
-        .find_map(|line| line.trim().strip_prefix("allow = ["))
-        .and_then(|rest| rest.split_once(']'))
-        .map(|(list, _)| {
-            list.split(',')
-                .map(|l| l.trim().trim_matches('"').to_owned())
-                .filter(|l| !l.is_empty())
-                .collect()
+        .scan(0, |offset, line| {
+            let start = *offset;
+            *offset += line.len() + 1;
+            Some((start, line))
         })
-        .unwrap_or_default()
+        .find_map(|(start, line)| line.trim().starts_with("allow = [").then_some(start))
+    else {
+        return Vec::new();
+    };
+    let body = &deny_toml[at..];
+    let list = body
+        .split_once('[')
+        .and_then(|(_, rest)| rest.split_once(']'))
+        .map_or("", |(list, _)| list);
+
+    list.lines()
+        .map(|l| l.split('#').next().unwrap_or_default())
+        .flat_map(|l| l.split(','))
+        .map(|l| l.trim().trim_matches('"').to_owned())
+        .filter(|l| !l.is_empty())
+        .collect()
 }
 
 /// Problems with license texts the repository keeps for a crate: a
 /// license file under `licenses/`, `third_party/` or `vendor/` in a
-/// directory named for a crate, other than a target's committed
-/// `THIRD_PARTY_LICENSES` (ENG-31). A crate that ships no text is
+/// directory named for a crate, or for it and its version, other than a
+/// target's committed `THIRD_PARTY_LICENSES` (ENG-31). A directory the
+/// check cannot read is a problem too. A crate that ships no text is
 /// removed or replaced, never patched here.
 #[must_use]
 pub fn kept_texts(checkout: &Checkout, packages: &[Package]) -> Vec<String> {
-    let names: BTreeSet<&str> = packages.iter().map(|p| p.name.as_str()).collect();
-    let mut found = Vec::new();
+    let names: BTreeSet<String> = packages
+        .iter()
+        .flat_map(|p| [p.name.clone(), format!("{}-{}", p.name, p.version)])
+        .collect();
+    let (mut files, mut found) = (Vec::new(), Vec::new());
     for top in ["licenses", "third_party", "vendor"] {
-        walk(&checkout.root.join(top), &mut |path| {
-            let in_crate_dir = path.parent().and_then(Path::file_name).is_some_and(|d| {
-                let d = d.to_string_lossy();
-                names.contains(d.as_ref())
-                    || names
-                        .iter()
-                        .any(|n| d.strip_prefix(n).is_some_and(|v| v.starts_with('-')))
-            });
-            let named = path
-                .file_name()
-                .is_some_and(|n| license_file_name(&n.to_string_lossy()));
-            if in_crate_dir && named {
-                found.push(format!(
-                    "the repository keeps a license text at {}",
-                    path.strip_prefix(&checkout.root).unwrap_or(path).display()
-                ));
-            }
-        });
+        walk(&checkout.root.join(top), &mut files, &mut found);
+    }
+    for path in files {
+        let in_crate_dir = path
+            .parent()
+            .and_then(Path::file_name)
+            .is_some_and(|d| names.contains(d.to_string_lossy().as_ref()));
+        let named = path
+            .file_name()
+            .is_some_and(|n| license_file_name(&n.to_string_lossy()));
+        if in_crate_dir && named {
+            found.push(format!(
+                "the repository keeps a license text at {}",
+                path.strip_prefix(&checkout.root).unwrap_or(&path).display()
+            ));
+        }
     }
     found.sort();
 
     found
 }
 
-/// Calls `visit` on each file under `dir`.
-fn walk(dir: &Path, visit: &mut impl FnMut(&Path)) {
-    let Ok(entries) = fs::read_dir(dir) else {
-        return;
+/// Lists in `files` each file under `dir`, and notes in `problems` a
+/// directory it cannot read. A directory that does not exist holds
+/// nothing.
+fn walk(dir: &Path, files: &mut Vec<PathBuf>, problems: &mut Vec<String>) {
+    let entries = match fs::read_dir(dir) {
+        Ok(entries) => entries,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return,
+        Err(e) => {
+            problems.push(format!("read {}: {e}", dir.display()));
+            return;
+        }
     };
     let mut paths: Vec<PathBuf> = entries.filter_map(|e| Some(e.ok()?.path())).collect();
     paths.sort();
     for path in paths {
         if path.is_dir() {
-            walk(&path, visit);
+            walk(&path, files, problems);
         } else {
-            visit(&path);
+            files.push(path);
         }
     }
 }
