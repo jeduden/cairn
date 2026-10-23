@@ -85,6 +85,8 @@ commands:
   hook <hook>                            run the hook handler on the hook input on stdin
   ingest --all | --path P [--json]       record every transcript under the roots, or the one at P
   mcp                                    serve the MCP tools over stdio
+  repository show [DIR] [--json]         show the repository identity of DIR, the working directory by default
+  repository bind [DIR] [--commit ID]    bind or rebind the repository identity (widening)
   rebuild [--json]                       derive the origins and the search index again from the record
   risk-acceptance show [--json]          show the residual risks open on this node
   risk-acceptance record [--json]        accept the open residual risks (widening)
@@ -309,6 +311,7 @@ pub fn run(
         Some("ingest") => ingest(args, ctx, stdout, stderr),
         Some("mcp") => mcp(args, ctx, stdout, stderr),
         Some("rebuild") => rebuild::rebuild(args, ctx, stdout, stderr),
+        Some("repository") => repository_identity::repository(args, ctx, stdout, stderr),
         Some("risk-acceptance") => act::risk_acceptance(args, ctx, stdout, stderr),
         Some("status") => status(args, ctx, stdout, stderr),
         Some("verify") => verify_command(args, ctx, stdout, stderr),
@@ -1985,6 +1988,7 @@ mod hook_handlers;
 mod identity_status;
 mod index_gaps;
 mod rebuild;
+mod repository_identity;
 mod segments;
 mod settings;
 mod sources;
