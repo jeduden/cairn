@@ -136,6 +136,16 @@ fn compiled_in_texts_must_be_whole_and_published_ones_line_for_line() {
         holds_compiled_in_texts("x86_64-pc-windows-gnu", &windows.replace(sentence, "")),
         ["x86_64-pc-windows-gnu: the text of GPL-3.0 is incomplete"]
     );
+    let reordered = windows.replacen(
+        "GNU GENERAL PUBLIC LICENSE\n                       Version 3, 29 June 2007",
+        "Version 3, 29 June 2007\n                    GNU GENERAL PUBLIC LICENSE",
+        1,
+    );
+    assert_ne!(reordered, windows);
+    assert_eq!(
+        holds_compiled_in_texts("x86_64-pc-windows-gnu", &reordered),
+        ["x86_64-pc-windows-gnu: the text of GPL-3.0 is incomplete"]
+    );
     let musl = render(&non_crate("x86_64-unknown-linux-musl"));
     assert!(holds_compiled_in_texts("x86_64-unknown-linux-musl", &musl).is_empty());
     assert_eq!(

@@ -106,16 +106,13 @@ fn required_names(target: &str) -> Vec<&'static str> {
 /// copyright lines.
 #[must_use]
 pub fn holds_compiled_in_texts(target: &str, rendered: &str) -> Vec<String> {
-    let lines: std::collections::BTreeSet<&str> = rendered.lines().map(str::trim_end).collect();
+    let lines: Vec<&str> = rendered.lines().map(str::trim_end).collect();
     let words = license_texts::normalize(rendered);
     let mut problems = Vec::new();
     for entry in super::non_crate(target) {
         for (label, text) in &entry.texts {
             let whole = if entry.verbatim {
-                text.lines()
-                    .map(str::trim_end)
-                    .filter(|l| !l.is_empty())
-                    .all(|l| lines.contains(l))
+                in_order(text, &lines)
             } else {
                 words.contains(&license_texts::normalize(text))
             };
@@ -126,6 +123,24 @@ pub fn holds_compiled_in_texts(target: &str, rendered: &str) -> Vec<String> {
     }
 
     problems
+}
+
+/// Whether every non-empty line of `text` stands in `lines`, in the order
+/// the text gives them.
+fn in_order(text: &str, lines: &[&str]) -> bool {
+    let mut from = 0;
+    text.lines()
+        .map(str::trim_end)
+        .filter(|l| !l.is_empty())
+        .all(|wanted| {
+            lines[from..]
+                .iter()
+                .position(|l| *l == wanted)
+                .is_some_and(|at| {
+                    from += at + 1;
+                    true
+                })
+        })
 }
 
 /// Problems with a file that does not name the code its target compiles
