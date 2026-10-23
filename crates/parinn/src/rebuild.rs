@@ -62,11 +62,7 @@ fn derive_again(store: &mut Store, key: &PublicKey) -> Result<(usize, u64), Stor
         .map(|(writer, origin)| (*writer, origin.as_str().to_owned()))
         .collect();
     store.replace_origins(&kept)?;
-    let indexed = match store.rebuild_search_index() {
-        Ok(read) => read,
-        Err(StoreError::NoIndex) => 0,
-        Err(e) => return Err(e),
-    };
+    let indexed = store.rebuild_search_index()?;
 
     Ok((derived.len(), indexed))
 }

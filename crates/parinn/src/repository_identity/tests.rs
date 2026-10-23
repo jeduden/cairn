@@ -369,3 +369,31 @@ fn only_hook_observations_not_yet_in_the_record_are_looked_at() {
 
     assert_eq!(counter(&p, "repository_identity_changed"), 0);
 }
+
+#[test]
+fn the_repository_verbs_report_a_home_they_cannot_open() {
+    let p = Process::new();
+    std::fs::create_dir_all(p.parinn_home()).unwrap();
+    crate::tests::set_mode(&p.parinn_home(), 0o750);
+    let app = p.dir.path().display().to_string();
+
+    for verb in ["show", "bind"] {
+        let (code, _, err) = run(&p, &["repository", verb, &app]);
+        assert_eq!(code, EXIT_FAILURE, "{verb}");
+        assert!(err.contains("lets other OS users in"), "{err}");
+    }
+}
+
+#[test]
+fn a_widening_bind_is_refused_while_a_run_leaves_a_risk_open() {
+    let p = Process::new();
+    crate::tests::transcript_in(&p, "-w-a", "s1.jsonl", b"{\"a\":1}\n");
+    assert_eq!(run(&p, &["ingest", "--all"]).0, EXIT_OK);
+    let app = clone(&p, "app", Some("a"));
+
+    let (code, _, err) = run(&p, &["repository", "bind", &app.display().to_string()]);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.contains("residual risk"), "{err}");
+    assert_eq!(shown(&p, &app)["status"], "unbound");
+}

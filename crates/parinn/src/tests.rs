@@ -572,7 +572,12 @@ fn ingest_says_which_unparsed_line_or_drift_it_cannot_audit_and_still_records() 
 
 /// Writes a transcript `name` holding `text` in project `project` under
 /// the default transcript root.
-fn transcript_in(p: &Process, project: &str, name: &str, text: &[u8]) -> std::path::PathBuf {
+pub(crate) fn transcript_in(
+    p: &Process,
+    project: &str,
+    name: &str,
+    text: &[u8],
+) -> std::path::PathBuf {
     let dir = p.dir.path().join(".claude").join("projects").join(project);
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join(name);
@@ -3337,4 +3342,33 @@ fn rebuild_without_a_store_fails_and_an_unknown_flag_is_usage() {
     let (code, _, err) = p.invoke(&["rebuild", "--now"], &DEV);
     assert_eq!(code, EXIT_USAGE);
     assert!(err.contains("unknown flag"), "{err}");
+}
+
+#[test]
+fn rebuild_refuses_a_home_it_cannot_open_a_newer_store_and_a_store_with_no_node() {
+    let mut p = Process::new();
+    p.invoke(&["counter", "ack"], &DEV);
+    let db = p.parinn_home().join("store.db");
+
+    let conn = rusqlite::Connection::open(&db).unwrap();
+    conn.execute_batch("DROP TABLE seats").unwrap();
+    drop(conn);
+    let (code, _, err) = p.invoke(&["rebuild"], &DEV);
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.starts_with("parinn rebuild: "), "{err}");
+
+    let conn = rusqlite::Connection::open(&db).unwrap();
+    conn.execute(
+        "UPDATE meta SET value = '99' WHERE key = 'schema_version'",
+        [],
+    )
+    .unwrap();
+    drop(conn);
+    assert_eq!(p.invoke(&["rebuild"], &DEV).0, EXIT_INTEGRITY);
+
+    p.home_id = Some("home-b".into());
+    let binding = p.parinn_home().join("home.json");
+    std::fs::write(&binding, r#"{"id":"home-a"}"#).unwrap();
+    set_mode(&binding, 0o600);
+    assert_eq!(p.invoke(&["rebuild"], &DEV).0, EXIT_FAILURE);
 }

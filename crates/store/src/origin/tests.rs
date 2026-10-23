@@ -62,3 +62,15 @@ fn a_store_that_takes_no_write_refuses_to_keep_origins() {
 
     assert!(replace(&conn, &kept).is_err());
 }
+
+#[test]
+fn a_store_that_refuses_a_row_after_clearing_the_table_reports_it() {
+    let conn = conn();
+    conn.execute_batch(
+        "CREATE TRIGGER refuse BEFORE INSERT ON origins BEGIN SELECT RAISE(ABORT, 'no'); END",
+    )
+    .unwrap();
+    let kept: BTreeMap<_, _> = [(writer(1), "peer".to_owned())].into();
+
+    assert!(replace(&conn, &kept).is_err());
+}
