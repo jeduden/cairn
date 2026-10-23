@@ -132,16 +132,61 @@ pub fn files_follow_crates(
     problems
 }
 
+/// The operating system and architecture a release target's `cfg` names.
+fn target_cfg(target: &str) -> (&'static str, &str) {
+    let arch = target.split('-').next().unwrap_or_default();
+    let os = if target.contains("linux") {
+        "linux"
+    } else if target.contains("windows") {
+        "windows"
+    } else {
+        "macos"
+    };
+
+    (os, arch)
+}
+
 /// Problems with the core's source that embeds the files: a release
-/// target whose file it neither includes nor names for the test that
-/// compares the two.
+/// target whose file no `include_str!` names, whose `include_str!` sits
+/// under a `#[cfg]` for another operating system or architecture (two
+/// arms with their paths swapped), or whose file the test that compares
+/// the embedded text does not name.
 #[must_use]
 pub fn embedding_selects(source: &str, targets: &[String]) -> Vec<String> {
-    targets
-        .iter()
-        .filter(|t| source.matches(&committed_path(t)).count() < 2)
-        .map(|t| format!("the core does not select and name {}", committed_path(t)))
-        .collect()
+    let lines: Vec<&str> = source.lines().collect();
+    let mut problems = Vec::new();
+    for target in targets {
+        let path = committed_path(target);
+        let (os, arch) = target_cfg(target);
+        let include = lines
+            .iter()
+            .position(|l| l.contains("include_str!") && l.contains(&path));
+        let Some(at) = include else {
+            problems.push(format!("the core does not select {path}"));
+            continue;
+        };
+        let cfg = lines[..at]
+            .iter()
+            .rev()
+            .find(|l| l.trim_start().starts_with("#[cfg("))
+            .copied()
+            .unwrap_or_default();
+        let arch_named: Vec<&str> = cfg.split("target_arch = \"").skip(1).collect();
+        let wrong_arch = arch_named
+            .iter()
+            .any(|rest| !rest.starts_with(&format!("{arch}\"")));
+        let missing_arch = os == "linux" && arch_named.is_empty();
+        if !cfg.contains(&format!("target_os = \"{os}\"")) || wrong_arch || missing_arch {
+            problems.push(format!("the core selects {path} under {}", cfg.trim()));
+        }
+        if source.matches(&path).count() < 2 {
+            problems.push(format!(
+                "the core does not name {path} for the test that compares it"
+            ));
+        }
+    }
+
+    problems
 }
 
 /// Problems with the executables the repository ships: any binary but

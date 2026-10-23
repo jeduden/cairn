@@ -1,13 +1,14 @@
-//! The `license-check` command line: ENG-30's check on a checkout, run
-//! by CI on every pull request. It prints each problem on its own line
-//! and exits non-zero when there is any.
+//! The `license-check` command line: ENG-30's and ENG-31's checks on a
+//! checkout, run by CI on every pull request. It prints each problem on
+//! its own line and exits non-zero when there is any.
 
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use crate::third_party::Options;
 
-/// Every crate a release links has a license text that fits.
+/// Every crate a release links has a license text that fits, and each
+/// target's committed file equals its regeneration.
 pub const EXIT_OK: u8 = 0;
 /// A crate lacks a fitting license text, or the check could not run.
 pub const EXIT_FAILURE: u8 = 1;
@@ -41,7 +42,10 @@ pub fn run(
             EXIT_FAILURE
         }
         Ok(problems) if problems.is_empty() => {
-            let _ = writeln!(stdout, "every crate a release links has a license text");
+            let _ = writeln!(
+                stdout,
+                "every crate a release links has a license text and each target's license file is current"
+            );
             EXIT_OK
         }
         Ok(problems) => {

@@ -13,8 +13,11 @@ pub mod cli;
 use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::OsStr;
 use std::fs;
+use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Child, Command, ExitStatus, Output, Stdio};
+use std::thread;
+use std::time::{Duration, Instant};
 
 use crate::{Checkout, architecture, dependencies};
 
@@ -628,6 +631,63 @@ pub fn release_targets(build_workflow: &str) -> Result<Vec<String>, String> {
     Ok(targets)
 }
 
+/// How long `cargo metadata` may take for one target (ENG-03).
+const METADATA_DEADLINE: Duration = Duration::from_secs(600);
+
+/// Waits for `child`, whose output is piped, until `deadline`, then kills
+/// it and says so.
+///
+/// # Errors
+///
+/// Fails when the child is still running at the deadline.
+pub fn finish_within(mut child: Child, deadline: Duration) -> Result<Output, String> {
+    let drain = |pipe: Option<Box<dyn Read + Send>>| {
+        thread::spawn(move || {
+            let mut bytes = Vec::new();
+            if let Some(mut pipe) = pipe {
+                let _ = pipe.read_to_end(&mut bytes);
+            }
+            bytes
+        })
+    };
+    let out = drain(
+        child
+            .stdout
+            .take()
+            .map(|p| Box::new(p) as Box<dyn Read + Send>),
+    );
+    let err = drain(
+        child
+            .stderr
+            .take()
+            .map(|p| Box::new(p) as Box<dyn Read + Send>),
+    );
+    let started = Instant::now();
+    let status: ExitStatus = loop {
+        if let Some(status) = child
+            .try_wait()
+            .map_err(|e| format!("wait for cargo: {e}"))?
+        {
+            break status;
+        }
+        if started.elapsed() >= deadline {
+            let _ = child.kill();
+            let _ = child.wait();
+            return Err(format!(
+                "cargo did not finish within {}s",
+                deadline.as_secs()
+            ));
+        }
+        thread::sleep(Duration::from_millis(20));
+    };
+
+    Ok(Output {
+        status,
+        stdout: out.join().unwrap_or_default(),
+        stderr: err.join().unwrap_or_default(),
+    })
+}
+
 /// Runs `cargo metadata`, offline, on the workspace `manifest` resolved for
 /// `target`, with `PARINN_HOME` pointed at `parinn_home` (ENG-14).
 ///
@@ -653,8 +713,11 @@ pub fn cargo_metadata_for(
         .arg("--manifest-path")
         .arg(manifest)
         .env("PARINN_HOME", parinn_home)
-        .output()
-        .map_err(|e| format!("run cargo metadata: {e}"))?;
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("run cargo metadata: {e}"))
+        .and_then(|child| finish_within(child, METADATA_DEADLINE))?;
     if !out.status.success() {
         return Err(format!(
             "cargo metadata for {target} failed (cargo fetch --locked fetches the sources): {}",

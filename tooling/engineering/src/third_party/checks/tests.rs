@@ -147,23 +147,99 @@ fn files_differ_exactly_when_the_linked_crates_do() {
     );
 }
 
-#[test]
-fn the_core_must_include_and_name_each_targets_file() {
-    let targets = vec!["a".to_owned(), "b".to_owned()];
-    let line = |t: &str| {
-        format!(
-            "include_str!(\"{0}\") const FILE: &str = \"{0}\";\n",
-            committed_path(t)
-        )
-    };
-    let both = format!("{}{}", line("a"), line("b"));
+const CORE: &str = r#"
+#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+pub const THIRD_PARTY_LICENSES: &str =
+    include_str!("../../../licenses/x86_64-unknown-linux-musl/THIRD_PARTY_LICENSES");
+#[cfg(all(target_os = "linux", target_arch = "aarch64"))]
+pub const THIRD_PARTY_LICENSES: &str =
+    include_str!("../../../licenses/aarch64-unknown-linux-musl/THIRD_PARTY_LICENSES");
+#[cfg(target_os = "windows")]
+pub const THIRD_PARTY_LICENSES: &str =
+    include_str!("../../../licenses/x86_64-pc-windows-gnu/THIRD_PARTY_LICENSES");
+#[cfg(target_os = "macos")]
+pub const THIRD_PARTY_LICENSES: &str =
+    include_str!("../../../licenses/aarch64-apple-darwin/THIRD_PARTY_LICENSES");
+const NAMED: [&str; 4] = [
+    "licenses/x86_64-unknown-linux-musl/THIRD_PARTY_LICENSES",
+    "licenses/aarch64-unknown-linux-musl/THIRD_PARTY_LICENSES",
+    "licenses/x86_64-pc-windows-gnu/THIRD_PARTY_LICENSES",
+    "licenses/aarch64-apple-darwin/THIRD_PARTY_LICENSES",
+];
+"#;
 
-    assert!(embedding_selects(&both, &targets).is_empty());
+fn targets() -> Vec<String> {
+    [
+        "x86_64-unknown-linux-musl",
+        "aarch64-unknown-linux-musl",
+        "x86_64-pc-windows-gnu",
+        "aarch64-apple-darwin",
+    ]
+    .map(str::to_owned)
+    .to_vec()
+}
+
+#[test]
+fn the_core_must_select_each_targets_file_under_its_own_cfg() {
+    assert!(embedding_selects(CORE, &targets()).is_empty());
+}
+
+#[test]
+fn two_arms_with_their_paths_swapped_are_caught() {
+    let (x86, arm) = ("x86_64-unknown-linux-musl", "aarch64-unknown-linux-musl");
+    let swapped = CORE
+        .replace(
+            &format!("include_str!(\"../../../licenses/{x86}/"),
+            "include_str!(\"../../../licenses/TMP/",
+        )
+        .replace(
+            &format!("include_str!(\"../../../licenses/{arm}/"),
+            &format!("include_str!(\"../../../licenses/{x86}/"),
+        )
+        .replace(
+            "include_str!(\"../../../licenses/TMP/",
+            &format!("include_str!(\"../../../licenses/{arm}/"),
+        );
+
+    let problems = embedding_selects(&swapped, &targets());
+
+    assert_eq!(problems.len(), 2, "{problems:?}");
+    assert!(problems[0].starts_with("the core selects licenses/x86_64-unknown-linux-musl/THIRD_PARTY_LICENSES under #[cfg(all(target_os = \"linux\", target_arch = \"aarch64\"))]"));
+    let windows_as_macos = CORE.replace("target_os = \"windows\"", "target_os = \"macos\"");
+    assert_eq!(embedding_selects(&windows_as_macos, &targets()).len(), 1);
+}
+
+#[test]
+fn a_linux_arm_without_an_architecture_or_a_missing_arm_is_caught() {
+    let no_arch = CORE.replace(
+        "all(target_os = \"linux\", target_arch = \"aarch64\")",
+        "target_os = \"linux\"",
+    );
+    assert_eq!(embedding_selects(&no_arch, &targets()).len(), 1);
+
+    let without_darwin = CORE.replace(
+        "include_str!(\"../../../licenses/aarch64-apple-darwin/THIRD_PARTY_LICENSES\")",
+        "\"\"",
+    );
     assert_eq!(
-        embedding_selects(&line("a"), &targets),
-        ["the core does not select and name licenses/b/THIRD_PARTY_LICENSES"]
+        embedding_selects(&without_darwin, &targets()),
+        ["the core does not select licenses/aarch64-apple-darwin/THIRD_PARTY_LICENSES"]
     );
 }
+
+#[test]
+fn the_comparing_test_must_name_each_file() {
+    let unnamed = CORE.replace(NAMED_DARWIN, "licenses/other");
+
+    assert_eq!(
+        embedding_selects(&unnamed, &targets()),
+        [
+            "the core does not name licenses/aarch64-apple-darwin/THIRD_PARTY_LICENSES for the test that compares it"
+        ]
+    );
+}
+
+const NAMED_DARWIN: &str = "    \"licenses/aarch64-apple-darwin/THIRD_PARTY_LICENSES\",";
 
 #[test]
 fn only_the_core_executable_may_ship() {

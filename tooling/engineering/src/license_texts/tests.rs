@@ -719,3 +719,42 @@ fn product_links_check_names_a_product_crate_that_depends_on_the_check() {
     );
     assert!(product_links_check("nope").is_err());
 }
+
+#[cfg(unix)]
+fn script(body: &str) -> (testkit::TempDir, std::process::Child) {
+    use std::os::unix::fs::PermissionsExt;
+    let (dir, _) = checkout(&[("run.sh", body)]);
+    let path = dir.path().join("run.sh");
+    fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+    let child = Command::new(&path)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+
+    (dir, child)
+}
+
+#[cfg(unix)]
+#[test]
+fn finish_within_collects_the_output_of_a_child_that_finishes() {
+    let (_dir, child) = script("#!/bin/sh\necho out\necho err >&2\nexit 3\n");
+
+    let out = finish_within(child, Duration::from_secs(30)).unwrap();
+
+    assert_eq!(out.status.code(), Some(3));
+    assert_eq!(
+        (out.stdout, out.stderr),
+        (b"out\n".to_vec(), b"err\n".to_vec())
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn finish_within_kills_a_child_still_running_at_the_deadline() {
+    let (_dir, child) = script("#!/bin/sh\nsleep 30\n");
+
+    let err = finish_within(child, Duration::from_millis(100)).unwrap_err();
+
+    assert_eq!(err, "cargo did not finish within 0s");
+}
