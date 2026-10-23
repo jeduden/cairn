@@ -187,6 +187,9 @@ pub enum Counter {
     /// A clone's git data could not be read, so its repository identity
     /// stays as it was (LANE-02, I6).
     RepositoryReadFailed,
+    /// The identity of a clone could not be bound: the record or the
+    /// random source failed, not the clone (LANE-02, I6).
+    RepositoryBindFailed,
 }
 
 impl Counter {
@@ -242,6 +245,7 @@ impl Counter {
             Self::SearchIndexGapLookupFailed => "search_index_gap_lookup_failed",
             Self::RepositoryIdentityChanged => "repository_identity_changed",
             Self::RepositoryReadFailed => "repository_read_failed",
+            Self::RepositoryBindFailed => "repository_bind_failed",
         }
     }
 }

@@ -419,3 +419,25 @@ fn a_bind_the_audit_log_takes_no_note_of_is_recorded_and_reported() {
         "{err}"
     );
 }
+
+#[test]
+fn a_bind_the_record_refuses_is_counted_apart_from_a_clone_that_cannot_be_read() {
+    let mut p = Process::new();
+    let app = clone(&p, "app", Some("a"));
+    start_in(&mut p, "s1", &app);
+    // The record takes no event from here on, so the bind fails to append.
+    run(&p, &["status"]);
+    let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
+    conn.execute_batch(
+        "CREATE TRIGGER refuse BEFORE INSERT ON events WHEN new.kind = 'repository_bind'
+         BEGIN SELECT RAISE(ABORT, 'no'); END",
+    )
+    .unwrap();
+    drop(conn);
+
+    run(&p, &["ingest", "--all"]);
+
+    assert_eq!(counter(&p, "repository_bind_failed"), 1);
+    assert_eq!(counter(&p, "repository_read_failed"), 0);
+    assert!(binds(&p).is_empty());
+}
