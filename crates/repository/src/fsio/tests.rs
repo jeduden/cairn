@@ -154,7 +154,10 @@ fn mkfifo(path: &Path) {
     let step = std::time::Duration::from_millis(10);
     let mut waited = std::time::Duration::ZERO;
     while child.try_wait().unwrap().is_none() {
-        assert!(waited < std::time::Duration::from_secs(10), "mkfifo did not exit");
+        assert!(
+            waited < std::time::Duration::from_secs(10),
+            "mkfifo did not exit"
+        );
         std::thread::sleep(step);
         waited += step;
     }
@@ -180,7 +183,10 @@ fn a_fifo_swapped_in_after_the_look_is_refused_not_waited_on() {
 
     let answer = rx.recv_timeout(std::time::Duration::from_secs(5));
 
-    assert!(matches!(answer, Ok(Err(Error::Unsupported(_)))), "{answer:?}");
+    assert!(
+        matches!(answer, Ok(Err(Error::Unsupported(_)))),
+        "{answer:?}"
+    );
 }
 
 #[test]

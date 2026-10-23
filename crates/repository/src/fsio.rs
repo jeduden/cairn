@@ -89,9 +89,50 @@ pub(crate) fn open_below(base: &Path, rel: &str) -> Result<Option<File>, Error> 
 ///
 /// [`Error::Unsupported`] for a link or anything that is not a regular
 /// file; [`Error::Io`] when it cannot be opened.
-pub(crate) fn open_checked(_path: &Path) -> Result<File, Error> {
-    Err(NOT_REGULAR)
+pub(crate) fn open_checked(path: &Path) -> Result<File, Error> {
+    let mut options = fs::OpenOptions::new();
+    options.read(true);
+    no_wait_no_follow(&mut options);
+    let file = match options.open(path) {
+        Ok(file) => file,
+        // The open refused a link: it was swapped in after the look.
+        Err(_) if fs::symlink_metadata(path).is_ok_and(|m| m.is_symlink()) => return Err(SYMLINK),
+        Err(e) => return Err(Error::io("a repository file")(e)),
+    };
+    let meta = file.metadata().map_err(Error::io("a repository file"))?;
+    if meta.is_file() {
+        Ok(file)
+    } else {
+        Err(NOT_REGULAR)
+    }
 }
+
+/// Makes `options` open without waiting on a FIFO and without following
+/// a link. `libc` would name these flags; the values are the platform's
+/// own, which std takes as plain integers.
+#[cfg(target_os = "linux")]
+fn no_wait_no_follow(options: &mut fs::OpenOptions) {
+    use std::os::unix::fs::OpenOptionsExt;
+    const O_NONBLOCK: i32 = 0o4000;
+    #[cfg(any(target_arch = "aarch64", target_arch = "arm"))]
+    const O_NOFOLLOW: i32 = 0o100_000;
+    #[cfg(not(any(target_arch = "aarch64", target_arch = "arm")))]
+    const O_NOFOLLOW: i32 = 0o400_000;
+    options.custom_flags(O_NONBLOCK | O_NOFOLLOW);
+}
+
+/// See the Linux version.
+#[cfg(target_os = "macos")]
+fn no_wait_no_follow(options: &mut fs::OpenOptions) {
+    use std::os::unix::fs::OpenOptionsExt;
+    const O_NONBLOCK: i32 = 0x4;
+    const O_NOFOLLOW: i32 = 0x100;
+    options.custom_flags(O_NONBLOCK | O_NOFOLLOW);
+}
+
+/// Elsewhere the look with `symlink_metadata` is all there is.
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
+fn no_wait_no_follow(_options: &mut fs::OpenOptions) {}
 
 /// The bytes of the regular file `rel` below `base`, or `None` when
 /// there is no such file.
