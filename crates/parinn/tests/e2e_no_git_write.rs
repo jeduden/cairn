@@ -15,50 +15,16 @@
     clippy::panic,
     reason = "a start the confinement refuses fails the test with its message"
 )]
-#![expect(
-    clippy::disallowed_types,
-    reason = "the test builds its repository with the real git, as a person's would be"
-)]
+mod git_fixture;
 
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
 
 use serde_json::json;
 use testkit::TempDir;
 use testkit::boundary::{Component, Confinement};
-
-fn git(home: &Path, dir: &Path, args: &[&str]) {
-    let mut command = Command::new("git");
-    testkit::isolate(&mut command, home)
-        .current_dir(dir)
-        .env("GIT_CONFIG_NOSYSTEM", "1")
-        .args([
-            "-c",
-            "user.name=a",
-            "-c",
-            "user.email=a@example.com",
-            "-c",
-            "commit.gpgsign=false",
-            "-c",
-            "init.defaultBranch=main",
-        ])
-        .args(args)
-        .stdout(Stdio::null())
-        .stderr(Stdio::null());
-    let mut child = command.spawn().unwrap();
-    for _ in 0..2_000 {
-        if let Some(status) = child.try_wait().unwrap() {
-            assert!(status.success(), "git {args:?}");
-            return;
-        }
-        std::thread::sleep(Duration::from_millis(5));
-    }
-    let _ = child.kill();
-    panic!("git {args:?} did not finish");
-}
 
 /// Every file and directory under `dir`: its bytes and modification time.
 fn snapshot(dir: &Path, out: &mut BTreeMap<PathBuf, (Vec<u8>, SystemTime)>) {
@@ -99,12 +65,12 @@ fn no_component_of_the_core_writes_to_a_repository() {
     let home = dir.path();
     let repo = home.join("work").join("app");
     fs::create_dir_all(&repo).unwrap();
-    git(home, &repo, &["init", "-q"]);
+    git_fixture::git(home, &repo, &["init", "-q"]);
     fs::write(repo.join("a.txt"), "a").unwrap();
-    git(home, &repo, &["add", "."]);
-    git(home, &repo, &["commit", "-q", "-m", "root"]);
-    git(home, &repo, &["notes", "add", "-m", "a note"]);
-    git(home, &repo, &["config", "demo.key", "value"]);
+    git_fixture::git(home, &repo, &["add", "."]);
+    git_fixture::git(home, &repo, &["commit", "-q", "-m", "root"]);
+    git_fixture::git(home, &repo, &["notes", "add", "-m", "a note"]);
+    git_fixture::git(home, &repo, &["config", "demo.key", "value"]);
     fs::write(repo.join(".git/hooks/pre-commit"), "#!/bin/sh\nexit 0\n").unwrap();
     fs::write(repo.join("untracked.txt"), "u").unwrap();
     let transcripts = home.join(".claude/projects/-work-app");
