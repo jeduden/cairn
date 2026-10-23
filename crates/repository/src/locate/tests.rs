@@ -123,11 +123,12 @@ fn a_gitdir_that_is_a_symbolic_link_is_refused() {
     let dir = TempDir::new().unwrap();
     let outside = dir.path().join("outside");
     fs::create_dir(&outside).unwrap();
-    let link = dir.path().join("link");
+    let link = dir.path().join("main/.git/worktrees/link");
+    fs::create_dir_all(link.parent().unwrap()).unwrap();
     std::os::unix::fs::symlink(&outside, &link).unwrap();
     let work = dir.path().join("work");
     fs::create_dir(&work).unwrap();
-    fs::write(work.join(".git"), "gitdir: ../link\n").unwrap();
+    fs::write(work.join(".git"), "gitdir: ../main/.git/worktrees/link\n").unwrap();
     assert!(matches!(git_dir(&work, None), Err(Error::Unsupported(_))));
 }
 

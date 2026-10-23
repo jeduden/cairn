@@ -197,3 +197,13 @@ fn a_link_swapped_in_after_the_look_is_refused_not_followed() {
 
     assert!(unsupported(open_checked(&dir.path().join("f"))));
 }
+
+#[test]
+fn a_file_gone_since_the_look_is_an_io_error() {
+    let dir = TempDir::new().unwrap();
+
+    assert!(matches!(
+        open_checked(&dir.path().join("gone")),
+        Err(Error::Io { .. })
+    ));
+}
