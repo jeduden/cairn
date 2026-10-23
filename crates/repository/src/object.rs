@@ -26,6 +26,16 @@ impl Kind {
         }
     }
 
+    /// The name a loose object's header and its id's hash spell.
+    pub(crate) fn name(self) -> &'static str {
+        match self {
+            Self::Commit => "commit",
+            Self::Tree => "tree",
+            Self::Blob => "blob",
+            Self::Tag => "tag",
+        }
+    }
+
     /// The kind a loose object's header names.
     pub(crate) fn from_name(name: &[u8]) -> Option<Self> {
         match name {

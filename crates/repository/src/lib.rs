@@ -59,17 +59,18 @@ pub fn root_commit(git_dir: &Path, deadline: &dyn Deadline) -> Result<Option<Com
     walk::lowest_root(&objects, &shallow, tip, deadline, walk::MAX_COMMITS)
 }
 
-/// Whether the clone whose git directory is `git_dir` holds the object
-/// `id`, loose or packed.
+/// Whether the clone whose git directory is `git_dir` holds the commit
+/// `id`, loose or packed. The object is read and hashed: one that does
+/// not hash to `id` is an error, and one that is not a commit is not a
+/// commit the clone holds.
 ///
 /// # Errors
 ///
 /// See [`Error`].
 pub fn has_commit(git_dir: &Path, id: &CommitId) -> Result<bool, Error> {
     let repo = Repo::open(git_dir)?;
-    Objects::open(&repo.objects_dir())?
-        .read(id)
-        .map(|object| object.is_some())
+    let object = Objects::open(&repo.objects_dir())?.read(id)?;
+    Ok(object.is_some_and(|object| object.kind == object::Kind::Commit))
 }
 
 /// The identity of the repository whose git directory is `git_dir`.

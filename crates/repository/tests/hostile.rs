@@ -11,7 +11,6 @@
     clippy::disallowed_types,
     reason = "a test makes its FIFOs with the mkfifo binary; the crate under test starts no program"
 )]
-
 #![allow(
     clippy::unwrap_used,
     clippy::expect_used,

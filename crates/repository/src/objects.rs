@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use crate::fsio::{open_below, read_limited, refuse_symlink};
 use crate::object::{MAX_OBJECT, Object};
 use crate::pack::{Entry, check_header, find_offset, read_entry};
-use crate::{CommitId, Error, delta, loose};
+use crate::{CommitId, Error, delta, loose, sha1};
 
 /// The most packs read. Git repacks long before this many; more is a
 /// clone this crate will not open a file handle for each of.
@@ -21,6 +21,17 @@ pub(crate) const MAX_CHAIN: usize = 1024;
 
 /// The largest `info/alternates` read.
 const MAX_ALTERNATES: u64 = 64 << 10;
+
+/// Refuses an object whose hash is not the id it was stored under, so a
+/// planted, truncated or swapped file is never taken for the object a
+/// reference or a parent names (I2).
+fn verify(id: &CommitId, object: &Object) -> Result<(), Error> {
+    if sha1::object_id(object.kind.name(), &object.data) == *id {
+        Ok(())
+    } else {
+        Err(Error::Corrupt("object does not hash to its id"))
+    }
+}
 
 /// A pack and its index, open for reading.
 #[derive(Debug)]
@@ -102,6 +113,15 @@ impl Objects {
     /// [`Error::TooLarge`] for a chain longer than [`MAX_CHAIN`] or an
     /// object past the bound.
     pub(crate) fn read(&self, id: &CommitId) -> Result<Option<Object>, Error> {
+        let object = self.read_unverified(id)?;
+        if let Some(object) = &object {
+            verify(id, object)?;
+        }
+        Ok(object)
+    }
+
+    /// The bytes stored under `id`, not yet checked against it.
+    fn read_unverified(&self, id: &CommitId) -> Result<Option<Object>, Error> {
         if let Some(object) = loose::read_up_to(&self.dir, id, MAX_OBJECT)? {
             return Ok(Some(object));
         }

@@ -5,12 +5,20 @@ use testkit::TempDir;
 
 use super::{MAX_CHAIN, MAX_PACKS, Objects};
 use crate::fixture::pack::{PackBuilder, delta, delta_copy, delta_insert};
-use crate::fixture::{Prng, zlib_stored};
+use crate::fixture::{Prng, put_object, zlib_stored};
 use crate::object::{Kind, Object};
+use crate::sha1::object_id;
 use crate::{CommitId, Error};
 
+/// An id no object is stored under, or one a read fails before it
+/// reaches the hash.
 fn raw(n: u8) -> [u8; 20] {
     [n; 20]
+}
+
+/// The raw id git gives the object of `kind` with `body`.
+fn real(kind: &str, body: &[u8]) -> [u8; 20] {
+    object_id(kind, body).to_bytes()
 }
 
 fn id(n: u8) -> CommitId {
@@ -47,10 +55,10 @@ fn read(objects: &Path, id: &CommitId) -> Result<Option<Object>, Error> {
 #[test]
 fn a_loose_object_is_read() {
     let dir = TempDir::new().unwrap();
-    put_loose(dir.path(), &id(1), "commit", b"tree x\n");
+    let stored = put_object(dir.path(), "commit", b"tree x\n");
     let objects = Objects::open(dir.path()).unwrap();
     assert_eq!(
-        objects.read(&id(1)).unwrap(),
+        objects.read(&stored).unwrap(),
         object(Kind::Commit, b"tree x\n")
     );
 }
@@ -59,23 +67,28 @@ fn a_loose_object_is_read() {
 fn a_packed_object_is_read() {
     let dir = TempDir::new().unwrap();
     let mut pack = PackBuilder::new();
-    pack.whole(raw(1), 1, b"first");
-    pack.whole(raw(2), 3, b"second");
+    pack.whole(real("commit", b"first"), 1, b"first");
+    pack.whole(real("blob", b"second"), 3, b"second");
     let (bytes, index) = pack.finish();
     put_pack(dir.path(), "a", &bytes, &index);
     let objects = Objects::open(dir.path()).unwrap();
+    let first = object_id("commit", b"first");
+    let second = object_id("blob", b"second");
     assert_eq!(
-        objects.read(&id(1)).unwrap(),
+        objects.read(&first).unwrap(),
         object(Kind::Commit, b"first")
     );
-    assert_eq!(objects.read(&id(2)).unwrap(), object(Kind::Blob, b"second"));
+    assert_eq!(
+        objects.read(&second).unwrap(),
+        object(Kind::Blob, b"second")
+    );
 }
 
 #[test]
 fn an_object_the_clone_lacks_is_none() {
     let dir = TempDir::new().unwrap();
     let mut pack = PackBuilder::new();
-    pack.whole(raw(1), 1, b"first");
+    pack.whole(real("commit", b"first"), 1, b"first");
     let (bytes, index) = pack.finish();
     put_pack(dir.path(), "a", &bytes, &index);
     let objects = Objects::open(dir.path()).unwrap();
@@ -93,21 +106,22 @@ fn a_clone_with_no_object_directory_holds_nothing() {
 fn offset_deltas_are_applied_down_the_chain() {
     let dir = TempDir::new().unwrap();
     let mut pack = PackBuilder::new();
-    let base = pack.whole(raw(1), 1, b"hello world");
+    let (one, two) = (b"hello brave world", b"hello brave world!");
+    let base = pack.whole(real("commit", b"hello world"), 1, b"hello world");
     let ops = [delta_copy(0, 6), delta_insert(b"brave "), delta_copy(6, 5)];
-    let first = pack.offset_delta(raw(2), base, &delta(11, 17, &ops));
+    let first = pack.offset_delta(real("commit", one), base, &delta(11, 17, &ops));
     let ops = [delta_copy(0, 17), delta_insert(b"!")];
-    pack.offset_delta(raw(3), first, &delta(17, 18, &ops));
+    pack.offset_delta(real("commit", two), first, &delta(17, 18, &ops));
     let (bytes, index) = pack.finish();
     put_pack(dir.path(), "a", &bytes, &index);
     let objects = Objects::open(dir.path()).unwrap();
     assert_eq!(
-        objects.read(&id(2)).unwrap(),
-        object(Kind::Commit, b"hello brave world")
+        objects.read(&object_id("commit", one)).unwrap(),
+        object(Kind::Commit, one)
     );
     assert_eq!(
-        objects.read(&id(3)).unwrap(),
-        object(Kind::Commit, b"hello brave world!")
+        objects.read(&object_id("commit", two)).unwrap(),
+        object(Kind::Commit, two)
     );
 }
 
@@ -115,23 +129,38 @@ fn offset_deltas_are_applied_down_the_chain() {
 fn a_reference_delta_finds_its_base_wherever_it_is() {
     let dir = TempDir::new().unwrap();
     let mut base_pack = PackBuilder::new();
-    base_pack.whole(raw(1), 2, b"packed base");
+    let packed = real("tree", b"packed base");
+    base_pack.whole(packed, 2, b"packed base");
     let (bytes, index) = base_pack.finish();
     put_pack(dir.path(), "a", &bytes, &index);
-    put_loose(dir.path(), &id(5), "blob", b"loose base");
+    let loose = put_object(dir.path(), "blob", b"loose base");
 
     let mut pack = PackBuilder::new();
-    pack.whole(raw(6), 1, b"same pack");
-    pack.reference_delta(raw(2), raw(1), &delta(11, 3, &[delta_copy(0, 3)]));
-    pack.reference_delta(raw(3), raw(5), &delta(10, 4, &[delta_copy(0, 4)]));
-    pack.reference_delta(raw(4), raw(6), &delta(9, 4, &[delta_copy(5, 4)]));
+    let same = real("commit", b"same pack");
+    pack.whole(same, 1, b"same pack");
+    pack.reference_delta(
+        real("tree", b"pac"),
+        packed,
+        &delta(11, 3, &[delta_copy(0, 3)]),
+    );
+    pack.reference_delta(
+        real("blob", b"loos"),
+        loose.to_bytes(),
+        &delta(10, 4, &[delta_copy(0, 4)]),
+    );
+    pack.reference_delta(
+        real("commit", b"pack"),
+        same,
+        &delta(9, 4, &[delta_copy(5, 4)]),
+    );
     let (bytes, index) = pack.finish();
     put_pack(dir.path(), "b", &bytes, &index);
 
     let objects = Objects::open(dir.path()).unwrap();
-    assert_eq!(objects.read(&id(2)).unwrap(), object(Kind::Tree, b"pac"));
-    assert_eq!(objects.read(&id(3)).unwrap(), object(Kind::Blob, b"loos"));
-    assert_eq!(objects.read(&id(4)).unwrap(), object(Kind::Commit, b"pack"));
+    let read = |kind, body: &[u8]| objects.read(&object_id(kind, body)).unwrap();
+    assert_eq!(read("tree", b"pac"), object(Kind::Tree, b"pac"));
+    assert_eq!(read("blob", b"loos"), object(Kind::Blob, b"loos"));
+    assert_eq!(read("commit", b"pack"), object(Kind::Commit, b"pack"));
 }
 
 #[test]
@@ -149,25 +178,23 @@ fn a_reference_delta_whose_base_is_absent_names_it() {
 /// adding one byte; `chain_id(n)` is the id of the nth.
 fn chain(dir: &Path, length: usize) {
     let mut pack = PackBuilder::new();
-    let mut at = pack.whole(raw(0), 3, b"");
+    let mut at = pack.whole(real("blob", b""), 3, b"");
     for n in 1..=length {
         let ops = if n == 1 {
             vec![delta_insert(b"x")]
         } else {
             vec![delta_copy(0, n - 1), delta_insert(b"x")]
         };
-        let mut id = [0; 20];
-        id[..8].copy_from_slice(&(n as u64).to_be_bytes());
+        let id = chain_id(n).to_bytes();
         at = pack.offset_delta(id, at, &delta(n - 1, n, &ops));
     }
     let (bytes, index) = pack.finish();
     put_pack(dir, "chain", &bytes, &index);
 }
 
+/// The id of the blob of `n` letters `x`.
 fn chain_id(n: usize) -> CommitId {
-    let mut id = [0; 20];
-    id[..8].copy_from_slice(&(n as u64).to_be_bytes());
-    CommitId::from_bytes(&id)
+    object_id("blob", &vec![b'x'; n])
 }
 
 #[test]
@@ -221,11 +248,11 @@ fn an_offset_delta_that_is_its_own_base_is_corrupt() {
 #[test]
 fn alternates_make_an_absent_object_unknowable() {
     let dir = TempDir::new().unwrap();
-    put_loose(dir.path(), &id(1), "blob", b"here");
+    let here = put_object(dir.path(), "blob", b"here");
     fs::create_dir_all(dir.path().join("info")).unwrap();
     fs::write(dir.path().join("info/alternates"), "/elsewhere/objects\n").unwrap();
     let objects = Objects::open(dir.path()).unwrap();
-    assert_eq!(objects.read(&id(1)).unwrap(), object(Kind::Blob, b"here"));
+    assert_eq!(objects.read(&here).unwrap(), object(Kind::Blob, b"here"));
     assert!(matches!(objects.read(&id(2)), Err(Error::Unsupported(_))));
 }
 
@@ -242,7 +269,7 @@ fn an_alternates_file_that_names_nothing_changes_nothing() {
 fn files_that_are_not_packs_are_ignored() {
     let dir = TempDir::new().unwrap();
     let mut pack = PackBuilder::new();
-    pack.whole(raw(1), 1, b"first");
+    pack.whole(real("commit", b"first"), 1, b"first");
     let (bytes, index) = pack.finish();
     put_pack(dir.path(), "a", &bytes, &index);
     let packs = dir.path().join("pack");
@@ -251,8 +278,9 @@ fn files_that_are_not_packs_are_ignored() {
     fs::write(packs.join("tmp_pack_x"), "junk").unwrap();
     fs::write(packs.join("pack-orphan.idx"), "no pack beside it").unwrap();
     let objects = Objects::open(dir.path()).unwrap();
+    let first = object_id("commit", b"first");
     assert_eq!(
-        objects.read(&id(1)).unwrap(),
+        objects.read(&first).unwrap(),
         object(Kind::Commit, b"first")
     );
 }
