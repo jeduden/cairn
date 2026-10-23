@@ -51,9 +51,11 @@ pub enum Outcome {
     Unchanged,
     /// The directory was bound now; whether to a provisional identity.
     Bound { provisional: bool },
-    /// The identity the directory resolves to changed since it was bound;
-    /// nothing was relinked.
+    /// The identity the directory resolves to changed since it was bound
+    /// or last reported; nothing was relinked.
     Changed,
+    /// It changed, and the change was reported already.
+    StillChanged,
     /// The clone's git data could not be read.
     Unreadable,
 }
@@ -162,7 +164,14 @@ pub fn bind(
     );
     match store.directory_identity(&directory)? {
         Some(kept) if kept == now => return Ok(Outcome::Unchanged),
-        Some(_) => return Ok(Outcome::Changed),
+        Some(_) => {
+            let marker = format!("reported:{directory}");
+            if store.directory_identity(&marker)?.as_deref() == Some(now.as_str()) {
+                return Ok(Outcome::StillChanged);
+            }
+            store.set_directory_identity(&marker, &now)?;
+            return Ok(Outcome::Changed);
+        }
         None => {}
     }
     let provisional = matches!(current, Current::Provisional);

@@ -179,7 +179,7 @@ fn a_repository_with_no_commit_gets_a_provisional_identity_and_binds_later() {
 }
 
 #[test]
-fn a_change_in_the_identity_a_directory_resolves_to_is_reported_every_time_and_relinks_nothing() {
+fn a_change_in_the_identity_a_directory_resolves_to_is_reported_once_and_relinks_nothing() {
     let mut f = fixture();
     let app = f.path("app");
     repository(&app, &[(A, &[])], Some(A));
@@ -188,8 +188,15 @@ fn a_change_in_the_identity_a_directory_resolves_to_is_reported_every_time_and_r
     repository(&app, &[(B, &[])], Some(B));
 
     assert_eq!(f.bind(&app), Outcome::Changed);
-    assert_eq!(f.bind(&app), Outcome::Changed);
+    assert_eq!(f.bind(&app), Outcome::StillChanged);
+    assert_eq!(f.bind(&app), Outcome::StillChanged);
     assert_eq!(f.binds().len(), 1);
+
+    // A second change is reported again, once.
+    fs::remove_dir_all(app.join(".git")).unwrap();
+    repository(&app, &[(C, &[])], Some(C));
+    assert_eq!(f.bind(&app), Outcome::Changed);
+    assert_eq!(f.bind(&app), Outcome::StillChanged);
 }
 
 #[test]
@@ -304,7 +311,7 @@ fn a_widening_bind_makes_the_directory_resolve_to_the_identity_it_names() {
     let rebind = f.plan(&app, None).unwrap();
     assert_eq!(rebind.commit, id(B));
     // Nothing moves until the act is recorded and the plan applied.
-    assert_eq!(f.bind(&app), Outcome::Changed);
+    assert_eq!(f.bind(&app), Outcome::StillChanged);
     apply(&mut f.store, &rebind).unwrap();
 
     assert_eq!(f.bind(&app), Outcome::Unchanged);
