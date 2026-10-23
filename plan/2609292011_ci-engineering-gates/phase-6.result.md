@@ -1,7 +1,7 @@
 ---
 n: 6
 title: "Main's protection and CODEOWNERS (ENG-21)"
-status: "🔳"
+status: "✅"
 result: true
 summary: >-
   Main's ruleset is committed and checked against the live one nightly, CODEOWNERS is checked against the paths that enforce the SRS and gives the security-sensitive crates to the security reviewer, and the ENG-21 scenario is off pending.

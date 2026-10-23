@@ -6,7 +6,6 @@
 //! commits, `.github/rulesets/main.json`, and from CODEOWNERS. That the
 //! forge holds the same ruleset is the nightly `protection` job's
 //! check; applying the ruleset is the stakeholder's act.
-//!
 
 use cucumber::{given, then};
 use engineering::{Checkout, branch_protection, codeowners, outcome};
@@ -67,13 +66,15 @@ fn no_owner_on_any_other_path(_w: &mut World) -> Result<(), String> {
 
 /// CODEOWNERS gives each security-sensitive crate to the security
 /// reviewer alone, and the ruleset makes a code owner's approval
-/// count (the approval step reads `require_code_owner_review`), so a
-/// change to one waits on that reviewer.
+/// count, so a change to one waits on that reviewer: the step reads
+/// both.
 #[then(
     regex = r"^the security-sensitive crates are owned by the designated security reviewer, whose approval they need$"
 )]
-fn security_crates_need_the_security_reviewer(_w: &mut World) -> Result<(), String> {
-    outcome(codeowners::security_crates_owned_by_the_security_reviewer(
-        &checkout(),
-    ))
+fn security_crates_need_the_security_reviewer(w: &mut World) -> Result<(), String> {
+    let mut problems = codeowners::security_crates_owned_by_the_security_reviewer(&checkout());
+    problems.extend(branch_protection::approval_from_another_reviewer(
+        &protection(w).ruleset,
+    ));
+    outcome(problems)
 }
