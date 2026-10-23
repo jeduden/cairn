@@ -558,3 +558,19 @@ fn show_names_a_provisional_directory_that_gained_a_commit_as_waiting_to_bind() 
 
     assert_eq!(f.show(&blank), Shown::Unbound(Some(root)));
 }
+
+#[test]
+fn a_bound_commit_the_default_branch_does_not_reach_names_no_clone() {
+    let mut f = fixture();
+    let (one, two) = (f.path("one"), f.path("two"));
+    rooted(&one, "x");
+    f.bind(&one);
+    // The clone holds the bound repository's root as a dangling object,
+    // as a side fetch leaves one, and its own branch does not reach it.
+    rooted(&two, "y");
+    commit(&two, &[], "x");
+
+    assert_eq!(f.bind(&two), Outcome::Bound { provisional: false });
+
+    assert_eq!(f.binds().len(), 2);
+}
