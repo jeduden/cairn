@@ -46,17 +46,20 @@ removed, and confirm the second run exits non-zero naming that crate.
 
 Done, red then green: the license-text check in
 `tooling/engineering/src/license_texts.rs`. It keeps the canonical text
-of every license `deny.toml` allows or grants by exception. Twenty-four
+of every license `deny.toml` allows or grants by exception. Twenty-five
 unit tests sit beside it.
 
 - A fitting license file passes.
 - A crate with none fails, naming the crate and version.
 - A text that does not fit the declared license fails.
-- A substitute text kept in the repository fails.
 - The check reads only `cargo metadata` output and fetched sources.
 
 Held back, awaiting the stakeholder:
 
+- The two checks of the repository's own records, the substitute texts
+  it keeps and `deny.toml`'s grants against the canonical texts, wait
+  for the scenario. ENG-27 asks for their drift case, which must fail a
+  bound scenario, so they land together.
 - The CLI entry, the CI step, the bound `@ENG-30` scenario and its drift
   case are not landed.
 - Run over the real tree, the check fails on seven crates. Each ships

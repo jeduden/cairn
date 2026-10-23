@@ -90,11 +90,78 @@ fn a_clause_starting_c_is_license_text_not_a_copyright_line() {
 #[test]
 fn the_apache_appendix_is_optional_and_nothing_else_may_follow() {
     let apache = canonical("Apache-2.0").unwrap();
-    let with = format!("{apache}\nAPPENDIX: How to apply the Apache License to your work.\n");
+    let with = format!("{apache}\n{APACHE_APPENDIX}");
+    let bracketed = with.replace('{', "[").replace('}', "]");
 
     assert!(fits(apache, apache));
     assert!(fits(&with, apache));
+    assert!(fits(&bracketed, apache));
     assert!(!fits(&format!("{apache}\nAnd you owe us a fee."), apache));
+    assert!(!fits(&format!("{with}\nAnd you owe us a fee."), apache));
+}
+
+#[test]
+fn only_apache_may_add_the_appendix() {
+    let mit = canonical("MIT").unwrap();
+
+    assert!(!fits(&format!("{mit}\n{APACHE_APPENDIX}"), mit));
+    assert!(!fits(
+        &format!(
+            "{mit}\nAPPENDIX: How to apply the Apache License to your work. Not for commercial use."
+        ),
+        mit
+    ));
+}
+
+#[test]
+fn appendix_is_exactly_the_apache_boilerplate() {
+    let words = normalize(APACHE_APPENDIX);
+
+    assert!(appendix(&words));
+    assert!(appendix(&format!("{words} ")));
+    assert!(!appendix(&format!("{words} and more")));
+    assert!(!appendix("appendix: how to apply the apache license"));
+    assert!(!appendix(""));
+}
+
+#[test]
+fn unmet_names_what_keeps_an_expression_from_being_satisfied() {
+    let met = |id: &str| id == "MIT";
+    let expr = |s: &str| parse(s).unwrap();
+
+    assert_eq!(unmet(&expr("MIT"), &met), None);
+    assert_eq!(unmet(&expr("ISC"), &met), Some(vec!["ISC".to_owned()]));
+    assert_eq!(unmet(&expr("MIT OR ISC"), &met), None);
+    assert_eq!(
+        unmet(&expr("ISC OR NCSA"), &met),
+        Some(vec!["ISC".to_owned(), "NCSA".to_owned()])
+    );
+    assert_eq!(
+        unmet(&expr("MIT AND ISC"), &met),
+        Some(vec!["ISC".to_owned()])
+    );
+    assert_eq!(unmet(&expr("MIT AND (ISC OR MIT)"), &met), None);
+}
+
+#[test]
+fn license_files_also_reads_a_reuse_style_licenses_directory() {
+    let (dir, _) = checkout(&[
+        ("LICENSE", "top"),
+        ("LICENSES/MIT.txt", "m"),
+        ("LICENSES/Apache-2.0.txt", "a"),
+        ("src/LICENSE", "deep"),
+    ]);
+
+    let names: Vec<String> = license_files(dir.path())
+        .unwrap()
+        .into_iter()
+        .map(|f| f.0)
+        .collect();
+
+    assert_eq!(
+        names,
+        ["LICENSE", "LICENSES/Apache-2.0.txt", "LICENSES/MIT.txt"]
+    );
 }
 
 fn id(s: &str) -> Expr {
@@ -321,61 +388,4 @@ fn check_tree_reports_every_crate_that_fails_and_every_dir_it_cannot_read() {
         ["b 1.0.0 ships no license file", "read /r/c: gone"]
     );
     assert!(check_tree("nope", |_| Ok(vec![])).is_err());
-}
-
-#[test]
-fn canon_covers_every_license_deny_toml_allows_or_grants() {
-    let deny =
-        "allow = [\"MIT\", \"ISC\"]\nexceptions = [\n  { crate = \"x\", allow = [\"NCSA\"] },\n]\n";
-    assert!(canon_covers(deny).is_empty());
-
-    let uncovered =
-        "allow = [\"MIT\"]\nexceptions = [\n  { crate = \"x\", allow = [\"WTFPL\"] },\n]\n";
-    assert_eq!(
-        canon_covers(uncovered),
-        ["deny.toml grants WTFPL, which the license tool keeps no text for"]
-    );
-    assert!(canon_covers("").is_empty());
-
-    let reflowed = "[licenses]\nallow = [\n  \"MIT\", # one\n  \"WTFPL\",\n]\n";
-    assert_eq!(
-        canon_covers(reflowed),
-        ["deny.toml grants WTFPL, which the license tool keeps no text for"]
-    );
-}
-
-#[test]
-fn kept_texts_flags_a_license_file_the_repository_keeps_for_a_crate() {
-    let (_dir, c) = checkout(&[
-        (
-            "licenses/x86_64-unknown-linux-musl/THIRD_PARTY_LICENSES",
-            "all",
-        ),
-        ("third_party/serde-1.0.0/LICENSE-MIT", "m"),
-        ("vendor/syn/COPYING", "c"),
-        ("vendor/syn/README.md", "r"),
-        ("vendor/other/LICENSE", "o"),
-        ("vendor/syn-extra-1/LICENSE", "o"),
-    ]);
-    let found = kept_texts(&c, &[package("serde", None), package("syn", None)]);
-
-    assert_eq!(
-        found,
-        [
-            "the repository keeps a license text at third_party/serde-1.0.0/LICENSE-MIT",
-            "the repository keeps a license text at vendor/syn/COPYING",
-        ]
-    );
-    let (_dir, none) = checkout(&[("README.md", "x")]);
-    assert!(kept_texts(&none, &[package("serde", None)]).is_empty());
-}
-
-#[test]
-fn kept_texts_reports_a_directory_it_cannot_read() {
-    let (_dir, c) = checkout(&[("vendor", "a file where a directory should be")]);
-
-    let found = kept_texts(&c, &[package("serde", None)]);
-
-    assert_eq!(found.len(), 1);
-    assert!(found[0].starts_with("read "), "{found:?}");
 }

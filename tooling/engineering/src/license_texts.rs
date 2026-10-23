@@ -1,16 +1,15 @@
 //! ENG-30: every crate in the workspace's dependency tree carries a
-//! license text in its published source, the repository keeps no
-//! substitute, and each text fits the canonical text of a license in
-//! the crate's declared SPDX expression. The canonical texts are kept
-//! here, one file each under `license_texts/canon`, with `{{}}` for
-//! the holder or name a template fills in. The check reads only
-//! `cargo metadata` and the sources cargo has already fetched.
+//! license text in its published source, and each text fits the
+//! canonical text of a license in the crate's declared SPDX expression.
+//! The canonical texts are kept here, one file each under
+//! `license_texts/canon`, with `{{}}` for the holder or name a template
+//! fills in. The check reads only `cargo metadata` and the sources cargo
+//! has already fetched. The checks of the repository's own records (the
+//! substitute texts it keeps, `deny.toml`'s grants against the canonical
+//! texts) land with the scenario and its drift case (ENG-27).
 
-use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
-
-use crate::{Checkout, dependencies};
 
 /// The canonical text of each license the allow-list in `deny.toml`
 /// and its exceptions grant, by SPDX id. The text of a license a
@@ -40,6 +39,9 @@ const CANON: [(&str, &str); 8] = [
         include_str!("license_texts/canon/Unicode-3.0.txt"),
     ),
 ];
+
+/// Apache-2.0's appendix, which a file may add after the license text.
+const APACHE_APPENDIX: &str = include_str!("license_texts/canon/Apache-2.0.appendix.txt");
 
 /// What a template fills in, in a canonical text.
 const FREE: &str = "{{}}";
@@ -81,7 +83,10 @@ pub fn normalize(text: &str) -> String {
 fn copyright_line(line: &str) -> bool {
     let line = line.trim().to_lowercase();
     let stated = line.starts_with("copyright")
-        && (line.contains("(c)") || line.contains('©') || line.chars().any(|c| c.is_ascii_digit()));
+        && (line.contains("(c)")
+            || line.contains('©')
+            || line.contains("yyyy")
+            || line.chars().any(|c| c.is_ascii_digit()));
 
     stated || line.starts_with('©')
 }
@@ -96,9 +101,9 @@ const TITLE_WORDS: usize = 8;
 /// added after the text does not fit, except Apache-2.0's optional
 /// appendix.
 #[must_use]
-pub fn fits(text: &str, canon: &str) -> bool {
+pub fn fits(text: &str, canon_raw: &str) -> bool {
     let text = normalize(text);
-    let canon = normalize(canon);
+    let canon = normalize(canon_raw);
     let parts: Vec<&str> = canon.split(FREE).map(str::trim).collect();
     let Some(first) = text.find(parts[0]) else {
         return false;
@@ -114,13 +119,20 @@ pub fn fits(text: &str, canon: &str) -> bool {
         rest = &rest[at + part.len()..];
     }
 
-    rest.trim().is_empty() || appendix(rest)
+    rest.trim().is_empty() || (canon_is_apache(canon_raw) && appendix(rest))
 }
 
-/// Whether `rest`, the words after Apache-2.0's text, are its appendix.
+/// Whether `canon` is Apache-2.0's text, the one license with an appendix.
+fn canon_is_apache(canon: &str) -> bool {
+    canonical("Apache-2.0") == Some(canon)
+}
+
+/// Whether `rest`, the words after Apache-2.0's text, are exactly its
+/// appendix, whichever of `{}` or `[]` marks the fields a work fills in.
 fn appendix(rest: &str) -> bool {
-    rest.trim_start()
-        .starts_with("appendix: how to apply the apache license")
+    let plain = |text: &str| text.replace(['{', '}', '[', ']'], "");
+
+    plain(rest).trim() == plain(&normalize(APACHE_APPENDIX)).trim()
 }
 
 /// An SPDX license expression.
@@ -262,24 +274,45 @@ pub fn packages(metadata: &str) -> Result<Vec<Package>, String> {
     Ok(found)
 }
 
-/// The license files in `dir`, as (name, text), in name order.
+/// The license files in `dir`, as (name, text), in name order: those
+/// named for a license at the top, and any file in a REUSE-style
+/// `LICENSES` directory, listed as `LICENSES/<name>`.
 ///
 /// # Errors
 ///
 /// Fails when the directory cannot be read.
 pub fn license_files(dir: &Path) -> Result<Vec<(String, String)>, String> {
+    let mut files = files_in(dir, "", license_file_name)?;
+    let reuse = dir.join("LICENSES");
+    if reuse.is_dir() {
+        files.extend(files_in(&reuse, "LICENSES/", |_| true)?);
+    }
+    files.sort();
+
+    Ok(files)
+}
+
+/// The files in `dir` that `wanted` accepts by name, each listed under
+/// `prefix` and its name.
+fn files_in(
+    dir: &Path,
+    prefix: &str,
+    wanted: impl Fn(&str) -> bool,
+) -> Result<Vec<(String, String)>, String> {
     let entries = fs::read_dir(dir).map_err(|e| format!("read {}: {e}", dir.display()))?;
     let mut files = Vec::new();
     for entry in entries {
         let entry = entry.map_err(|e| format!("read {}: {e}", dir.display()))?;
         let name = entry.file_name().to_string_lossy().into_owned();
-        if license_file_name(&name) && entry.path().is_file() {
+        if wanted(&name) && entry.path().is_file() {
             // Not UTF-8 means no canonical text fits it; lossy keeps it listed.
             let bytes = fs::read(entry.path()).map_err(|e| format!("read {name}: {e}"))?;
-            files.push((name, String::from_utf8_lossy(&bytes).into_owned()));
+            files.push((
+                format!("{prefix}{name}"),
+                String::from_utf8_lossy(&bytes).into_owned(),
+            ));
         }
     }
-    files.sort();
 
     Ok(files)
 }
@@ -344,111 +377,6 @@ pub fn check_tree(
     }
 
     Ok(problems)
-}
-
-/// Problems with the canonical texts themselves: a license `deny.toml`
-/// allows, or grants by exception, that the tool keeps no text for.
-#[must_use]
-pub fn canon_covers(deny_toml: &str) -> Vec<String> {
-    let mut wanted: BTreeSet<String> = deny_allow(deny_toml).into_iter().collect();
-    wanted.extend(
-        dependencies::license_exceptions(deny_toml)
-            .into_values()
-            .flatten(),
-    );
-
-    wanted
-        .into_iter()
-        .filter(|id| canonical(id).is_none())
-        .map(|id| format!("deny.toml grants {id}, which the license tool keeps no text for"))
-        .collect()
-}
-
-/// The licenses `deny.toml`'s top-level `allow = [...]` lists, on one
-/// line or several.
-fn deny_allow(deny_toml: &str) -> Vec<String> {
-    let Some(at) = deny_toml
-        .lines()
-        .scan(0, |offset, line| {
-            let start = *offset;
-            *offset += line.len() + 1;
-            Some((start, line))
-        })
-        .find_map(|(start, line)| line.trim().starts_with("allow = [").then_some(start))
-    else {
-        return Vec::new();
-    };
-    let body = &deny_toml[at..];
-    let list = body
-        .split_once('[')
-        .and_then(|(_, rest)| rest.split_once(']'))
-        .map_or("", |(list, _)| list);
-
-    list.lines()
-        .map(|l| l.split('#').next().unwrap_or_default())
-        .flat_map(|l| l.split(','))
-        .map(|l| l.trim().trim_matches('"').to_owned())
-        .filter(|l| !l.is_empty())
-        .collect()
-}
-
-/// Problems with license texts the repository keeps for a crate: a
-/// license file under `licenses/`, `third_party/` or `vendor/` in a
-/// directory named for a crate, or for it and its version, other than a
-/// target's committed `THIRD_PARTY_LICENSES` (ENG-31). A directory the
-/// check cannot read is a problem too. A crate that ships no text is
-/// removed or replaced, never patched here.
-#[must_use]
-pub fn kept_texts(checkout: &Checkout, packages: &[Package]) -> Vec<String> {
-    let names: BTreeSet<String> = packages
-        .iter()
-        .flat_map(|p| [p.name.clone(), format!("{}-{}", p.name, p.version)])
-        .collect();
-    let (mut files, mut found) = (Vec::new(), Vec::new());
-    for top in ["licenses", "third_party", "vendor"] {
-        walk(&checkout.root.join(top), &mut files, &mut found);
-    }
-    for path in files {
-        let in_crate_dir = path
-            .parent()
-            .and_then(Path::file_name)
-            .is_some_and(|d| names.contains(d.to_string_lossy().as_ref()));
-        let named = path
-            .file_name()
-            .is_some_and(|n| license_file_name(&n.to_string_lossy()));
-        if in_crate_dir && named {
-            found.push(format!(
-                "the repository keeps a license text at {}",
-                path.strip_prefix(&checkout.root).unwrap_or(&path).display()
-            ));
-        }
-    }
-    found.sort();
-
-    found
-}
-
-/// Lists in `files` each file under `dir`, and notes in `problems` a
-/// directory it cannot read. A directory that does not exist holds
-/// nothing.
-fn walk(dir: &Path, files: &mut Vec<PathBuf>, problems: &mut Vec<String>) {
-    let entries = match fs::read_dir(dir) {
-        Ok(entries) => entries,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return,
-        Err(e) => {
-            problems.push(format!("read {}: {e}", dir.display()));
-            return;
-        }
-    };
-    let mut paths: Vec<PathBuf> = entries.filter_map(|e| Some(e.ok()?.path())).collect();
-    paths.sort();
-    for path in paths {
-        if path.is_dir() {
-            walk(&path, files, problems);
-        } else {
-            files.push(path);
-        }
-    }
 }
 
 #[cfg(test)]
