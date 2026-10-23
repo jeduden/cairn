@@ -102,15 +102,15 @@ recorded in the lockfile. Taplo and cargo-audit publish no checksums, so
 verify and record their asset SHA-256 values in the lockfile when bumping
 them.
 
-A Claude Code web environment sets
-[scripts/setup-web.sh](../scripts/setup-web.sh) as its setup script. It
-only downloads and verifies, never builds: it refuses a tool whose backend
-is not `github:` or `aqua:`, downloads the mise binary pinned in the setup
-action, refuses it unless its SHA-256 matches, then runs
-`mise install --locked`. mise checks each download against the lockfile and
-verifies the attestation of each GitHub release the lockfile records, which
-needs GitHub API access to those repositories; without it the install stops
-rather than skip the check.
+A Claude Code web environment runs
+[scripts/setup-web.sh](../scripts/setup-web.sh) as its setup script. The
+script downloads and verifies tools. It never builds them. It refuses a tool
+whose backend is not `github:` or `aqua:`. It checks the mise binary against
+the SHA-256 pinned in the setup action. Then it runs `mise install --locked`.
+mise checks each download against the lockfile. It also verifies each
+attestation the lockfile records. That needs GitHub API access to the
+release's repository. Without it, the install stops rather than skip the
+check.
 
 The shared setup action installs each job's selected tools and caches
 mise's installs and the exact Rustup toolchain. Release jobs disable
