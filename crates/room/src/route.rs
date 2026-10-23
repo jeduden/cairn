@@ -9,7 +9,7 @@
 
 use record::id::RoomId;
 
-use crate::branch::{BranchIdentity, BranchLink};
+use crate::branch::{BranchIdentity, BranchLink, resolve};
 
 /// The seat a run's event is written to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -41,8 +41,23 @@ pub fn seat_for_run_event(
     links: &[BranchLink],
     causal: &dyn Fn(&BranchLink, &BranchLink) -> bool,
 ) -> SeatTarget {
-    let _ = (branch, rooms, links, causal);
-    SeatTarget::PersonalRoomSeat
+    let Some(branch) = branch else {
+        return SeatTarget::PersonalRoomSeat;
+    };
+    let ours = links
+        .iter()
+        .filter(|l| &l.branch == branch && rooms.iter().any(|r| r.room == l.room));
+    let Some(standing) = resolve(ours, causal).standing else {
+        return SeatTarget::PersonalRoomSeat;
+    };
+    let works = rooms
+        .iter()
+        .any(|r| r.room == standing.room && r.member_with_work);
+    if works {
+        SeatTarget::RunSeat(standing.room)
+    } else {
+        SeatTarget::PersonalRoomSeat
+    }
 }
 
 #[cfg(test)]

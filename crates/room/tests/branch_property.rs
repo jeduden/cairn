@@ -6,6 +6,11 @@
 //! failure names a seed that reproduces it; `PARINN_PROPERTY_CASES`
 //! runs more.
 
+#![allow(
+    clippy::unwrap_used,
+    reason = "a test's helpers unwrap: a failure is the assertion"
+)]
+
 use std::collections::BTreeSet;
 
 use record::digest::Digest;
