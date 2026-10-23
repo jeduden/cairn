@@ -397,3 +397,25 @@ fn a_widening_bind_is_refused_while_a_run_leaves_a_risk_open() {
     assert!(err.contains("residual risk"), "{err}");
     assert_eq!(shown(&p, &app)["status"], "unbound");
 }
+
+#[test]
+fn a_bind_the_audit_log_takes_no_note_of_is_recorded_and_reported() {
+    let p = Process::new();
+    let app = clone(&p, "app", Some("a"));
+    assert_eq!(
+        run(&p, &["repository", "show", &app.display().to_string()]).0,
+        EXIT_OK
+    );
+    let audit_dir = p.parinn_home().join("audit");
+    let _ = fs::remove_dir_all(&audit_dir);
+    fs::write(&audit_dir, "").unwrap();
+    crate::tests::set_mode(&audit_dir, 0o600);
+
+    let (code, _, err) = run(&p, &["repository", "bind", &app.display().to_string()]);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(
+        err.contains("the bind is recorded, but the audit log took no note"),
+        "{err}"
+    );
+}

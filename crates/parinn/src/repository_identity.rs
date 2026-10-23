@@ -78,9 +78,13 @@ fn deadline() -> impl Fn() -> bool {
 /// and counted, and a clone that cannot be read counted, each once (I6).
 /// Nothing is relinked, and a failure leaves the record as it was (I9).
 pub(crate) fn bind_observed(ctx: &Context, home: &Home, store: &mut Store) {
-    let (Ok(node), Ok(held)) = (Node::find(home, store), store.hook_observations()) else {
-        return;
-    };
+    if let (Ok(node), Ok(held)) = (Node::find(home, store), store.hook_observations()) {
+        bind_held(ctx, store, &node, held);
+    }
+}
+
+/// [`bind_observed`]'s work over the observations `held`.
+fn bind_held(ctx: &Context, store: &mut Store, node: &Node, held: Vec<store::Held>) {
     let directories: BTreeSet<String> = held
         .into_iter()
         .filter(|h| !h.appended)
@@ -93,7 +97,7 @@ pub(crate) fn bind_observed(ctx: &Context, home: &Home, store: &mut Store) {
     for directory in directories {
         let outcome = repository::bind(
             store,
-            &node,
+            node,
             &mut OsEntropy,
             Path::new(&directory),
             ctx.home.as_deref().map(Path::new),
