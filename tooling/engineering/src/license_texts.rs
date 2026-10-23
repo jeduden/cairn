@@ -341,6 +341,19 @@ fn files_in(dir: &Path, prefix: &str) -> Result<Vec<(String, String)>, String> {
     Ok(files)
 }
 
+/// How a problem with a crate that keeps no license file ends.
+const NO_FILE: &str = "ships no license file";
+
+/// Splits the problems of [`check_packages`] into those about a missing
+/// license file or an unreadable crate directory, and those about a
+/// text that does not fit.
+#[must_use]
+pub fn split_problems(problems: Vec<String>) -> (Vec<String>, Vec<String>) {
+    problems
+        .into_iter()
+        .partition(|p| p.ends_with(NO_FILE) || p.starts_with("read "))
+}
+
 /// Problems with one crate: no license file, no license declared, an
 /// expression that does not parse, or a part of the expression no file
 /// fits, with a note for each license the tool keeps no text for.
@@ -348,7 +361,7 @@ fn files_in(dir: &Path, prefix: &str) -> Result<Vec<(String, String)>, String> {
 pub fn check_crate(package: &Package, files: &[(String, String)]) -> Vec<String> {
     let who = format!("{} {}", package.name, package.version);
     if files.is_empty() {
-        return vec![format!("{who} ships no license file")];
+        return vec![format!("{who} {NO_FILE}")];
     }
     let Some(expression) = &package.license else {
         return vec![format!("{who} declares no license")];
@@ -615,7 +628,7 @@ pub fn release_targets(build_workflow: &str) -> Result<Vec<String>, String> {
     Ok(targets)
 }
 
-/// Runs `cargo metadata` on the workspace `manifest` resolved for
+/// Runs `cargo metadata`, offline, on the workspace `manifest` resolved for
 /// `target`, with `PARINN_HOME` pointed at `parinn_home` (ENG-14).
 ///
 /// # Errors
@@ -633,6 +646,7 @@ pub fn cargo_metadata_for(
             "--format-version",
             "1",
             "--locked",
+            "--offline",
             "--filter-platform",
         ])
         .arg(target)
@@ -643,7 +657,7 @@ pub fn cargo_metadata_for(
         .map_err(|e| format!("run cargo metadata: {e}"))?;
     if !out.status.success() {
         return Err(format!(
-            "cargo metadata for {target} failed: {}",
+            "cargo metadata for {target} failed (cargo fetch --locked fetches the sources): {}",
             String::from_utf8_lossy(&out.stderr).trim_end()
         ));
     }
@@ -688,19 +702,26 @@ pub fn check_packages(
     problems
 }
 
-/// Problems with ENG-30's CI step: it runs `license-check` with the
-/// locked dependency tree.
+/// Problems with ENG-30's CI step: a step, not a comment, runs
+/// `license-check` with the locked dependency tree, and the workflow
+/// runs on every pull request.
 #[must_use]
 pub fn ci_runs_check(ci_workflow: &str) -> Vec<String> {
-    let runs = ci_workflow
+    let runs = ci_workflow.lines().map(str::trim).any(|l| {
+        l.starts_with("- run:") && l.contains("--bin license-check") && l.contains("--locked")
+    });
+    let on_pull_requests = ci_workflow
         .lines()
-        .any(|l| l.contains("--bin license-check") && l.contains("--locked"));
-
-    if runs {
-        Vec::new()
-    } else {
-        vec!["the CI workflow does not run license-check with --locked".to_owned()]
+        .any(|l| l.trim_end() == "  pull_request:");
+    let mut problems = Vec::new();
+    if !runs {
+        problems.push("the CI workflow does not run license-check with --locked".to_owned());
     }
+    if !on_pull_requests {
+        problems.push("the CI workflow does not run on every pull request".to_owned());
+    }
+
+    problems
 }
 
 /// Problems with the repository for ENG-30: the crates a release links

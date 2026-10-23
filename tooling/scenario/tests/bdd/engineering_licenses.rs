@@ -39,12 +39,7 @@ fn problems(w: &mut World) -> Vec<String> {
 
 #[then(regex = r"^each crate has a license file in its source$")]
 fn each_crate_has_a_license_file(w: &mut World) -> Result<(), String> {
-    outcome(
-        problems(w)
-            .into_iter()
-            .filter(|p| p.ends_with("ships no license file") || p.starts_with("read "))
-            .collect(),
-    )
+    outcome(license_texts::split_problems(problems(w)).0)
 }
 
 #[then(regex = r"^the repository keeps no license text for any crate by name and version$")]
@@ -58,10 +53,7 @@ fn the_repository_keeps_no_license_text(w: &mut World) -> Result<(), String> {
     regex = r"^each license file's text fits the canonical text of a license in the crate's declared expression, from the allow-list in .+$"
 )]
 fn each_license_file_fits(w: &mut World) -> Result<(), String> {
-    let mut found: Vec<String> = problems(w)
-        .into_iter()
-        .filter(|p| !p.ends_with("ships no license file") && !p.starts_with("read "))
-        .collect();
+    let mut found = license_texts::split_problems(problems(w)).1;
     let deny = eng(w).checkout()?.read("deny.toml")?;
     found.extend(license_texts::canon_covers(&deny));
 

@@ -207,7 +207,7 @@ Feature: Engineering quality (ENG)
     When the release targets are read from the build workflow
     Then each target has a committed "licenses/<target-triple>/THIRD_PARTY_LICENSES" and no other target has one
     When each target's file is regenerated twice with "cargo metadata --filter-platform <target-triple>"
-    Then both runs give the same bytes, with no timestamp, host path or randomness
+    Then both regenerations give the same bytes, with no timestamp, host path or randomness
     And the committed file equals the regeneration
     And it holds the license text and copyright lines of every crate a normal-dependency path from a binary under "crates/" reaches for that target
     And no build-only, proc-macro, test, fuzz or tooling crate appears in it

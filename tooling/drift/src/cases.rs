@@ -238,6 +238,13 @@ fn license_check_cases() -> Vec<Case> {
             "deny.toml grants WTFPL, which the license tool keeps no text for",
         ),
         case(
+            "a license text the repository keeps for a linked crate",
+            "ENG-30",
+            Injection::create("vendor/serde_json/LICENSE-MIT", "MIT"),
+            scenario("ENG-30"),
+            "the repository keeps a license text at vendor/serde_json/LICENSE-MIT",
+        ),
+        case(
             "CI no longer runs the license check",
             "ENG-30",
             Injection::replace(CI_WORKFLOW, "--bin license-check", "--bin protection-check"),

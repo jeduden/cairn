@@ -133,7 +133,9 @@ jobs:
       # each executable must print on its own platform. The command also
       # fails the build when a committed file differs from them.
       - name: Regenerate the license files
-        run: cargo run --locked -p engineering --bin license-check -- --out "$RUNNER_TEMP/regenerated"
+        run: |
+          cargo fetch --locked
+          cargo run --locked -p engineering --bin license-check -- --out "$RUNNER_TEMP/regenerated"
       - name: Check the binary prints the regenerated licenses
         env:
           BIN: dist/parinn-${{ matrix.runs }}

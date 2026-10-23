@@ -55,6 +55,9 @@ jobs:
           command -v strace >/dev/null || {
             sudo apt-get update && sudo apt-get install -y --no-install-recommends strace
           }
+      # ENG-30: the license check reads only the sources cargo has
+      # already fetched, for every release target.
+      - run: cargo fetch --locked
       # NFR-02: the scenario that holds a hook handler to its budget
       # times the release build of the core, never the development
       # build (testkit::release_core_executable), against the frozen
@@ -123,6 +126,9 @@ jobs:
           command -v strace >/dev/null || {
             sudo apt-get update && sudo apt-get install -y --no-install-recommends strace
           }
+      # ENG-30: the license check reads only the sources cargo has
+      # already fetched, for every release target.
+      - run: cargo fetch --locked
       # NFR-02: the budget rows time the release core, which the
       # instrumented run does not build.
       - run: cargo build --release --locked -p parinn -p calibrate
@@ -228,6 +234,7 @@ jobs:
         with:
           tools: "rust github:EmbarkStudios/cargo-deny cargo:cargo-audit"
           cache: true
+      - run: cargo fetch --locked
       - run: cargo deny check licenses bans sources
       # The fuzz workspace has its own manifest and lockfile (ENG-07),
       # so the same policy reads them too.
@@ -268,6 +275,9 @@ jobs:
           command -v strace >/dev/null || {
             sudo apt-get update && sudo apt-get install -y --no-install-recommends strace
           }
+      # ENG-30: the license check reads only the sources cargo has
+      # already fetched, for every release target.
+      - run: cargo fetch --locked
       - run: cargo test --locked -p drift --test suite -- --ignored
 
   # ENG-15: the benchmark gate. The base is the head's first parent:

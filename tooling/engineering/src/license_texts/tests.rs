@@ -587,19 +587,69 @@ fn check_packages_reports_each_failure_and_each_unreadable_directory() {
 
 #[test]
 fn ci_must_run_license_check_with_the_locked_tree() {
-    let ok = "      - run: cargo run --locked -p engineering --bin license-check\n";
+    let on = "on:\n  pull_request:\n    branches: [main]\n";
+    let step = "      - run: cargo run --locked -p engineering --bin license-check\n";
+    let ok = format!("{on}{step}");
 
-    assert!(ci_runs_check(ok).is_empty());
+    assert!(ci_runs_check(&ok).is_empty());
     for bad in [
         "      - run: cargo run -p engineering --bin license-check\n",
         "      - run: cargo run --locked -p engineering --bin protection-check\n",
+        "      # - run: cargo run --locked -p engineering --bin license-check\n",
         "",
     ] {
         assert_eq!(
-            ci_runs_check(bad),
-            ["the CI workflow does not run license-check with --locked"]
+            ci_runs_check(&format!("{on}{bad}")),
+            ["the CI workflow does not run license-check with --locked"],
+            "{bad}"
         );
     }
+    assert_eq!(
+        ci_runs_check(&format!("on:\n  push:\n{step}")),
+        ["the CI workflow does not run on every pull request"]
+    );
+}
+
+#[test]
+fn problems_split_into_missing_files_and_texts_that_do_not_fit() {
+    let missing = check_crate(&package("a", Some("MIT")), &[]);
+    let unfit = check_crate(&package("b", Some("Apache-2.0")), &[mit_file()]);
+    let all = [
+        missing.clone(),
+        unfit.clone(),
+        vec!["read /r/c: gone".into()],
+    ]
+    .concat();
+
+    let (no_file, not_fit) = split_problems(all);
+
+    assert_eq!(
+        no_file,
+        [missing, vec!["read /r/c: gone".to_owned()]].concat()
+    );
+    assert_eq!(not_fit, unfit);
+}
+
+#[cfg(unix)]
+#[test]
+fn cargo_metadata_for_never_lets_cargo_fetch() {
+    use std::os::unix::fs::PermissionsExt;
+    let (dir, _) = checkout(&[("cargo", "#!/bin/sh\necho \"$@\" > \"$0.args\"\nexit 1\n")]);
+    let fake = dir.path().join("cargo");
+    fs::set_permissions(&fake, fs::Permissions::from_mode(0o755)).unwrap();
+
+    let err =
+        cargo_metadata_for(fake.as_os_str(), Path::new("Cargo.toml"), dir.path(), "t").unwrap_err();
+
+    assert!(
+        err.contains("cargo fetch --locked fetches the sources"),
+        "{err}"
+    );
+    let args = fs::read_to_string(dir.path().join("cargo.args")).unwrap();
+    assert!(
+        args.contains("--offline") && args.contains("--locked"),
+        "{args}"
+    );
 }
 
 const APP: &str = "[package]\nname = \"app\"\nversion = \"0.0.0\"\nedition = \"2024\"\n";
@@ -643,7 +693,7 @@ fn cargo_metadata_for_resolves_a_workspace_for_a_target_and_names_a_failure() {
     )
     .unwrap_err();
     assert!(
-        err.starts_with("cargo metadata for x86_64-unknown-linux-musl failed: "),
+        err.starts_with("cargo metadata for x86_64-unknown-linux-musl failed ("),
         "{err}"
     );
     let err = cargo_metadata_for(

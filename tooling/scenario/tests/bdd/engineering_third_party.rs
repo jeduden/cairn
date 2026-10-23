@@ -98,8 +98,10 @@ fn each_target_is_regenerated_twice(w: &mut World) -> Result<(), String> {
     Ok(())
 }
 
-#[then(regex = r"^both runs give the same bytes, with no timestamp, host path or randomness$")]
-fn both_runs_give_the_same_bytes(w: &mut World) -> Result<(), String> {
+#[then(
+    regex = r"^both regenerations give the same bytes, with no timestamp, host path or randomness$"
+)]
+fn both_regenerations_give_the_same_bytes(w: &mut World) -> Result<(), String> {
     let root = eng(w).checkout()?.root.to_string_lossy().into_owned();
     let s = state(w);
     let mut problems = Vec::new();
