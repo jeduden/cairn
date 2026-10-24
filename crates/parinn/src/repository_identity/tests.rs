@@ -452,6 +452,42 @@ fn a_bind_the_record_refuses_is_counted_apart_from_a_clone_that_cannot_be_read()
     assert_eq!(counter(&p, "repository_bind_failed"), 1);
     assert_eq!(counter(&p, "repository_read_failed"), 0);
     assert!(binds(&p).is_empty());
+
+    // Tried again at each start, counted once for the observation.
+    run(&p, &["ingest", "--all"]);
+    run(&p, &["ingest", "--all"]);
+    assert_eq!(counter(&p, "repository_bind_failed"), 1);
+
+    // Once the record takes the event, the next start binds it.
+    rusqlite::Connection::open(p.parinn_home().join("store.db"))
+        .unwrap()
+        .execute_batch("DROP TRIGGER refuse")
+        .unwrap();
+    run(&p, &["ingest", "--all"]);
+    assert_eq!(binds(&p).len(), 1);
+    assert_eq!(counter(&p, "repository_bind_failed"), 1);
+}
+
+#[test]
+fn a_failed_bind_mark_that_cannot_be_made_still_counts_the_failure() {
+    let mut p = Process::new();
+    let app = clone(&p, "app", Some("a"));
+    start_in(&mut p, "s1", &app);
+    let (ctx, mut store, node) = node_and_held(&p);
+    let held = store.hook_observations().unwrap();
+    let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
+    conn.execute_batch(
+        "CREATE TRIGGER refuse BEFORE INSERT ON events WHEN new.kind = 'repository_bind'
+         BEGIN SELECT RAISE(ABORT, 'no'); END;
+         CREATE TABLE repository_worktree_marks (mark TEXT PRIMARY KEY, value TEXT NOT NULL);
+         CREATE TRIGGER no_marks BEFORE INSERT ON repository_worktree_marks
+         BEGIN SELECT RAISE(ABORT, 'no marks'); END;",
+    )
+    .unwrap();
+
+    super::bind_held(&say(&ctx), None, &mut store, &node, held, &|| false);
+
+    assert_eq!(counter(&p, "repository_bind_failed"), 1);
 }
 
 #[test]

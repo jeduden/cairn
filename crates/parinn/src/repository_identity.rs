@@ -89,8 +89,8 @@ fn deadline(within: Duration) -> impl Fn() -> bool {
 /// process able to run the hook handler could forge, steers nothing.
 /// A change in a bound identity is audited and counted, a clone that
 /// cannot be read counted, each once (I6); a bind the record refuses is
-/// counted under its own name, and tried and counted again at each start
-/// until it lands. Nothing is relinked, and a failure
+/// counted under its own name once for each observation, and tried again
+/// at each start until it lands. Nothing is relinked, and a failure
 /// leaves the record as it was (I9).
 pub(crate) fn bind_observed(ctx: &Context, home: &Home, store: &mut Store) {
     if let (Ok(node), Ok(held)) = (Node::find(home, store), store.hook_observations()) {
@@ -109,6 +109,27 @@ pub(crate) fn bind_observed(ctx: &Context, home: &Home, store: &mut Store) {
 /// The deadline all the looks of one start share.
 pub(crate) fn start_deadline() -> impl Fn() -> bool {
     deadline(START_WITHIN)
+}
+
+/// Marks every observation of `ids` as failed to bind; whether any was
+/// not marked before. A mark that cannot be made counts as a first
+/// failure, as the failure is better counted twice than not at all (I6).
+fn first_failure(store: &mut Store, ids: &[i64]) -> bool {
+    let mut first = false;
+    for id in ids {
+        let key = failed_mark(*id);
+        first |= store.worktree_mark(&key).ok().flatten().is_none();
+        let _ = store.set_worktree_mark(&key, "1").map_err(|e| {
+            tracing::warn!(error = e.to_string().as_str(), "mark a failed bind");
+        });
+    }
+
+    first
+}
+
+/// The key a failed bind of observation `id` is marked under.
+fn failed_mark(id: i64) -> String {
+    format!("failed:{id}")
 }
 
 /// The key a look at observation `id` is marked under.
@@ -180,12 +201,16 @@ pub(crate) fn bind_held(
             Err(e) => {
                 // The audit entry is fixed text; the cause goes to the log.
                 tracing::warn!(error = e.to_string().as_str(), "bind a repository identity");
-                say(&Occurrence::Degraded {
-                    kind: Kind::Failed,
-                    counter: Counter::RepositoryBindFailed,
-                    operation: "repository bind",
-                    detail: "repository identity could not be bound: the record or the random source failed",
-                });
+                // The look is tried again at each start, but counted once
+                // for each observation (I6).
+                if first_failure(store, &ids) {
+                    say(&Occurrence::Degraded {
+                        kind: Kind::Failed,
+                        counter: Counter::RepositoryBindFailed,
+                        operation: "repository bind",
+                        detail: "repository identity could not be bound: the record or the random source failed",
+                    });
+                }
                 continue;
             }
             Ok(_) => None,
