@@ -78,13 +78,15 @@ fn deadline(within: Duration) -> impl Fn() -> bool {
     move || Instant::now() >= end
 }
 
-/// Binds the identity of every repository the `SessionStart` hook
-/// observations no look has marked showed, once each (LANE-02).
+/// Binds the identity of every repository the session bindings an MCP
+/// server holds, and no look has marked, showed, once each (LANE-02).
 ///
 /// The bind is recorded here, when `parinn ingest` or an MCP server
 /// starts, and by a server's live ingest as it takes a session binding,
 /// not in the hook handler: reading git cannot stay within the handler's
-/// hook budget (NFR-02), and the observation is the first hook event.
+/// hook budget (NFR-02). Only the `cwd` of a session binding an MCP
+/// server holds is read (SEC-18): a hook input no server took, which any
+/// process able to run the hook handler could forge, steers nothing.
 /// A change in a bound identity is audited and counted, a clone that
 /// cannot be read counted, and a bind the record refuses counted under
 /// its own name, each once (I6). Nothing is relinked, and a failure
@@ -114,8 +116,9 @@ fn looked(id: i64) -> String {
 }
 
 /// [`bind_observed`]'s work over the observations `held`: each
-/// `SessionStart` observation no look has marked, whether or not it has
-/// reached the record, is looked at once. Its directory's outcome is
+/// `SessionStart` observation an MCP server took as its session binding
+/// and no look has marked, whether or not it has reached the record, is
+/// looked at once. Its directory's outcome is
 /// reported through `say`, and the observation marked, so a look that ran
 /// out of time or found a clone unreadable is not made, or counted,
 /// again for it; a new hook event for the directory looks again. A bind
@@ -132,6 +135,7 @@ pub(crate) fn bind_held(
     for h in held {
         let o = h.observation;
         if o.hook == "SessionStart"
+            && h.taken
             && !o.cwd.is_empty()
             && store
                 .worktree_identity(&looked(h.id))

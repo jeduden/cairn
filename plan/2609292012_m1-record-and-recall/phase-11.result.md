@@ -4,12 +4,12 @@ title: "Trust, origin, branch links and repository identity"
 status: "✅"
 result: true
 summary: >-
-  @MEM-01, @OWN-01 and @LANE-02 off @pending and passing. Each event's
-  trust level and origin derive from the record and the node's key set
-  alone, nothing stores them, and parinn rebuild and parinn verify keep
-  the kept origins honest. A repository's identity is read inside the
-  core and bound once. @PRV-02 passes narrowed; @PRV-06 and @PRV-13 are
-  proven by named tests; no scenario row needing M7 or OQ-40 could pass.
+  @MEM-01 and @OWN-01 off @pending and passing. Each event's trust level
+  and origin derive from the record and the node's key set alone,
+  nothing stores them, and parinn rebuild and parinn verify keep the
+  kept origins honest. A repository's identity is read inside the core;
+  @LANE-02 stays @pending for a ruling. @PRV-02 passes narrowed; @PRV-06
+  and @PRV-13 are proven by named tests.
 ---
 # Phase 11 result
 
@@ -17,12 +17,12 @@ summary: >-
 
 Outcome:
 
-- MEM-01, OWN-01 and LANE-02 hold: all three are off `@pending`, passing
-  against the built core, confined. After every hook and `parinn
-  rebuild`, no file outside the store holds a canary. A run's seats are
-  all certified by the node's one device key. A repository's identity is
-  its lowest parentless commit, read from `.git` inside the core and
-  bound once by a structural event.
+- MEM-01 and OWN-01 hold: off `@pending`, passing against the built
+  core, confined. After every hook and `parinn rebuild`, no file outside
+  the store holds a canary. A run's seats are all certified by the
+  node's one device key. LANE-02's identity is the lowest parentless
+  commit, read from `.git` inside the core. `@LANE-02` stays
+  `@pending`: its steps pass narrowed, locally.
 - PRV-02 holds for what M1 can show. `administration::trust_policy`
   trusts only `operator` events and the core's own structural events in
   a device seat of origin `witnessed`. No `user` event is trusted (R3 and
@@ -72,11 +72,11 @@ Inherited:
   identity's replacement by `replaces_provisional`);
   `EventKind::RepositoryBind`; four `repository_*` counters.
 - `parinn rebuild`, `parinn repository show|bind`; `mcp::Server::new`
-  takes the device key; `event_search`'s `trust` filter applies after
-  the ranking.
+  takes the device key; `event_search`'s `trust` filter applies before
+  the ranking cuts.
 
 For phases 13 to 16: the envelope's shape is untouched, its `origin` and
-`trust` come from `administration`; restore (M2) reads `trust_level`;
+`trust` come from `administration`; restore reads `trust_level`;
 quarantine (phase 14) must change no origin.
 
 For the stakeholder:
@@ -85,8 +85,8 @@ For the stakeholder:
   recorded by a keyed digest. That key derives from the device key, a
   use `seats-and-keys.md` does not name: open.
 - Needs a ruling: LANE-02 binds at the first hook event; here it is
-  recorded when `parinn ingest` or an MCP server starts, as reading git
-  cannot stay within NFR-02's 150 ms.
+  recorded when `parinn ingest` or an MCP server starts, for a session
+  binding a server holds (SEC-18): reading git cannot fit NFR-02.
 - Deviation, PRV-13: after a node identity change every writer reads
   `peer` until a PRV-12 confirm, which no M1 command makes.
 - Residual after the review: a `.git` file may still name a worktree

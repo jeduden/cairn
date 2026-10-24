@@ -84,8 +84,8 @@ fn clone_that(w: &mut World, how: String) -> Result<(), String> {
     Ok(())
 }
 
-/// The first hook event for `dir`, and the `parinn ingest` that records
-/// what it observed.
+/// The first hook event for `dir`, the session binding an MCP server
+/// takes from it, and the `parinn ingest` that records what it observed.
 fn first_hook_event(w: &mut World, dir: &Path, session: &str) -> Result<(), String> {
     let path = w.home.join(format!("{session}.jsonl"));
     let input = json!({
@@ -101,6 +101,10 @@ fn first_hook_event(w: &mut World, dir: &Path, session: &str) -> Result<(), Stri
         Some(input.to_string().as_bytes()),
         &[],
     )?;
+    // Only a session binding an MCP server holds is looked at (SEC-18).
+    rusqlite::Connection::open(home(w)?.store())
+        .and_then(|c| c.execute("UPDATE hook_observations SET taken = 1", []))
+        .map_err(|e| e.to_string())?;
     run_core(w, &["ingest", "--all"], None)?;
     let out = last_run(w)?;
     if out.status.success() {

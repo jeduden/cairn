@@ -98,8 +98,10 @@ fn name_secret(node: &Node) -> [u8; 32] {
 /// Fails when the worktree cannot be resolved: a path as spelled would
 /// keep one worktree under two names.
 fn worktree_digest(secret: &[u8; 32], worktree: &Path) -> Result<String, AdminError> {
-    let resolved = std::fs::canonicalize(worktree)
-        .map_err(|_| AdminError::Repository("the worktree cannot be resolved"))?;
+    let resolved = std::fs::canonicalize(worktree).map_err(|source| AdminError::Unresolved {
+        what: "worktree",
+        source,
+    })?;
 
     Ok(Digest::of(&[
         LABEL,
@@ -113,8 +115,10 @@ fn worktree_digest(secret: &[u8; 32], worktree: &Path) -> Result<String, AdminEr
 /// The name of a directory whose clone could not be read: its worktree
 /// is not known, so it is the directory's own.
 fn directory_marker(secret: &[u8; 32], directory: &Path) -> Result<String, AdminError> {
-    let resolved = std::fs::canonicalize(directory)
-        .map_err(|_| AdminError::Repository("the directory cannot be resolved"))?;
+    let resolved = std::fs::canonicalize(directory).map_err(|source| AdminError::Unresolved {
+        what: "directory",
+        source,
+    })?;
 
     Ok(Digest::of(&[
         LABEL,
@@ -448,7 +452,7 @@ pub fn plan(
     commit: Option<CommitId>,
     deadline: &dyn Deadline,
 ) -> Result<Rebind, AdminError> {
-    let unreadable = |_| AdminError::Repository("the repository's git data cannot be read");
+    let unreadable = AdminError::RepositoryRead;
     let located = repository::locate(directory, ceiling)
         .map_err(unreadable)?
         .ok_or(AdminError::Repository(

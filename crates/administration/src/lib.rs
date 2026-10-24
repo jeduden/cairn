@@ -32,8 +32,15 @@ pub enum AdminError {
     Store(store::StoreError),
     /// The home and the store disagree about the node.
     Node(&'static str),
-    /// A repository's identity cannot be read or bound (LANE-02).
+    /// A repository's identity cannot be bound (LANE-02).
     Repository(&'static str),
+    /// A repository's git data cannot be read (LANE-02).
+    RepositoryRead(::repository::Error),
+    /// A worktree or directory cannot be resolved to one name (LANE-02).
+    Unresolved {
+        what: &'static str,
+        source: std::io::Error,
+    },
     /// The device key is missing from the key store, but the store holds
     /// this node's record: no second genesis starts (PRV-12).
     DeviceKeyMissing,
@@ -66,6 +73,10 @@ impl fmt::Display for AdminError {
             Self::Key(e) => write!(f, "{e}"),
             Self::Store(e) => write!(f, "{e}"),
             Self::Node(why) | Self::Repository(why) => f.write_str(why),
+            Self::RepositoryRead(e) => write!(f, "the repository's git data cannot be read: {e}"),
+            Self::Unresolved { what, source } => {
+                write!(f, "the {what} cannot be resolved: {source}")
+            }
             Self::DeviceKeyMissing => f.write_str(
                 "the device key is missing from the key store, but the store holds this node's record; no second genesis starts",
             ),
@@ -99,7 +110,10 @@ impl fmt::Display for AdminError {
 impl std::error::Error for AdminError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            Self::Io { source, .. } | Self::OsUser(source) => Some(source),
+            Self::Io { source, .. } | Self::OsUser(source) | Self::Unresolved { source, .. } => {
+                Some(source)
+            }
+            Self::RepositoryRead(e) => Some(e),
             Self::Key(e) => Some(e),
             Self::Store(e) => Some(e),
             Self::NoHome

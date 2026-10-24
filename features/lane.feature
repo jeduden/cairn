@@ -27,7 +27,7 @@ Feature: Room (LANE)
     And an authorized linked issue observation for "R" recorded by a member node of "alice" goes to that node's device seat in "R", while a node of a nonmember principal cannot import there
     And any other event with no run, recorded by a node of "alice", goes to that node's device seat in her personal room there
 
-  @LANE-02 @P0 @I1 @I6 @I8
+  @LANE-02 @P0 @I1 @I6 @I8 @pending
   Scenario Outline: a repository's identity is independent of the local path
     Given an isolated ParleyInn home
     And a repository clone that <clone>

@@ -236,8 +236,19 @@ fn the_repository_verbs_refuse_what_they_do_not_know() {
     }
 }
 
-/// Runs the `SessionStart` hook in `cwd`.
+/// Runs the `SessionStart` hook in `cwd`, and an MCP server takes the
+/// session binding it records.
 fn start_in(p: &mut Process, session: &str, cwd: &Path) {
+    start_untaken(p, session, cwd);
+    rusqlite::Connection::open(p.parinn_home().join("store.db"))
+        .unwrap()
+        .execute("UPDATE hook_observations SET taken = 1", [])
+        .unwrap();
+}
+
+/// Runs the `SessionStart` hook in `cwd`; no MCP server takes its
+/// session binding.
+fn start_untaken(p: &mut Process, session: &str, cwd: &Path) {
     let projects = p.dir.path().join(".claude/projects/-w-app");
     fs::create_dir_all(&projects).unwrap();
     let path = projects.join(format!("{session}.jsonl"));
@@ -608,5 +619,27 @@ fn a_look_the_store_cannot_mark_goes_on() {
 
     super::bind_held(&say(&ctx), None, &mut store, &node, held, &|| false);
 
+    assert_eq!(binds(&p).len(), 1);
+}
+
+#[test]
+fn a_hook_input_no_mcp_server_took_steers_no_read_of_the_directory_it_names() {
+    let mut p = Process::new();
+    let app = clone(&p, "app", Some("a"));
+    start_untaken(&mut p, "forged", &app);
+    let (ctx, mut store, node) = node_and_held(&p);
+
+    let held = store.hook_observations().unwrap();
+    super::bind_held(&say(&ctx), None, &mut store, &node, held, &|| false);
+
+    assert!(binds(&p).is_empty());
+    assert_eq!(shown(&p, &app)["status"], "unbound");
+    // Once a server takes it, the next start binds.
+    rusqlite::Connection::open(p.parinn_home().join("store.db"))
+        .unwrap()
+        .execute("UPDATE hook_observations SET taken = 1", [])
+        .unwrap();
+    let held = store.hook_observations().unwrap();
+    super::bind_held(&say(&ctx), None, &mut store, &node, held, &|| false);
     assert_eq!(binds(&p).len(), 1);
 }

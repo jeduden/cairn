@@ -759,3 +759,26 @@ fn a_bind_naming_no_identity_or_no_worktree_derives_nothing() {
 
     assert!(derive_worktrees(&f.store, &f.node).unwrap().is_empty());
 }
+
+#[test]
+fn show_names_a_provisional_directory_that_is_still_without_a_commit_as_bound() {
+    let mut f = fixture();
+    let blank = f.path("blank");
+    empty(&blank);
+    f.bind(&blank);
+
+    assert_eq!(f.show(&blank), Shown::Bound(None));
+}
+
+#[test]
+fn a_name_for_a_worktree_or_directory_that_is_gone_keeps_the_io_cause() {
+    let gone = Path::new("/no/such/worktree");
+
+    for (error, what) in [
+        (worktree_digest(&[0; 32], gone).unwrap_err(), "worktree"),
+        (directory_marker(&[0; 32], gone).unwrap_err(), "directory"),
+    ] {
+        assert!(matches!(&error, AdminError::Unresolved { what: w, .. } if *w == what));
+        assert!(std::error::Error::source(&error).is_some());
+    }
+}
