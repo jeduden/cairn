@@ -818,3 +818,42 @@ fn a_bind_another_process_made_first_leaves_the_worktree_as_that_one_did() {
         Outcome::Bound { provisional: true }
     );
 }
+
+#[test]
+fn a_worktree_is_bound_again_after_the_device_key_rotated_or_was_minted_anew() {
+    for kind in ["rotated", "minted_anew"] {
+        let mut f = fixture();
+        let (one, two) = (f.path("one"), f.path("two"));
+        rooted(&one, "x");
+        rooted(&two, "x");
+        assert_eq!(f.bind(&one), Outcome::Bound { provisional: false });
+        f.append(
+            EventKind::KeyEvent,
+            Provenance::Structural,
+            serde_json::json!({"kind": kind}),
+        );
+
+        assert_eq!(f.bind(&two), Outcome::Rebound, "{kind}");
+    }
+}
+
+#[test]
+fn other_key_events_leave_the_names_of_worktrees_as_they_were() {
+    let mut f = fixture();
+    let (one, two) = (f.path("one"), f.path("two"));
+    rooted(&one, "x");
+    rooted(&two, "x");
+    f.append(
+        EventKind::KeyEvent,
+        Provenance::Structural,
+        serde_json::json!({"kind": "recovered"}),
+    );
+    f.append(
+        EventKind::KeyEvent,
+        Provenance::Structural,
+        serde_json::json!({"no_kind": 1}),
+    );
+
+    assert_eq!(f.bind(&one), Outcome::Bound { provisional: false });
+    assert_eq!(f.bind(&two), Outcome::Bound { provisional: false });
+}

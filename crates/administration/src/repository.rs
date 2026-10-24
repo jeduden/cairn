@@ -27,6 +27,7 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
+use key::key_event::KeyEventKind;
 use key::random::{Entropy, draw};
 use record::commitment::CommitmentKey;
 use record::digest::Digest;
@@ -56,10 +57,12 @@ pub enum Outcome {
     Unchanged,
     /// The directory was bound now; whether to a provisional identity.
     Bound { provisional: bool },
-    /// The directory was bound now, after a node identity change: its
-    /// kept names went with the replaced key, so a bind of the same
-    /// worktree is indistinguishable from a first one. Audited and
-    /// counted apart; not a widening act.
+    /// The directory was bound now, after the node's device key was
+    /// replaced (a node identity change, a rotation or a key minted
+    /// anew): its kept names went with the old key, so a bind of the same
+    /// worktree is indistinguishable from a first one. It keeps the same
+    /// identity, so it is no rebind: audited and counted apart, and not a
+    /// widening act.
     Rebound,
     /// The identity the directory resolves to changed since it was bound
     /// or last reported; nothing was relinked.
@@ -261,13 +264,23 @@ fn unreadable(
 /// unreadable; no identity value is this short.
 const UNREADABLE: &str = "unreadable";
 
-/// Whether this node's device seat begins with a node identity change:
-/// its names for worktrees went with the key it replaced.
-fn after_identity_change(store: &Store, node: &Node) -> Result<bool, AdminError> {
-    Ok(store
-        .log(node.device_writer())?
-        .first()
-        .is_some_and(|s| s.link.header.kind == EventKind::NodeIdentityChange))
+/// Whether this node's device key was replaced since its first: its
+/// device seat's log holds a node identity change, a rotation or a key
+/// minted anew (REC-24, PRV-12). Its names for worktrees went with the key
+/// it replaced.
+fn after_key_change(store: &Store, node: &Node) -> Result<bool, AdminError> {
+    let replaced = |s: &store::Stored| match s.link.header.kind {
+        EventKind::NodeIdentityChange => true,
+        EventKind::KeyEvent => s
+            .content
+            .as_ref()
+            .and_then(|c| c["kind"].as_str())
+            .and_then(KeyEventKind::parse)
+            .is_some_and(|k| matches!(k, KeyEventKind::MintedAnew | KeyEventKind::Rotated)),
+        _ => false,
+    };
+
+    Ok(store.log(node.device_writer())?.iter().any(replaced))
 }
 
 /// A fresh node-local id for a provisional identity.
@@ -366,7 +379,7 @@ pub fn bind(
         &value,
     )?;
 
-    let rebound = landed.is_some() && after_identity_change(store, node)?;
+    let rebound = landed.is_some() && after_key_change(store, node)?;
 
     Ok(landed_as(
         landed.is_some(),
