@@ -13,12 +13,14 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::time::{Duration, Instant};
 
 use cucumber::{given, then, when};
 use serde_json::{Value, json};
 
 use crate::World;
-use crate::record::{home, last_run, run_core, run_core_at_terminal, run_core_with};
+use crate::live::Harness;
+use crate::record::{home, last_run, run_core, run_core_at_terminal};
 
 /// What the repository steps track: the clone, and the identity git
 /// names for it.
@@ -84,8 +86,26 @@ fn clone_that(w: &mut World, how: String) -> Result<(), String> {
     Ok(())
 }
 
-/// The first hook event for `dir`, the session binding an MCP server
-/// takes from it, and the `parinn ingest` that records what it observed.
+/// How many session-start looks the node has marked done.
+fn looks_done(w: &World) -> Result<i64, String> {
+    let store = home(w)?.store();
+    if !store.exists() {
+        return Ok(0);
+    }
+    let conn = rusqlite::Connection::open(store).map_err(|e| e.to_string())?;
+    // The marks' table is made by the first look.
+    Ok(conn
+        .query_row(
+            "SELECT count(*) FROM repository_worktree_marks WHERE mark LIKE 'looked:%'",
+            [],
+            |r| r.get::<_, i64>(0),
+        )
+        .unwrap_or(0))
+}
+
+/// The first hook event for `dir` under a stand-in harness: its
+/// `SessionStart` hook runs, its MCP server takes the session binding
+/// and, once it holds it, looks at the clone (SEC-18).
 fn first_hook_event(w: &mut World, dir: &Path, session: &str) -> Result<(), String> {
     let path = w.home.join(format!("{session}.jsonl"));
     let input = json!({
@@ -95,25 +115,32 @@ fn first_hook_event(w: &mut World, dir: &Path, session: &str) -> Result<(), Stri
         "hook_event_name": "SessionStart",
         "source": "startup",
     });
-    run_core_with(
-        w,
-        &["hook", "SessionStart"],
-        Some(input.to_string().as_bytes()),
-        &[],
-    )?;
-    // Only a session binding an MCP server holds is looked at (SEC-18).
-    rusqlite::Connection::open(home(w)?.store())
-        .and_then(|c| c.execute("UPDATE hook_observations SET taken = 1", []))
-        .map_err(|e| e.to_string())?;
-    run_core(w, &["ingest", "--all"], None)?;
-    let out = last_run(w)?;
-    if out.status.success() {
+    let before = looks_done(w)?;
+    let mut harness = Harness::start(w, false, &[])?;
+    harness.hook("SessionStart", &input)?;
+    harness.start_mcp()?;
+    // The server holds the binding once it has taken it, and says so.
+    let params = json!({"name": "mcp_server_get", "arguments": {}});
+    let mut held = false;
+    let mut looked = false;
+    let deadline = Instant::now() + Duration::from_secs(10);
+    while Instant::now() < deadline && !(held && looked) {
+        let reply = harness.request("tools/call", params.clone())?;
+        let state: Value = reply["result"]["content"][0]["text"]
+            .as_str()
+            .and_then(|text| serde_json::from_str(text).ok())
+            .unwrap_or(Value::Null);
+        held = state["session_binding"] == "held";
+        looked = held && looks_done(w)? > before;
+        if !(held && looked) {
+            std::thread::sleep(Duration::from_millis(100));
+        }
+    }
+    harness.stop()?;
+    if held && looked {
         return Ok(());
     }
-    Err(format!(
-        "parinn ingest: {}",
-        String::from_utf8_lossy(&out.stderr)
-    ))
+    Err("the MCP server did not take the session binding and look at the clone".to_owned())
 }
 
 fn clone_dir(w: &mut World) -> Result<PathBuf, String> {
