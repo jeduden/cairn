@@ -7,7 +7,7 @@ use std::fmt;
 
 use ed25519_dalek::{Signer as _, SigningKey, VerifyingKey};
 use record::canonical;
-use record::digest::{Digest, hex, unhex};
+use record::digest::{Digest, hex, hmac_sha256, unhex};
 use serde_json::Value;
 
 use crate::key_store::{Entry, KeyStore};
@@ -286,7 +286,7 @@ macro_rules! signing_key {
             #[must_use]
             pub fn derive_secret(&self, label: &[u8]) -> [u8; 32] {
                 let seed = self.0.to_bytes();
-                *Digest::of(&[b"parinn derived secret v1\0", label, b"\0", &seed]).as_bytes()
+                *hmac_sha256(&seed, &[b"parinn derived secret v1\0", label]).as_bytes()
             }
 
             /// Its public half.
