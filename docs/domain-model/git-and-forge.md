@@ -6,11 +6,11 @@ summary: >-
 ---
 # Git and forge
 
-- **Repository**: A git repository, identified by its **repository identity**, a
-  bound root commit, the same on every node with a git clone, else a
-  provisional node-local identity bound later by a structural event that
-  names the identity it replaces (LANE-02). It has remotes and may
-  carry room trailers in its commits and bundles as git refs.
+- **Repository**: A git repository, identified by its **repository identity**,
+  a bound parentless commit of its default branch, the same on every node with
+  a git clone, else a provisional node-local identity bound later by a
+  structural event that names the identity it replaces (LANE-02). It has
+  remotes and may carry room trailers in its commits and bundles as git refs.
 - **Branch**: A git branch, identified by repository identity, remote URL and
   branch name (LANE-01). It belongs to the first of this node's principal's
   rooms whose branch link names it, concurrent links resolving by Room merge
