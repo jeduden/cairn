@@ -1249,7 +1249,7 @@ fn the_worktrees_rebuilt_from_the_record_agree_and_a_changed_or_stray_one_does_n
 #[test]
 fn a_report_marker_is_no_worktree_and_a_derive_failure_keeps_its_kind() {
     let mut f = fixture();
-    f.store.set_worktree_identity("reported:w1", "x").unwrap();
+    f.store.set_worktree_mark("reported:w1", "x").unwrap();
 
     assert!(kept_worktrees_agree(&f.store, &f.node).is_ok());
     assert!(matches!(

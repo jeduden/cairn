@@ -88,8 +88,9 @@ fn deadline(within: Duration) -> impl Fn() -> bool {
 /// server holds is read (SEC-18): a hook input no server took, which any
 /// process able to run the hook handler could forge, steers nothing.
 /// A change in a bound identity is audited and counted, a clone that
-/// cannot be read counted, and a bind the record refuses counted under
-/// its own name, each once (I6). Nothing is relinked, and a failure
+/// cannot be read counted, each once (I6); a bind the record refuses is
+/// counted under its own name, and tried and counted again at each start
+/// until it lands. Nothing is relinked, and a failure
 /// leaves the record as it was (I9).
 pub(crate) fn bind_observed(ctx: &Context, home: &Home, store: &mut Store) {
     if let (Ok(node), Ok(held)) = (Node::find(home, store), store.hook_observations()) {
@@ -137,11 +138,7 @@ pub(crate) fn bind_held(
         if o.hook == "SessionStart"
             && h.taken
             && !o.cwd.is_empty()
-            && store
-                .worktree_identity(&looked(h.id))
-                .ok()
-                .flatten()
-                .is_none()
+            && store.worktree_mark(&looked(h.id)).ok().flatten().is_none()
         {
             by_directory.entry(o.cwd).or_default().push(h.id);
         }
@@ -161,6 +158,12 @@ pub(crate) fn bind_held(
                 counter: Counter::RepositoryIdentityChanged,
                 operation: "repository bind",
                 detail: "repository identity changed: no branch link is relinked until a widening bind",
+            }),
+            Ok(Outcome::Rebound) => Some(Occurrence::Degraded {
+                kind: Kind::Dropped,
+                counter: Counter::RepositoryIdentityRebound,
+                operation: "repository bind",
+                detail: "worktree bound again after node key change, identity bound by structural event",
             }),
             Ok(Outcome::Unreadable) => Some(Occurrence::Degraded {
                 kind: Kind::Failed,
@@ -192,7 +195,7 @@ pub(crate) fn bind_held(
         }
         for id in ids {
             // Unmarked, the observation is looked at again; say why.
-            let _ = store.set_worktree_identity(&looked(id), "1").map_err(|e| {
+            let _ = store.set_worktree_mark(&looked(id), "1").map_err(|e| {
                 tracing::warn!(error = e.to_string().as_str(), "mark a repository look");
             });
         }
@@ -245,10 +248,17 @@ fn showing(ctx: &Context, asked: &Asked, stdout: &mut dyn Write, stderr: &mut dy
 
 /// What `parinn repository show` prints.
 fn shown_line(ctx: &Context, asked: &Asked) -> Result<String, String> {
-    let mut taking = Taking::open(ctx)?;
+    // Read-only: a node that never started, or a store that was never
+    // made, is none, and nothing is created or written.
+    let home = ctx.home().map_err(|e| e.to_string())?;
+    let kept = if home.store().exists() {
+        let store = Store::open_read_only(&home.store()).map_err(|e| e.to_string())?;
+        Node::find(&home, &store).ok().map(|node| (store, node))
+    } else {
+        None
+    };
     let shown = repository::show(
-        &mut taking.store,
-        &taking.node,
+        kept.as_ref().map(|(store, node)| (store, node)),
         &asked.directory,
         ctx.home.as_deref().map(Path::new),
         &deadline(WITHIN),

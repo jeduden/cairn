@@ -28,18 +28,18 @@ Outcome:
   a device seat of origin `witnessed`. No `user` event is trusted (R3 and
   R8 stay open until OQ-40), no hook observation, no `ingested` event,
   no `harness_meta` the launcher did not sign. Nothing stores a level.
-  `@PRV-02` stays `@pending`: 11 rows pass narrowed locally, end to end;
-  the rest need a launcher, a signed sandbox state, another node's key,
-  a hook ancestry or a purge.
+  `@PRV-02` stays `@pending`: 11 rows pass narrowed locally; the rest
+  need a launcher, a signed sandbox state, another node's key, a hook
+  ancestry or a purge.
 - PRV-06 is proven by `Taint`'s unit tests: an artifact records its
   sources and is untrusted if any is. `@PRV-06` stays pending: its rows
   need a launcher's `harness_meta`, a landmark, kernel output and an
   export.
 - PRV-13's M1 part holds: `administration::origin` derives `witnessed`,
   `ingested` or `peer` per writer from the record and this node's device
-  key alone, in one place that recall and `parinn verify` share. A
-  replaced key's writers read `peer`, so do another node's. `parinn
-  rebuild` writes the `origins` table and the search index, appending no
+  key alone, shared by recall and `parinn verify`. A replaced key's
+  writers read `peer`, so do another node's. `parinn rebuild` writes the
+  `origins` and worktree tables and the search index, appending no
   event; `parinn verify` exits 3 on a kept origin that differs.
   `@PRV-13` stays pending: no arrival event exists yet.
 - LANE-01 and LANE-31's M1 part is proven by the `room` crate's unit and
@@ -66,11 +66,11 @@ Inherited:
   `trust_policy::{trust_level, Input, TrustLevel, Taint}`,
   `repository::{bind, show, plan, apply, Outcome}`, `Act::RepositoryBind`,
   `verify`'s `VerifyError::Derived`.
-- `store`: `origins` and `replace_origins`, `worktree_identity` and
-  `worktree_identities` (rebuilt from `repository_bind` events and acts,
-  which name a worktree by `worktree_digest` and a provisional
-  identity's replacement by `replaces_provisional`);
-  `EventKind::RepositoryBind`; four `repository_*` counters.
+- `store`: `origins`, `worktree_identities` (rebuilt from bind events
+  and acts, which carry `worktree_digest` and `replaces_provisional`),
+  `repository_worktree_marks`; `EventKind::RepositoryBind`; five
+  `repository_*` counters, `repository_identity_rebound` for a bind
+  after a node identity change; fuzz target `git_reader`.
 - `parinn rebuild`, `parinn repository show|bind`; `mcp::Server::new`
   takes the device key; `event_search`'s `trust` filter applies before
   the ranking cuts.
@@ -89,12 +89,12 @@ For the stakeholder:
   binding a server holds (SEC-18): reading git cannot fit NFR-02.
 - Deviation, PRV-13: after a node identity change every writer reads
   `peer` until a PRV-12 confirm, which no M1 command makes.
-- Residual after the review: a `.git` file may still name a worktree
-  or submodule git directory of another repository, which then binds
-  its commit id; a separate git directory is refused. M1 holds no room,
-  so two `@LANE-02` clauses (branch links, state) hold vacuously.
-- Stakeholder paths touched: `tooling/scenario`, `features/`, `fuzz/`
-  (LMK-03's sanitizer and its `field_sanitizer` target) and `reach.rs`.
+- Residual: a `.git` file may still name a worktree or submodule git
+  directory of another repository, which then binds its commit id. M1
+  holds no room, so two `@LANE-02` clauses (branch links, state) hold
+  vacuously.
+- Stakeholder paths touched: `tooling/scenario`, `features/`, `fuzz/` and
+  `reach.rs`.
 
 Parked: PRV-02's and PRV-06's remaining rows; PRV-13's arrival steps;
 the trust of `user` events once OQ-40 closes.

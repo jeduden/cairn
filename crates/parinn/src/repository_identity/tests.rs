@@ -416,10 +416,8 @@ fn a_widening_bind_is_refused_while_a_run_leaves_a_risk_open() {
 fn a_bind_the_audit_log_takes_no_note_of_is_recorded_and_reported() {
     let p = Process::new();
     let app = clone(&p, "app", Some("a"));
-    assert_eq!(
-        run(&p, &["repository", "show", &app.display().to_string()]).0,
-        EXIT_OK
-    );
+    fs::create_dir_all(p.parinn_home()).unwrap();
+    crate::tests::set_mode(&p.parinn_home(), 0o700);
     let audit_dir = p.parinn_home().join("audit");
     let _ = fs::remove_dir_all(&audit_dir);
     fs::write(&audit_dir, "").unwrap();
@@ -611,9 +609,9 @@ fn a_look_the_store_cannot_mark_goes_on() {
     rusqlite::Connection::open(p.parinn_home().join("store.db"))
         .unwrap()
         .execute_batch(
-            "DELETE FROM repository_worktrees WHERE worktree LIKE 'looked:%';
-             CREATE TRIGGER no_marks BEFORE INSERT ON repository_worktrees
-             WHEN NEW.worktree LIKE 'looked:%' BEGIN SELECT RAISE(ABORT, 'no marks'); END;",
+            "DELETE FROM repository_worktree_marks WHERE mark LIKE 'looked:%';
+             CREATE TRIGGER no_marks BEFORE INSERT ON repository_worktree_marks
+             WHEN NEW.mark LIKE 'looked:%' BEGIN SELECT RAISE(ABORT, 'no marks'); END;",
         )
         .unwrap();
 
@@ -642,4 +640,45 @@ fn a_hook_input_no_mcp_server_took_steers_no_read_of_the_directory_it_names() {
     let held = store.hook_observations().unwrap();
     super::bind_held(&say(&ctx), None, &mut store, &node, held, &|| false);
     assert_eq!(binds(&p).len(), 1);
+}
+
+#[test]
+fn show_writes_nothing_and_starts_no_node() {
+    let mut p = Process::new();
+    let app = clone(&p, "app", Some("a"));
+
+    // A home that never started stays absent.
+    assert_eq!(shown(&p, &app)["status"], "unbound");
+    assert!(!p.parinn_home().exists());
+
+    // A started node's store is left byte for byte as it was.
+    start_in(&mut p, "s1", &app);
+    run(&p, &["ingest", "--all"]);
+    let before = fs::read(p.parinn_home().join("store.db")).unwrap();
+    assert_eq!(shown(&p, &app)["status"], "bound");
+    let after = fs::read(p.parinn_home().join("store.db")).unwrap();
+    assert_eq!(before, after);
+}
+
+#[test]
+fn a_worktree_bound_again_after_a_node_identity_change_is_audited_and_counted_once() {
+    let mut p = Process::new();
+    let id = p.dir.path().join("machine-id");
+    fs::write(&id, "first").unwrap();
+    p.node_identity = Some(id.clone());
+    let app = clone(&p, "app", Some("a"));
+    start_in(&mut p, "s1", &app);
+    assert_eq!(run(&p, &["ingest", "--all"]).0, EXIT_OK);
+    fs::write(&id, "second").unwrap();
+
+    start_in(&mut p, "s2", &app);
+    assert_eq!(run(&p, &["ingest", "--all"]).0, EXIT_OK);
+    assert_eq!(run(&p, &["ingest", "--all"]).0, EXIT_OK);
+
+    assert_eq!(counter(&p, "repository_identity_rebound"), 1);
+    assert_eq!(counter(&p, "repository_identity_changed"), 0);
+    assert!(crate::tests::audited(&p).iter().any(|e| {
+        e.detail
+            .contains("worktree bound again after node key change")
+    }));
 }

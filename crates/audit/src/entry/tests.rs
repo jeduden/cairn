@@ -124,6 +124,10 @@ fn each_counter_of_the_mcp_server_has_its_name() {
             Counter::RepositoryIdentityChanged,
             "repository_identity_changed",
         ),
+        (
+            Counter::RepositoryIdentityRebound,
+            "repository_identity_rebound",
+        ),
         (Counter::RepositoryReadFailed, "repository_read_failed"),
         (Counter::RepositoryBindFailed, "repository_bind_failed"),
         (Counter::RepositoryReadTimedOut, "repository_read_timed_out"),

@@ -989,21 +989,75 @@ impl Store {
         Ok(())
     }
 
-    /// Forgets what `worktree` resolved to; nothing, when it never did
+    /// What the mark `mark` holds: a node-local note of what this node
+    /// already reported or looked at, not derived from the record
     /// (LANE-02).
     ///
     /// # Errors
     ///
     /// Fails when SQLite does.
-    pub fn forget_worktree_identity(&mut self, worktree: &str) -> Result<(), StoreError> {
-        repository::forget_identity(&self.conn, worktree)?;
+    pub fn worktree_mark(&self, mark: &str) -> Result<Option<String>, StoreError> {
+        repository::mark(&self.conn, mark)
+    }
+
+    /// Makes the mark `mark` hold `value` (LANE-02).
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does.
+    pub fn set_worktree_mark(&mut self, mark: &str, value: &str) -> Result<(), StoreError> {
+        repository::set_mark(&self.conn, mark, value)?;
 
         Ok(())
     }
 
-    /// The identity each worktree resolved to, as derived from the
-    /// record: every kept worktree whose key holds no `:`; the rest are
-    /// node-local report markers (LANE-02, I10).
+    /// Clears the mark `mark`; nothing, when it was never made (LANE-02).
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does.
+    pub fn forget_worktree_mark(&mut self, mark: &str) -> Result<(), StoreError> {
+        repository::forget_mark(&self.conn, mark)?;
+
+        Ok(())
+    }
+
+    /// Appends the bind `event` to `writer`'s log and keeps `identity` as
+    /// what `worktree` resolves to, in one transaction, provided the
+    /// worktree still resolves to `expected`: a bind another process
+    /// made since the caller looked changes nothing and returns `None`
+    /// (LANE-02).
+    ///
+    /// # Errors
+    ///
+    /// As [`append`](Self::append); nothing changes then.
+    pub fn bind_worktree(
+        &mut self,
+        writer: WriterId,
+        event: &NewEvent,
+        worktree: &str,
+        expected: Option<&str>,
+        identity: &str,
+    ) -> Result<Option<Address>, StoreError> {
+        let to = Out {
+            payloads: &self.payloads,
+            threshold: self.threshold,
+        };
+        let tx = self
+            .conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)?;
+        if repository::identity(&tx, worktree)?.as_deref() != expected {
+            return Ok(None);
+        }
+        let address = to.append_chunk(&tx, writer, std::slice::from_ref(event), true)?;
+        repository::set_identity(&tx, worktree, identity)?;
+        tx.commit()?;
+
+        Ok(address.into_iter().next())
+    }
+
+    /// The identity each worktree resolves to, as derived from the
+    /// record (LANE-02, I10).
     ///
     /// # Errors
     ///
@@ -1012,8 +1066,8 @@ impl Store {
         repository::identities(&self.conn)
     }
 
-    /// Replaces the derived worktree identities with `identities` in one
-    /// transaction, leaving the report markers alone (LANE-02, I10).
+    /// Replaces the worktree identities with `identities` in one
+    /// transaction, leaving the marks alone (LANE-02, I10).
     ///
     /// # Errors
     ///

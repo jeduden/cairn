@@ -184,6 +184,10 @@ pub enum Counter {
     /// it was bound; no room's branch link is relinked for it (LANE-02,
     /// I6).
     RepositoryIdentityChanged,
+    /// A worktree this node had bound was bound again after a node
+    /// identity change, its kept names lost with the replaced key; a
+    /// structural event, not a widening principal act (LANE-02, I6).
+    RepositoryIdentityRebound,
     /// A clone's git data could not be read, so its repository identity
     /// stays as it was (LANE-02, I6).
     RepositoryReadFailed,
@@ -247,6 +251,7 @@ impl Counter {
             Self::ForkConflict => "fork_conflict",
             Self::SearchIndexGapLookupFailed => "search_index_gap_lookup_failed",
             Self::RepositoryIdentityChanged => "repository_identity_changed",
+            Self::RepositoryIdentityRebound => "repository_identity_rebound",
             Self::RepositoryReadFailed => "repository_read_failed",
             Self::RepositoryBindFailed => "repository_bind_failed",
             Self::RepositoryReadTimedOut => "repository_read_timed_out",

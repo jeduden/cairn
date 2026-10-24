@@ -114,6 +114,7 @@ fn reinit(dir: &Path) {
 
 struct Fixture {
     dir: TempDir,
+    home: Home,
     store: Store,
     node: Node,
 }
@@ -127,7 +128,12 @@ fn fixture() -> Fixture {
     home.create().unwrap();
     let mut store = Store::open(&home.store()).unwrap();
     let node = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
-    Fixture { dir, store, node }
+    Fixture {
+        dir,
+        home,
+        store,
+        node,
+    }
 }
 
 impl Fixture {
@@ -413,7 +419,10 @@ impl Fixture {
     }
 
     fn show_below(&mut self, directory: &Path, ceiling: Option<&Path>) -> Shown {
-        show(&mut self.store, &self.node, directory, ceiling, &|| false).unwrap()
+        show(Some((&self.store, &self.node)), directory, ceiling, &|| {
+            false
+        })
+        .unwrap()
     }
 
     fn plan(&mut self, directory: &Path, commit: Option<&CommitId>) -> Result<Rebind, AdminError> {
@@ -781,4 +790,31 @@ fn a_name_for_a_worktree_or_directory_that_is_gone_keeps_the_io_cause() {
         assert!(matches!(&error, AdminError::Unresolved { what: w, .. } if *w == what));
         assert!(std::error::Error::source(&error).is_some());
     }
+}
+
+#[test]
+fn a_worktree_bound_again_after_a_node_identity_change_is_told_from_a_first_bind() {
+    let mut f = fixture();
+    let app = f.path("app");
+    rooted(&app, "a");
+    assert_eq!(f.bind(&app), Outcome::Bound { provisional: false });
+
+    // The node moves to another machine: a new device key, a new seat that
+    // begins with the identity change. Its names for worktrees are new.
+    fs::write(f.dir.path().join("machine-id"), "second").unwrap();
+    f.node = Node::open(&f.home, &mut f.store, &mut OsEntropy).unwrap();
+
+    assert_eq!(f.bind(&app), Outcome::Rebound);
+    assert_eq!(f.bind(&app), Outcome::Unchanged);
+    assert_eq!(f.binds().len(), 1, "the new seat holds its own bind");
+}
+
+#[test]
+fn a_bind_another_process_made_first_leaves_the_worktree_as_that_one_did() {
+    assert_eq!(landed_as(false, true, true), Outcome::Unchanged);
+    assert_eq!(landed_as(true, true, false), Outcome::Rebound);
+    assert_eq!(
+        landed_as(true, false, true),
+        Outcome::Bound { provisional: true }
+    );
 }

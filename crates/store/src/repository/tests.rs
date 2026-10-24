@@ -2,7 +2,7 @@ use super::*;
 
 fn conn() -> Connection {
     let conn = Connection::open_in_memory().unwrap();
-    conn.execute_batch(SCHEMA).unwrap();
+    conn.execute_batch(&WORKTREES.schema()).unwrap();
     conn
 }
 
@@ -25,14 +25,16 @@ fn a_worktree_keeps_the_identity_it_last_resolved_to() {
 }
 
 #[test]
-fn a_worktree_can_be_forgotten_and_forgetting_one_never_kept_is_nothing() {
-    let conn = conn();
-    set_identity(&conn, "w", "one").unwrap();
+fn a_mark_is_set_cleared_and_clearing_one_never_made_is_nothing() {
+    let conn = Connection::open_in_memory().unwrap();
+    assert_eq!(mark(&conn, "m").unwrap(), None);
 
-    forget_identity(&conn, "w").unwrap();
-    forget_identity(&conn, "x").unwrap();
+    set_mark(&conn, "m", "one").unwrap();
+    assert_eq!(mark(&conn, "m").unwrap().as_deref(), Some("one"));
+    forget_mark(&conn, "m").unwrap();
+    forget_mark(&conn, "x").unwrap();
 
-    assert_eq!(identity(&conn, "w").unwrap(), None);
+    assert_eq!(mark(&conn, "m").unwrap(), None);
 }
 
 #[test]
@@ -52,25 +54,11 @@ fn a_store_that_takes_no_write_keeps_no_worktree() {
 }
 
 #[test]
-fn the_derived_rows_leave_out_the_markers() {
-    let conn = conn();
-    set_identity(&conn, "b", "two").unwrap();
-    set_identity(&conn, "a", "one").unwrap();
-    set_identity(&conn, "reported:a", "x").unwrap();
-    set_identity(&conn, "looked:1", "1").unwrap();
-
-    assert_eq!(
-        identities(&conn).unwrap(),
-        map(&[("a", "one"), ("b", "two")])
-    );
-}
-
-#[test]
-fn replacing_the_derived_rows_keeps_the_markers_and_drops_the_stale_rows() {
+fn replacing_the_rows_drops_the_stale_ones_and_keeps_the_marks() {
     let conn = conn();
     set_identity(&conn, "stale", "old").unwrap();
     set_identity(&conn, "a", "old").unwrap();
-    set_identity(&conn, "unreadable:a", "unreadable").unwrap();
+    set_mark(&conn, "unreadable:a", "unreadable").unwrap();
 
     replace(&conn, &map(&[("a", "new"), ("b", "two")])).unwrap();
 
@@ -79,7 +67,7 @@ fn replacing_the_derived_rows_keeps_the_markers_and_drops_the_stale_rows() {
         map(&[("a", "new"), ("b", "two")])
     );
     assert_eq!(
-        identity(&conn, "unreadable:a").unwrap().as_deref(),
+        mark(&conn, "unreadable:a").unwrap().as_deref(),
         Some("unreadable")
     );
 }

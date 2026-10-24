@@ -1489,23 +1489,69 @@ fn the_kept_origins_are_empty_until_written_and_then_replaced_whole() {
 }
 
 #[test]
-fn a_store_keeps_the_identity_a_worktree_resolved_to_and_replaces_the_derived_ones() {
+fn a_store_keeps_the_identity_a_worktree_resolves_to_and_replaces_them_all() {
     let dir = TempDir::new().unwrap();
     let mut store = open(&dir);
 
     assert_eq!(store.worktree_identity("w").unwrap(), None);
     assert!(store.worktree_identities().unwrap().is_empty());
     store.set_worktree_identity("w", "h").unwrap();
-    store.set_worktree_identity("reported:w", "m").unwrap();
+    store.set_worktree_mark("reported:w", "m").unwrap();
     assert_eq!(store.worktree_identity("w").unwrap().as_deref(), Some("h"));
 
     let derived = BTreeMap::from([("v".to_owned(), "i".to_owned())]);
     store.replace_worktree_identities(&derived).unwrap();
     assert_eq!(store.worktree_identities().unwrap(), derived);
+    // The marks are the node's own, and stay.
     assert_eq!(
-        store.worktree_identity("reported:w").unwrap().as_deref(),
+        store.worktree_mark("reported:w").unwrap().as_deref(),
         Some("m")
     );
-    store.forget_worktree_identity("v").unwrap();
-    assert_eq!(store.worktree_identity("v").unwrap(), None);
+    store.forget_worktree_mark("reported:w").unwrap();
+    assert_eq!(store.worktree_mark("reported:w").unwrap(), None);
+}
+
+#[test]
+fn a_bind_appends_its_event_and_keeps_its_identity_in_one_unit_or_neither() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    let w = writer(1);
+
+    // Nothing is kept for the worktree: the bind lands whole.
+    let bound = store
+        .bind_worktree(w, &new_event(1), "wt", None, "one")
+        .unwrap();
+    assert!(bound.is_some());
+    assert_eq!(
+        store.worktree_identity("wt").unwrap().as_deref(),
+        Some("one")
+    );
+    assert_eq!(store.log(w).unwrap().len(), 1);
+
+    // Another process bound it since the caller looked: nothing changes.
+    let raced = store
+        .bind_worktree(w, &new_event(2), "wt", None, "two")
+        .unwrap();
+    assert_eq!(raced, None);
+    assert_eq!(
+        store.worktree_identity("wt").unwrap().as_deref(),
+        Some("one")
+    );
+    assert_eq!(store.log(w).unwrap().len(), 1);
+
+    // The caller saw what is kept: the bind replaces it.
+    store
+        .bind_worktree(w, &new_event(3), "wt", Some("one"), "three")
+        .unwrap();
+    assert_eq!(
+        store.worktree_identity("wt").unwrap().as_deref(),
+        Some("three")
+    );
+    assert_eq!(store.log(w).unwrap().len(), 2);
+
+    // A table that takes no write rolls the event back with it.
+    store.conn.execute_batch("DROP TABLE repository_worktrees; CREATE TABLE repository_worktrees (worktree TEXT PRIMARY KEY, identity TEXT NOT NULL CHECK (identity <> 'bad'));").unwrap();
+    let refused = store.bind_worktree(w, &new_event(4), "wt2", None, "bad");
+    assert!(refused.is_err());
+    assert_eq!(store.log(w).unwrap().len(), 2);
 }

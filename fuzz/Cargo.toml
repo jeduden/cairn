@@ -21,6 +21,7 @@ configuration = { path = "../crates/configuration" }
 hook = { path = "../crates/hook" }
 provenance = { path = "../crates/provenance" }
 redaction = { path = "../crates/redaction" }
+repository = { path = "../crates/repository" }
 search = { path = "../crates/search" }
 transcript = { path = "../crates/transcript" }
 
@@ -66,6 +67,13 @@ bench = false
 [[bin]]
 name = "field_sanitizer"
 path = "fuzz_targets/field_sanitizer.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "git_reader"
+path = "fuzz_targets/git_reader.rs"
 test = false
 doc = false
 bench = false
