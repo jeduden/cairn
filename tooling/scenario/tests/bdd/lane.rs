@@ -20,7 +20,7 @@ use serde_json::{Value, json};
 
 use crate::World;
 use crate::live::Harness;
-use crate::record::{home, last_run, run_core, run_core_at_terminal};
+use crate::record::{home, last_run, run_core, run_core_at_terminal, set_env};
 
 /// What the repository steps track: the clone, and the identity git
 /// names for it.
@@ -80,6 +80,15 @@ fn make(w: &World, dir: &Path, commits: bool) -> Result<Option<String>, String> 
 fn clone_that(w: &mut World, how: String) -> Result<(), String> {
     let dir = w.home.join("work").join("app");
     let root = make(w, &dir, how.starts_with("contains"))?;
+    // The node reads its identity from a file of the scenario's, so a step
+    // can move it to another machine.
+    let identity = w.home.join("machine-id");
+    fs::write(&identity, "first\n").map_err(|e| e.to_string())?;
+    set_env(
+        w,
+        "PARINN_TEST_NODE_IDENTITY",
+        &identity.display().to_string(),
+    );
     let steps = lane(w);
     steps.clone = Some(dir);
     steps.root = root;
@@ -231,7 +240,7 @@ fn events(w: &World, kind: &str) -> Result<Vec<(String, Value)>, String> {
 }
 
 #[then(
-    regex = r#"^a repository's first bind is a structural event ParleyInn records at the first hook event, never an "operator" event$"#
+    regex = r#"^a repository's first bind is a structural event ParleyInn records when the first hook's observation reaches the record, never an "operator" event, and it names the worktree by a keyed digest of its root path$"#
 )]
 fn first_bind_is_structural(w: &mut World) -> Result<(), String> {
     let binds = events(w, "repository_bind")?;
@@ -240,6 +249,10 @@ fn first_bind_is_structural(w: &mut World) -> Result<(), String> {
             "the record holds {binds:?}, wanting one structural bind"
         ));
     }
+    let digest = binds[0].1["worktree_digest"].as_str().unwrap_or_default();
+    if digest.len() != 64 || !digest.bytes().all(|b| b.is_ascii_hexdigit()) {
+        return Err(format!("the bind names no keyed digest: {:?}", binds[0].1));
+    }
     let acts = events(w, "principal_act")?;
     match acts.iter().find(|(_, c)| c["act"] == "repository_bind") {
         Some(act) => Err(format!("an operator act bound it: {act:?}")),
@@ -247,7 +260,9 @@ fn first_bind_is_structural(w: &mut World) -> Result<(), String> {
     }
 }
 
-#[then(regex = r"^no identity is minted from the local path$")]
+#[then(
+    regex = r"^no identity is minted from the local path, and a further worktree of the identity is recorded by a bind event of its own$"
+)]
 fn no_identity_from_the_path(w: &mut World) -> Result<(), String> {
     // A second clone at another path names the same identity and binds
     // nothing more; a provisional one's id holds no path.
@@ -464,5 +479,44 @@ fn a_later_change(w: &mut World) -> Result<(), String> {
     {
         return Err("the rebind is no operator act".to_owned());
     }
+    Ok(())
+}
+
+#[then(
+    regex = r#"^a commit bound later to a worktree that held a provisional identity names the provisional identity it replaces, and after a node identity change each worktree is bound again, audited and counted as "repository_identity_rebound", never by a widening principal act$"#
+)]
+fn replaced_and_rebound(w: &mut World) -> Result<(), String> {
+    // A provisional identity that a commit bound later names it.
+    let binds = events(w, "repository_bind")?;
+    for (_, later) in binds
+        .iter()
+        .filter(|(_, c)| c["replaces_provisional"].is_string())
+    {
+        let named = binds.iter().any(|(_, first)| {
+            first["repository_provisional"] == later["replaces_provisional"]
+                && first["worktree_digest"] == later["worktree_digest"]
+        });
+        if !named {
+            return Err(format!(
+                "a bind names a provisional identity not in the record: {later}"
+            ));
+        }
+    }
+    // The node moves to another machine; its next look binds the worktree
+    // again under its new device key.
+    let dir = clone_dir(w)?;
+    let acts_before = events(w, "principal_act")?.len();
+    fs::write(w.home.join("machine-id"), "another-machine\n").map_err(|e| e.to_string())?;
+    first_hook_event(w, &dir, "lane-02-moved")?;
+    run_core(w, &["status", "--json"], None)?;
+    let out = last_run(w)?;
+    let status: Value = serde_json::from_slice(&out.stdout).map_err(|e| e.to_string())?;
+    if status["counters"]["repository_identity_rebound"]["total"] != 1 {
+        return Err(format!("the rebind was not counted once: {status}"));
+    }
+    if events(w, "principal_act")?.len() != acts_before {
+        return Err("a principal act recorded the new bind".to_owned());
+    }
+
     Ok(())
 }
