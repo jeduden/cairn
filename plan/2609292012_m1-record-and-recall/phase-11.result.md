@@ -83,9 +83,8 @@ quarantine (phase 14) must change no origin.
 
 For the stakeholder:
 
-- Proposed: LANE-02 reads "bound once per identity", each worktree
-  recorded by a keyed digest. That key derives from the device key, a
-  use `seats-and-keys.md` does not name: open.
+- The SRS and model edits (LANE-02, RCL-01, REC-19, §9.2, the device-key
+  secret) are pull request #76, to land first.
 - Needs a ruling: LANE-02 binds at the first hook event; here it is
   recorded when `parinn ingest` or an MCP server starts, for a session
   binding a server holds (SEC-18): reading git cannot fit NFR-02.
