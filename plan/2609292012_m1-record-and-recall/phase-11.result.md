@@ -71,11 +71,13 @@ Inherited:
   `repository_worktree_marks`; `EventKind::RepositoryBind`; five
   `repository_*` counters, `repository_identity_rebound` for a bind
   after a node identity change; fuzz target `git_reader`.
-- `parinn rebuild`, `parinn repository show|bind`; `mcp::Server::new`
-  takes the device key; `event_search`'s `trust` filter applies before
-  the ranking cuts.
+- `parinn rebuild`, `parinn repository show|bind`; MCP tool
+  `mcp_server_get`; `parinn status` and the untaken-binding audit say
+  whether any server took a binding;
+  `mcp::Server::new` takes the device key; `event_search`'s `trust`
+  filter applies before the ranking cuts.
 
-For phases 13 to 16: the envelope's shape is untouched, its `origin` and
+For phases 13 to 16: the envelope's shape is untouched; `origin` and
 `trust` come from `administration`; restore reads `trust_level`;
 quarantine (phase 14) must change no origin.
 

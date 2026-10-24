@@ -191,6 +191,65 @@ fn a_search_past_its_deadline_is_cancelled_counted_and_told_in_fixed_text() {
     assert_eq!(server.take_cancelled(), 0);
 }
 
+fn mcp_server_get(server: &mut Server) -> Value {
+    let result = call(
+        server,
+        json!({"jsonrpc": "2.0", "id": 9, "method": "tools/call", "params": {"name": "mcp_server_get", "arguments": {}}}),
+    )["result"]
+        .clone();
+    assert_eq!(result["isError"], false, "{result}");
+
+    serde_json::from_str(result["content"][0]["text"].as_str().unwrap()).unwrap()
+}
+
+#[test]
+fn the_server_tells_its_own_state_in_closed_words_whether_or_not_a_run_is_found() {
+    let f = fixture();
+    let mut server = f.server();
+
+    // No session binding is held, and no run is needed to say so.
+    let state = mcp_server_get(&mut server);
+    assert_eq!(
+        state,
+        json!({
+            "session_binding": "not_held",
+            "search_index": "readable",
+            "searches_timed_out": 0,
+            "version": "v9",
+        })
+    );
+
+    // A bound server whose calls name no run still tells its state.
+    let mut bound = f.server().with_runs(Box::new(OneRun { serving: true }));
+    assert_eq!(mcp_server_get(&mut bound)["session_binding"], "held");
+    assert!(bound.take_found().is_empty());
+}
+
+#[test]
+fn the_server_counts_the_searches_that_timed_out_and_the_index_it_cannot_read() {
+    let dir = TempDir::new().unwrap();
+    let home = Home::locate(Some(dir.path().join(".parinn").as_os_str()), None).unwrap();
+    let path = dir.path().join("t.jsonl");
+    std::fs::write(&path, "alpha pad\n".repeat(2100)).unwrap();
+    ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();
+    let store = Store::open(&home.store()).unwrap();
+    let node = Node::find(&home, &store).unwrap();
+    let mut server = Server::new(store, "v9", node.device().public(), node.personal_room())
+        .with_query_deadline(Duration::ZERO);
+    ask(&mut server, "alpha", json!({}));
+    ask(&mut server, "alpha", json!({}));
+    // Counting them for the audit log leaves the server's own total.
+    assert_eq!(server.take_cancelled(), 2);
+    assert_eq!(mcp_server_get(&mut server)["searches_timed_out"], 2);
+
+    for suffix in ["", "-wal", "-shm"] {
+        let _ = std::fs::remove_file(home.root().join(format!("search_index{suffix}")));
+    }
+    let store = Store::open_read_only(&home.store()).unwrap();
+    let mut gone = Server::new(store, "v9", node.device().public(), node.personal_room());
+    assert_eq!(mcp_server_get(&mut gone)["search_index"], "unreadable");
+}
+
 #[test]
 fn a_search_whose_hit_cannot_be_read_says_to_run_verify() {
     let f = fixture();

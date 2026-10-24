@@ -3409,3 +3409,50 @@ fn rebuild_refuses_a_home_it_cannot_open_a_newer_store_and_a_store_with_no_node(
     set_mode(&binding, 0o600);
     assert_eq!(p.invoke(&["rebuild"], &DEV).0, EXIT_FAILURE);
 }
+
+#[test]
+fn status_says_whether_an_mcp_server_took_the_session_bindings() {
+    assert_eq!(
+        binding_line(0, 2),
+        "MCP server: none has taken a session binding on this node (2 untaken)"
+    );
+    assert_eq!(binding_line(3, 0), "MCP server: took 3 session bindings");
+    assert_eq!(
+        binding_line(3, 1),
+        "MCP server: took 3 session bindings, 1 untaken"
+    );
+}
+
+#[test]
+fn status_reports_the_session_bindings_in_text_and_json_once_any_was_observed() {
+    let mut p = Process::new();
+    let (_, none, _) = p.invoke(&["status", "--json"], &DEV);
+    let none: serde_json::Value = serde_json::from_str(&none).unwrap();
+    assert!(none.get("mcp_server").is_none());
+
+    let app = p.dir.path().join("app");
+    std::fs::create_dir_all(&app).unwrap();
+    p.lines = vec![
+        serde_json::json!({
+            "session_id": "s1",
+            "transcript_path": p.transcript("a\n"),
+            "cwd": app,
+            "hook_event_name": "SessionStart",
+            "source": "startup",
+        })
+        .to_string(),
+    ];
+    assert_eq!(p.invoke(&["hook", "SessionStart"], &DEV).0, EXIT_OK);
+    p.lines = Vec::new();
+
+    let (_, json, _) = p.invoke(&["status", "--json"], &DEV);
+    let json: serde_json::Value = serde_json::from_str(&json).unwrap();
+    let (_, text, _) = p.invoke(&["status"], &DEV);
+
+    assert_eq!(json["mcp_server"]["bindings_untaken"], 1);
+    assert_eq!(json["mcp_server"]["bindings_taken"], 0);
+    assert!(
+        text.contains("MCP server: none has taken a session binding on this node (1 untaken)"),
+        "{text}"
+    );
+}

@@ -139,13 +139,22 @@ fn tools_list_offers_event_get_with_its_schema() {
     )["result"]["tools"]
         .clone();
 
-    assert_eq!(tools.as_array().unwrap().len(), 2);
+    assert_eq!(tools.as_array().unwrap().len(), 3);
     assert_eq!(tools[0]["name"], "event_search");
     assert_eq!(tools[1]["name"], "event_get");
+    assert_eq!(tools[2]["name"], "mcp_server_get");
     assert_eq!(tools[1]["inputSchema"]["required"], json!(["address"]));
-    for tool in tools.as_array().unwrap() {
+    // The recall tools answer inside the envelope; the server's own state
+    // holds no recalled content.
+    for tool in &tools.as_array().unwrap()[..2] {
         assert!(tool["description"].as_str().unwrap().contains("envelope"));
     }
+    assert!(
+        tools[2]["description"]
+            .as_str()
+            .unwrap()
+            .contains("never recalled content")
+    );
 }
 
 #[test]
@@ -312,7 +321,7 @@ fn an_unknown_tool_is_a_tool_error() {
 
     assert_eq!(
         refusal(&result),
-        "no such tool: this server offers event_get and event_search"
+        "no such tool: this server offers event_get, event_search and mcp_server_get"
     );
 }
 
